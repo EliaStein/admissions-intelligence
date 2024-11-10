@@ -4,23 +4,19 @@ import { Hero } from './components/Hero';
 import { Features } from './components/Features';
 import { HowItWorks } from './components/HowItWorks';
 import { Testimonials } from './components/Testimonials';
-import { Journey } from './components/Journey';
 import { Footer } from './components/Footer';
 
-function App() {
+export function App() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-white via-primary-50 to-white">
       <Header />
       <main>
         <Hero />
         <Features />
         <HowItWorks />
         <Testimonials />
-        <Journey />
       </main>
       <Footer />
     </div>
   );
 }
-
-export default App;
