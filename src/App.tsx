@@ -12,8 +12,8 @@ export function App() {
       <Header />
       <main>
         <Hero />
-        <Features />
         <HowItWorks />
+        <Features />
         <Testimonials />
       </main>
       <Footer />

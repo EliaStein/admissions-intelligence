@@ -8,12 +8,13 @@ export function Hero() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
         <div className="text-center">
           <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-8">
-            Transform Your College Essay with
-            <span className="text-primary-600"> Expert-Trained AI Feedback</span>
+            Transform Your College Essay
+            <br />
+            <span className="text-primary-600">with Expert-Trained AI Feedback</span>
           </h1>
           
           <p className="text-xl text-gray-600 mb-6 max-w-2xl mx-auto">
-            Get personalized feedback powered by AI trained on insights from former admissions officers.
+            Get personalized feedback powered by AI trained on insights from former admissions officers within 24 hours.
           </p>
 
           <div className="flex items-center justify-center space-x-2 mb-12">
