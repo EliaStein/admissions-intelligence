@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, FileText, MessageSquare, Loader2, CheckCircle, Upload } from 'lucide-react';
+import { ArrowLeft, FileText, MessageSquare, Loader2, Upload } from 'lucide-react';
 import emailjs from '@emailjs/browser';
 import { EMAILJS_CONFIG } from '../config/emailjs';
 import { essayService } from '../services/essayService';
 import { School } from '../types/essay';
+import { useAnalytics } from '../hooks/useAnalytics';
+import { StepIndicator } from './StepIndicator';
+import { SuccessMessage } from './SuccessMessage';
 
 type EssayType = 'personal' | 'supplemental' | null;
 
@@ -19,6 +22,7 @@ const PERSONAL_STATEMENT_PROMPTS = [
 
 export function EssayWizard() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const analytics = useAnalytics();
   const [step, setStep] = useState(1);
   const [essayType, setEssayType] = useState<EssayType>(null);
   const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
@@ -33,7 +37,6 @@ export function EssayWizard() {
   const [schools, setSchools] = useState<School[]>([]);
 
   useEffect(() => {
-    // Get schools from the essay service
     const updateSchools = () => {
       const currentSchools = essayService.getSchools();
       if (currentSchools.length > 0) {
@@ -41,15 +44,11 @@ export function EssayWizard() {
       }
     };
 
-    // Initial load
     updateSchools();
-
-    // Set up polling to check for updates
     const interval = setInterval(updateSchools, 1000);
     return () => clearInterval(interval);
   }, []);
 
-  // Only scroll to top when step changes after initial selection
   useEffect(() => {
     if (step > 1 && containerRef.current) {
       containerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -58,8 +57,14 @@ export function EssayWizard() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setEssayFile(e.target.files[0]);
+      const file = e.target.files[0];
+      setEssayFile(file);
       setEssayText('');
+      analytics.trackEvent({
+        action: 'file_upload',
+        category: 'essay_input',
+        label: file.name
+      });
     }
   };
 
@@ -89,12 +94,17 @@ export function EssayWizard() {
         }
       );
       
+      analytics.trackEssaySubmission({
+        essayType: essayType || 'unknown',
+        school: selectedSchool?.name,
+        promptType: selectedPrompt,
+        submissionMethod: essayFile ? 'file' : 'text'
+      });
+
       setIsSuccess(true);
-      setTimeout(() => {
-        resetForm();
-      }, 3000);
     } catch (error) {
       console.error('Error:', error);
+      analytics.trackError('Essay submission failed', 'EssaySubmission');
     } finally {
       setIsSubmitting(false);
     }
@@ -111,57 +121,36 @@ export function EssayWizard() {
     setLastName('');
     setEmail('');
     setIsSuccess(false);
+    analytics.trackEvent({
+      action: 'form_reset',
+      category: 'user_flow'
+    });
   };
 
   const goBack = () => {
     if (step > 1) {
+      analytics.trackNavigation({
+        from: `Step ${step}`,
+        to: `Step ${step - 1}`
+      });
       setStep(step - 1);
     }
   };
 
-  const renderStepIndicator = () => {
-    const totalSteps = essayType === 'personal' ? 4 : 5;
-    return (
-      <div className="mb-8">
-        <div className="flex justify-between items-center max-w-xs mx-auto">
-          {Array.from({ length: totalSteps }).map((_, index) => (
-            <React.Fragment key={index}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                index + 1 === step ? 'bg-primary-600 text-white' : 'bg-gray-200'
-              }`}>
-                {index + 1}
-              </div>
-              {index < totalSteps - 1 && (
-                <div className="flex-1 h-1 bg-gray-200 mx-2" />
-              )}
-            </React.Fragment>
-          ))}
-        </div>
-      </div>
-    );
+  const handleStepChange = (newStep: number) => {
+    analytics.trackFormStep(newStep, essayType || 'unknown');
+    setStep(newStep);
   };
 
   if (isSuccess) {
-    return (
-      <div className="text-center p-8">
-        <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-        <h3 className="text-2xl font-bold text-gray-900 mb-2">Success!</h3>
-        <p className="text-gray-600 mb-6">
-          Your essay has been submitted successfully. We'll send detailed feedback to your email shortly.
-        </p>
-        <button
-          onClick={resetForm}
-          className="bg-primary-600 text-white px-6 py-3 rounded-full hover:bg-primary-700 transition-colors"
-        >
-          Submit Another Essay
-        </button>
-      </div>
-    );
+    return <SuccessMessage onReset={resetForm} />;
   }
+
+  const totalSteps = essayType === 'personal' ? 4 : 5;
 
   return (
     <div ref={containerRef} className="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-xl">
-      {renderStepIndicator()}
+      <StepIndicator currentStep={step} totalSteps={totalSteps} />
       
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-center text-gray-900 mb-8">
@@ -173,7 +162,7 @@ export function EssayWizard() {
             <button
               onClick={() => {
                 setEssayType('personal');
-                setStep(2);
+                handleStepChange(2);
               }}
               className="w-full p-4 text-left bg-white border-2 border-gray-200 rounded-lg hover:border-primary-500 transition-colors"
             >
@@ -182,7 +171,7 @@ export function EssayWizard() {
             <button
               onClick={() => {
                 setEssayType('supplemental');
-                setStep(2);
+                handleStepChange(2);
               }}
               className="w-full p-4 text-left bg-white border-2 border-gray-200 rounded-lg hover:border-primary-500 transition-colors"
             >
@@ -198,7 +187,7 @@ export function EssayWizard() {
                 key={index}
                 onClick={() => {
                   setSelectedPrompt(prompt);
-                  setStep(3);
+                  handleStepChange(3);
                 }}
                 className="w-full p-4 text-left bg-white border-2 border-gray-200 rounded-lg hover:border-primary-500 transition-colors"
               >
@@ -216,7 +205,7 @@ export function EssayWizard() {
                   key={school.name}
                   onClick={() => {
                     setSelectedSchool(school);
-                    setStep(3);
+                    handleStepChange(3);
                   }}
                   className="w-full p-4 text-left bg-white border-2 border-gray-200 rounded-lg hover:border-primary-500 transition-colors"
                 >
@@ -243,7 +232,7 @@ export function EssayWizard() {
                 key={index}
                 onClick={() => {
                   setSelectedPrompt(prompt.prompt);
-                  setStep(4);
+                  handleStepChange(4);
                 }}
                 className="w-full p-4 text-left bg-white border-2 border-gray-200 rounded-lg hover:border-primary-500 transition-colors"
               >
@@ -284,7 +273,7 @@ export function EssayWizard() {
             </div>
             {(essayText || essayFile) && (
               <button
-                onClick={() => setStep(step + 1)}
+                onClick={() => handleStepChange(step + 1)}
                 className="w-full bg-primary-600 text-white px-6 py-3 rounded-full hover:bg-primary-700 transition-colors"
               >
                 Request Feedback
