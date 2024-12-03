@@ -5,12 +5,13 @@ class EssayService {
   private lastUpdate: Date | null = null;
 
   updateSchools(parsedData: ParsedSchoolData) {
+    // Completely replace the existing schools with the new data
     this.schools = parsedData.schools;
     this.lastUpdate = new Date();
   }
 
   getSchools(): School[] {
-    return this.schools;
+    return [...this.schools]; // Return a copy to prevent external modifications
   }
 
   getSchoolByName(name: string): School | undefined {
