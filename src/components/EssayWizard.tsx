@@ -35,7 +35,9 @@ export function EssayWizard() {
     // Get schools from the essay service
     const updateSchools = () => {
       const currentSchools = essayService.getSchools();
-      setSchools(currentSchools);
+      if (currentSchools.length > 0) {
+        setSchools(currentSchools);
+      }
     };
 
     // Initial load
