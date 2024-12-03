@@ -12,6 +12,7 @@ export function AdminLogin() {
     const success = login(password);
     if (!success) {
       setError('Invalid password');
+      setPassword('');
     }
   };
 
@@ -41,6 +42,7 @@ export function AdminLogin() {
                 placeholder="Admin password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
               />
             </div>
           </div>
