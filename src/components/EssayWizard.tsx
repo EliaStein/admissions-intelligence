@@ -1,13 +1,11 @@
-import React, { useState } from 'react';
-import { ArrowLeft, ArrowRight, Upload, Mail, Loader2, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ArrowLeft, FileText, MessageSquare, Loader2, CheckCircle, Upload } from 'lucide-react';
 import emailjs from '@emailjs/browser';
 import { EMAILJS_CONFIG } from '../config/emailjs';
+import { essayService } from '../services/essayService';
+import { School } from '../types/essay';
 
 type EssayType = 'personal' | 'supplemental' | null;
-type School = {
-  name: string;
-  prompts: string[];
-};
 
 const PERSONAL_STATEMENT_PROMPTS = [
   "Some students have a background, identity, interest, or talent that is so meaningful they believe their application would be incomplete without it. If this sounds like you, then please share your story.",
@@ -19,23 +17,8 @@ const PERSONAL_STATEMENT_PROMPTS = [
   "Share an essay on any topic of your choice. It can be one you've already written, one that responds to a different prompt, or one of your own design."
 ];
 
-const SCHOOLS: School[] = [
-  {
-    name: "American University",
-    prompts: [
-      "American University students identify as changemakers and describe themselves as passionate. Describe a belief, hobby, idea, issue, or topic about which you're excited. (Max 250)"
-    ]
-  },
-  {
-    name: "Babson College",
-    prompts: [
-      "The Babson education prepares students for all types of careers across business, entrepreneurship, social innovation, and more. Tell us about your interest in this area of study and in Babson specifically. (500 words maximum)",
-      "A defining element of the Babson experience is learning and thriving in an equitable and inclusive community with a wide range of perspectives and interests. Please share something about your background, lived experiences, or viewpoint(s) that speaks to how you will contribute to and learn from Babson's collaborative community. (250 words maximum)"
-    ]
-  }
-];
-
 export function EssayWizard() {
+  const containerRef = useRef<HTMLDivElement>(null);
   const [step, setStep] = useState(1);
   const [essayType, setEssayType] = useState<EssayType>(null);
   const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
@@ -47,6 +30,31 @@ export function EssayWizard() {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [schools, setSchools] = useState<School[]>([]);
+
+  useEffect(() => {
+    // Get schools from the essay service
+    const updateSchools = () => {
+      const currentSchools = essayService.getSchools();
+      if (currentSchools.length > 0) {
+        setSchools(currentSchools);
+      }
+    };
+
+    // Initial load
+    updateSchools();
+
+    // Set up polling to check for updates
+    const interval = setInterval(updateSchools, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Scroll to top when step changes
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [step]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -152,7 +160,7 @@ export function EssayWizard() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-xl">
+    <div ref={containerRef} className="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-xl">
       {renderStepIndicator()}
       
       <div className="mb-8">
@@ -202,18 +210,29 @@ export function EssayWizard() {
 
         {step === 2 && essayType === 'supplemental' && (
           <div className="space-y-4">
-            {SCHOOLS.map((school, index) => (
-              <button
-                key={index}
-                onClick={() => {
-                  setSelectedSchool(school);
-                  setStep(3);
-                }}
-                className="w-full p-4 text-left bg-white border-2 border-gray-200 rounded-lg hover:border-primary-500 transition-colors"
-              >
-                {school.name}
-              </button>
-            ))}
+            {schools.length > 0 ? (
+              schools.map((school) => (
+                <button
+                  key={school.name}
+                  onClick={() => {
+                    setSelectedSchool(school);
+                    setStep(3);
+                  }}
+                  className="w-full p-4 text-left bg-white border-2 border-gray-200 rounded-lg hover:border-primary-500 transition-colors"
+                >
+                  <h3 className="font-semibold text-gray-900">{school.name}</h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {school.prompts.length} {school.prompts.length === 1 ? 'prompt' : 'prompts'} available
+                  </p>
+                </button>
+              ))
+            ) : (
+              <div className="text-center text-gray-600 py-8">
+                <MessageSquare className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                <p>No supplemental essays available yet.</p>
+                <p className="text-sm mt-2">Please check back later or contact support.</p>
+              </div>
+            )}
           </div>
         )}
 
@@ -223,12 +242,13 @@ export function EssayWizard() {
               <button
                 key={index}
                 onClick={() => {
-                  setSelectedPrompt(prompt);
+                  setSelectedPrompt(prompt.prompt);
                   setStep(4);
                 }}
                 className="w-full p-4 text-left bg-white border-2 border-gray-200 rounded-lg hover:border-primary-500 transition-colors"
               >
-                {prompt}
+                <p className="text-gray-900 mb-2">{prompt.prompt}</p>
+                <p className="text-sm text-gray-600">Word limit: {prompt.wordCount}</p>
               </button>
             ))}
           </div>
