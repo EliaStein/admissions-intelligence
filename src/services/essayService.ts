@@ -1,17 +1,48 @@
 import { School, ParsedSchoolData } from '../types/essay';
 
+const STORAGE_KEY = 'admissions_intelligence_schools';
+
 class EssayService {
   private schools: School[] = [];
   private lastUpdate: Date | null = null;
 
+  constructor() {
+    // Load initial data from localStorage
+    this.loadFromStorage();
+  }
+
+  private loadFromStorage() {
+    try {
+      const storedData = localStorage.getItem(STORAGE_KEY);
+      if (storedData) {
+        const { schools, lastUpdate } = JSON.parse(storedData);
+        this.schools = schools;
+        this.lastUpdate = new Date(lastUpdate);
+      }
+    } catch (error) {
+      console.error('Error loading schools from storage:', error);
+    }
+  }
+
+  private saveToStorage() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        schools: this.schools,
+        lastUpdate: this.lastUpdate
+      }));
+    } catch (error) {
+      console.error('Error saving schools to storage:', error);
+    }
+  }
+
   updateSchools(parsedData: ParsedSchoolData) {
-    // Completely replace the existing schools with the new data
     this.schools = parsedData.schools;
     this.lastUpdate = new Date();
+    this.saveToStorage();
   }
 
   getSchools(): School[] {
-    return [...this.schools]; // Return a copy to prevent external modifications
+    return [...this.schools];
   }
 
   getSchoolByName(name: string): School | undefined {
