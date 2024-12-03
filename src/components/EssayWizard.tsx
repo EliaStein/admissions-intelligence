@@ -49,9 +49,9 @@ export function EssayWizard() {
     return () => clearInterval(interval);
   }, []);
 
-  // Scroll to top when step changes
+  // Only scroll to top when step changes after initial selection
   useEffect(() => {
-    if (containerRef.current) {
+    if (step > 1 && containerRef.current) {
       containerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, [step]);
@@ -192,7 +192,7 @@ export function EssayWizard() {
         )}
 
         {step === 2 && essayType === 'personal' && (
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
             {PERSONAL_STATEMENT_PROMPTS.map((prompt, index) => (
               <button
                 key={index}
@@ -209,7 +209,7 @@ export function EssayWizard() {
         )}
 
         {step === 2 && essayType === 'supplemental' && (
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
             {schools.length > 0 ? (
               schools.map((school) => (
                 <button
@@ -237,7 +237,7 @@ export function EssayWizard() {
         )}
 
         {step === 3 && essayType === 'supplemental' && selectedSchool && (
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
             {selectedSchool.prompts.map((prompt, index) => (
               <button
                 key={index}
