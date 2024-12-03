@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, FileText, MessageSquare, Loader2, CheckCircle, Upload } from 'lucide-react';
 import emailjs from '@emailjs/browser';
 import { EMAILJS_CONFIG } from '../config/emailjs';
@@ -18,6 +18,7 @@ const PERSONAL_STATEMENT_PROMPTS = [
 ];
 
 export function EssayWizard() {
+  const containerRef = useRef<HTMLDivElement>(null);
   const [step, setStep] = useState(1);
   const [essayType, setEssayType] = useState<EssayType>(null);
   const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
@@ -47,6 +48,13 @@ export function EssayWizard() {
     const interval = setInterval(updateSchools, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Scroll to top when step changes
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [step]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -152,7 +160,7 @@ export function EssayWizard() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-xl">
+    <div ref={containerRef} className="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-xl">
       {renderStepIndicator()}
       
       <div className="mb-8">
