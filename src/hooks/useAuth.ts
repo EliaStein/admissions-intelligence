@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
-// In a real application, this would be replaced with proper authentication
 const ADMIN_TOKEN = 'admin_access_token';
+const ADMIN_PASSWORD = 'Eliloves0livia!'; // Hardcoded for demo purposes only
 
 export function useAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -12,7 +12,7 @@ export function useAuth() {
   }, []);
 
   const login = (password: string) => {
-    if (password === import.meta.env.VITE_ADMIN_PASSWORD) {
+    if (password === ADMIN_PASSWORD) {
       localStorage.setItem(ADMIN_TOKEN, 'authenticated');
       setIsAuthenticated(true);
       return true;
