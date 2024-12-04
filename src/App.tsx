@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { Features } from './components/Features';
@@ -9,6 +9,7 @@ import { Footer } from './components/Footer';
 import { EssayDashboard } from './components/EssayDashboard';
 import { AdminLogin } from './components/AdminLogin';
 import { useAuth } from './hooks/useAuth';
+import { useAnalytics } from './hooks/useAnalytics';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -30,20 +31,28 @@ function HomePage() {
   );
 }
 
+function AppRoutes() {
+  useAnalytics(); // Initialize analytics inside Router context
+  
+  return (
+    <Routes>
+      <Route path="/" element={<HomePage />} />
+      <Route
+        path="/admin/essays"
+        element={
+          <ProtectedRoute>
+            <EssayDashboard />
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
+  );
+}
+
 export function App() {
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route
-          path="/admin/essays"
-          element={
-            <ProtectedRoute>
-              <EssayDashboard />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
+      <AppRoutes />
     </Router>
   );
 }
