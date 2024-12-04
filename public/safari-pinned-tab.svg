@@ -1,3 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 16 16">
-  <path fill="#000000" fill-rule="evenodd" d="M8 1L1 4.5l7 3.5 7-3.5L8 1zM4 6.5v3.25c2 2 6 2 8 0V6.5L8 8.5 4 6.5zm11 0v4" clip-rule="evenodd"/>
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 20010904//EN" "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
+<svg version="1.0" xmlns="http://www.w3.org/2000/svg" width="700.000000pt" height="700.000000pt" viewBox="0 0 700.000000 700.000000" preserveAspectRatio="xMidYMid meet">
+  <g transform="translate(0.000000,700.000000) scale(0.100000,-0.100000)" fill="#000000" stroke="none">
+    <path d="M3280 5600 c-690 -345 -1260 -630 -1265 -633 -6 -3 -526 -264 -1155
+    -580 l-345 -172 1265 -633 c696 -348 1270 -632 1275 -632 6 0 580 284 1275
+    632 l1265 633 -345 172 c-629 316 -1149 577 -1155 580 -5 3 -575 288 -1265
+    633 -690 345 -1257 627 -1260 627 -3 0 -570 -282 -1260 -627z"/>
+    <path d="M1860 3705 l0 -355 355 178 c195 97 355 179 355 182 0 3 -160 85
+    -355 182 l-355 178 0 -365z"/>
+    <path d="M4785 3882 c-195 -97 -355 -179 -355 -182 0 -3 160 -85 355 -182
+    l355 -178 0 355 c0 195 -3 355 -7 355 -5 0 -161 -76 -348 -168z"/>
+  </g>
 </svg>
