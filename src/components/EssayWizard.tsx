@@ -34,13 +34,8 @@ export function EssayWizard() {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [schools, setSchools] = useState<School[]>([]);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Initialize EmailJS when component mounts
-    emailjs.init(EMAILJS_CONFIG.PUBLIC_KEY);
-  }, []);
+  const [schools, setSchools] = useState<School[]>([]);
 
   useEffect(() => {
     const updateSchools = () => {
@@ -79,9 +74,23 @@ export function EssayWizard() {
     setEssayFile(null);
   };
 
+  const validateEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
   const handleSubmit = async () => {
-    if (!firstName || !lastName || !email || (!essayText && !essayFile)) {
+    if (!firstName.trim() || !lastName.trim() || !email.trim()) {
       setError('Please fill in all required fields');
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    if (!essayText && !essayFile) {
+      setError('Please provide an essay');
       return;
     }
 
@@ -94,20 +103,16 @@ export function EssayWizard() {
         : essayText;
 
       const templateParams = {
-        to_name: 'Admissions Team',
-        from_name: `${firstName} ${lastName}`,
-        from_email: email,
-        essay_type: essayType,
-        school_name: selectedSchool?.name || 'Personal Statement',
-        essay_prompt: selectedPrompt,
-        essay_content: essayContent,
-        reply_to: email
+        first_name: firstName,
+        reply_to: email,
+        essay_text: essayContent
       };
 
       const response = await emailjs.send(
         EMAILJS_CONFIG.SERVICE_ID,
         EMAILJS_CONFIG.TEMPLATE_ID,
-        templateParams
+        templateParams,
+        EMAILJS_CONFIG.PUBLIC_KEY
       );
 
       if (response.status !== 200) {
@@ -131,7 +136,6 @@ export function EssayWizard() {
     }
   };
 
-  // ... rest of the component remains exactly the same ...
   const resetForm = () => {
     setStep(1);
     setEssayType(null);
