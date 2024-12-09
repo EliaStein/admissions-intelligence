@@ -9,6 +9,12 @@ import { StepIndicator } from './StepIndicator';
 import { SuccessMessage } from './SuccessMessage';
 
 type EssayType = 'personal' | 'supplemental' | null;
+type ValidationError = {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  essay?: string;
+};
 
 const PERSONAL_STATEMENT_PROMPTS = [
   "Some students have a background, identity, interest, or talent that is so meaningful they believe their application would be incomplete without it. If this sounds like you, then please share your story.",
@@ -39,7 +45,8 @@ export function EssayWizard() {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<ValidationError>({});
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [schools, setSchools] = useState<School[]>([]);
 
   useEffect(() => {
@@ -61,11 +68,43 @@ export function EssayWizard() {
     }
   }, [step]);
 
+  const validateForm = (): boolean => {
+    const newErrors: ValidationError = {};
+    let isValid = true;
+
+    if (!firstName.trim()) {
+      newErrors.firstName = 'First name is required';
+      isValid = false;
+    }
+
+    if (!lastName.trim()) {
+      newErrors.lastName = 'Last name is required';
+      isValid = false;
+    }
+
+    if (!email.trim()) {
+      newErrors.email = 'Email address is required';
+      isValid = false;
+    } else if (!validateEmail(email)) {
+      newErrors.email = 'Please enter a valid email address';
+      isValid = false;
+    }
+
+    if (!essayText && !essayFile) {
+      newErrors.essay = 'Please provide an essay';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setEssayFile(file);
       setEssayText('');
+      setErrors((prev) => ({ ...prev, essay: undefined }));
       analytics.trackEvent({
         action: 'file_upload',
         category: 'essay_input',
@@ -77,26 +116,16 @@ export function EssayWizard() {
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setEssayText(e.target.value);
     setEssayFile(null);
+    setErrors((prev) => ({ ...prev, essay: undefined }));
   };
 
   const handleSubmit = async () => {
-    if (!firstName.trim() || !lastName.trim() || !email.trim()) {
-      setError('Please fill in all required fields');
-      return;
-    }
-
-    if (!validateEmail(email)) {
-      setError('Please enter a valid email address');
-      return;
-    }
-
-    if (!essayText && !essayFile) {
-      setError('Please provide an essay');
+    if (!validateForm()) {
       return;
     }
 
     setIsSubmitting(true);
-    setError(null);
+    setSubmitError(null);
 
     try {
       const essayContent = essayFile 
@@ -133,7 +162,7 @@ export function EssayWizard() {
       setIsSuccess(true);
     } catch (error) {
       console.error('Error submitting essay:', error);
-      setError('Failed to submit essay. Please try again.');
+      setSubmitError('Failed to submit essay. Please try again.');
       analytics.trackError('Essay submission failed', 'EssaySubmission');
     } finally {
       setIsSubmitting(false);
@@ -151,7 +180,8 @@ export function EssayWizard() {
     setLastName('');
     setEmail('');
     setIsSuccess(false);
-    setError(null);
+    setErrors({});
+    setSubmitError(null);
     analytics.trackEvent({
       action: 'form_reset',
       category: 'user_flow'
@@ -188,9 +218,9 @@ export function EssayWizard() {
           What essay would you like help with?
         </h2>
 
-        {error && (
+        {submitError && (
           <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">
-            {error}
+            {submitError}
           </div>
         )}
 
@@ -288,8 +318,13 @@ export function EssayWizard() {
                 value={essayText}
                 onChange={handleTextChange}
                 disabled={!!essayFile}
-                className="w-full h-64 p-4 border-2 border-gray-200 rounded-lg focus:border-primary-500 focus:ring-primary-500"
+                className={`w-full h-64 p-4 border-2 rounded-lg focus:ring-primary-500 ${
+                  errors.essay ? 'border-red-500' : 'border-gray-200 focus:border-primary-500'
+                }`}
               />
+              {errors.essay && (
+                <p className="text-sm text-red-600 mt-1">{errors.essay}</p>
+              )}
               <div className="text-center">
                 <span className="text-gray-500">or</span>
               </div>
@@ -329,9 +364,17 @@ export function EssayWizard() {
                 <input
                   type="text"
                   value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full p-2 border-2 border-gray-200 rounded-lg"
+                  onChange={(e) => {
+                    setFirstName(e.target.value);
+                    setErrors((prev) => ({ ...prev, firstName: undefined }));
+                  }}
+                  className={`w-full p-2 border-2 rounded-lg ${
+                    errors.firstName ? 'border-red-500' : 'border-gray-200'
+                  }`}
                 />
+                {errors.firstName && (
+                  <p className="text-sm text-red-600 mt-1">{errors.firstName}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -340,9 +383,17 @@ export function EssayWizard() {
                 <input
                   type="text"
                   value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  className="w-full p-2 border-2 border-gray-200 rounded-lg"
+                  onChange={(e) => {
+                    setLastName(e.target.value);
+                    setErrors((prev) => ({ ...prev, lastName: undefined }));
+                  }}
+                  className={`w-full p-2 border-2 rounded-lg ${
+                    errors.lastName ? 'border-red-500' : 'border-gray-200'
+                  }`}
                 />
+                {errors.lastName && (
+                  <p className="text-sm text-red-600 mt-1">{errors.lastName}</p>
+                )}
               </div>
             </div>
             <div>
@@ -352,13 +403,21 @@ export function EssayWizard() {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full p-2 border-2 border-gray-200 rounded-lg"
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setErrors((prev) => ({ ...prev, email: undefined }));
+                }}
+                className={`w-full p-2 border-2 rounded-lg ${
+                  errors.email ? 'border-red-500' : 'border-gray-200'
+                }`}
               />
+              {errors.email && (
+                <p className="text-sm text-red-600 mt-1">{errors.email}</p>
+              )}
             </div>
             <button
               onClick={handleSubmit}
-              disabled={!firstName || !lastName || !email || isSubmitting}
+              disabled={isSubmitting}
               className="w-full bg-primary-600 text-white px-6 py-3 rounded-full hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
