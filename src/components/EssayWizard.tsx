@@ -35,6 +35,12 @@ export function EssayWizard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [schools, setSchools] = useState<School[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Initialize EmailJS when component mounts
+    emailjs.init(EMAILJS_CONFIG.PUBLIC_KEY);
+  }, []);
 
   useEffect(() => {
     const updateSchools = () => {
@@ -55,7 +61,7 @@ export function EssayWizard() {
     }
   }, [step]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setEssayFile(file);
@@ -74,25 +80,39 @@ export function EssayWizard() {
   };
 
   const handleSubmit = async () => {
+    if (!firstName || !lastName || !email || (!essayText && !essayFile)) {
+      setError('Please fill in all required fields');
+      return;
+    }
+
     setIsSubmitting(true);
+    setError(null);
+
     try {
       const essayContent = essayFile 
         ? await essayFile.text() 
         : essayText;
 
-      await emailjs.send(
+      const templateParams = {
+        to_name: 'Admissions Team',
+        from_name: `${firstName} ${lastName}`,
+        from_email: email,
+        essay_type: essayType,
+        school_name: selectedSchool?.name || 'Personal Statement',
+        essay_prompt: selectedPrompt,
+        essay_content: essayContent,
+        reply_to: email
+      };
+
+      const response = await emailjs.send(
         EMAILJS_CONFIG.SERVICE_ID,
         EMAILJS_CONFIG.TEMPLATE_ID,
-        {
-          email,
-          first_name: firstName,
-          last_name: lastName,
-          essay_type: essayType,
-          school: selectedSchool?.name || 'N/A',
-          essay_prompt: selectedPrompt,
-          essay_text: essayContent,
-        }
+        templateParams
       );
+
+      if (response.status !== 200) {
+        throw new Error('Failed to send email');
+      }
       
       analytics.trackEssaySubmission({
         essayType: essayType || 'unknown',
@@ -103,13 +123,15 @@ export function EssayWizard() {
 
       setIsSuccess(true);
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error submitting essay:', error);
+      setError('Failed to submit essay. Please try again.');
       analytics.trackError('Essay submission failed', 'EssaySubmission');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // ... rest of the component remains exactly the same ...
   const resetForm = () => {
     setStep(1);
     setEssayType(null);
@@ -121,6 +143,7 @@ export function EssayWizard() {
     setLastName('');
     setEmail('');
     setIsSuccess(false);
+    setError(null);
     analytics.trackEvent({
       action: 'form_reset',
       category: 'user_flow'
@@ -140,6 +163,7 @@ export function EssayWizard() {
   const handleStepChange = (newStep: number) => {
     analytics.trackFormStep(newStep, essayType || 'unknown');
     setStep(newStep);
+    setError(null);
   };
 
   if (isSuccess) {
@@ -284,6 +308,11 @@ export function EssayWizard() {
 
         {((essayType === 'personal' && step === 4) || (essayType === 'supplemental' && step === 5)) && (
           <div className="space-y-6">
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -294,6 +323,7 @@ export function EssayWizard() {
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   className="w-full p-2 border-2 border-gray-200 rounded-lg"
+                  required
                 />
               </div>
               <div>
@@ -305,6 +335,7 @@ export function EssayWizard() {
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   className="w-full p-2 border-2 border-gray-200 rounded-lg"
+                  required
                 />
               </div>
             </div>
@@ -317,6 +348,7 @@ export function EssayWizard() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full p-2 border-2 border-gray-200 rounded-lg"
+                required
               />
             </div>
             <button
