@@ -20,6 +20,11 @@ const PERSONAL_STATEMENT_PROMPTS = [
   "Share an essay on any topic of your choice. It can be one you've already written, one that responds to a different prompt, or one of your own design."
 ];
 
+const validateEmail = (email: string): boolean => {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(email);
+};
+
 export function EssayWizard() {
   const containerRef = useRef<HTMLDivElement>(null);
   const analytics = useAnalytics();
@@ -56,7 +61,7 @@ export function EssayWizard() {
     }
   }, [step]);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setEssayFile(file);
@@ -72,10 +77,6 @@ export function EssayWizard() {
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setEssayText(e.target.value);
     setEssayFile(null);
-  };
-
-  const validateEmail = (email: string) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
   const handleSubmit = async () => {
@@ -105,7 +106,10 @@ export function EssayWizard() {
       const templateParams = {
         first_name: firstName,
         reply_to: email,
-        essay_text: essayContent
+        essay_text: essayContent,
+        essay_prompt: selectedPrompt,
+        school_name: selectedSchool?.name || 'Personal Statement',
+        essay_type: essayType || 'unknown'
       };
 
       const response = await emailjs.send(
@@ -167,7 +171,6 @@ export function EssayWizard() {
   const handleStepChange = (newStep: number) => {
     analytics.trackFormStep(newStep, essayType || 'unknown');
     setStep(newStep);
-    setError(null);
   };
 
   if (isSuccess) {
@@ -184,6 +187,12 @@ export function EssayWizard() {
         <h2 className="text-2xl font-bold text-center text-gray-900 mb-8">
           What essay would you like help with?
         </h2>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">
+            {error}
+          </div>
+        )}
 
         {step === 1 && (
           <div className="space-y-4">
@@ -312,11 +321,6 @@ export function EssayWizard() {
 
         {((essayType === 'personal' && step === 4) || (essayType === 'supplemental' && step === 5)) && (
           <div className="space-y-6">
-            {error && (
-              <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
-                {error}
-              </div>
-            )}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -327,7 +331,6 @@ export function EssayWizard() {
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   className="w-full p-2 border-2 border-gray-200 rounded-lg"
-                  required
                 />
               </div>
               <div>
@@ -339,7 +342,6 @@ export function EssayWizard() {
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   className="w-full p-2 border-2 border-gray-200 rounded-lg"
-                  required
                 />
               </div>
             </div>
@@ -352,7 +354,6 @@ export function EssayWizard() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full p-2 border-2 border-gray-200 rounded-lg"
-                required
               />
             </div>
             <button
