@@ -23,6 +23,13 @@ export const uploadService = {
     };
 
     try {
+      // First check if we're authenticated
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) {
+        result.errors.push('You must be logged in to upload data');
+        return result;
+      }
+
       const parsed = await parseSchoolsCSV(file);
       result.errors.push(...parsed.errors);
 
