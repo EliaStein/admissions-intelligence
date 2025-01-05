@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../types/supabase';
 
 const supabaseUrl = "https://rpiwnxbkknlxouxmytgy.supabase.co";
-const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_KEY
 
 // Check if we're in development and using placeholder values
 if (supabaseUrl === 'your-project-url' || supabaseAnonKey === 'your-anon-key') {
