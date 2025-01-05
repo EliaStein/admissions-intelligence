@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../types/supabase';
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const supabaseUrl = "https://rpiwnxbkknlxouxmytgy.supabase.co";
 const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
 
 // Check if we're in development and using placeholder values
