@@ -35,7 +35,7 @@ const PERSONAL_STATEMENT_PROMPTS = [
   },
   {
     id: 'ps-7',
-    prompt: 'Share an essay on any topic of your choice. It can be one you've already written, one that responds to a different prompt, or one of your own design.',
+    prompt: 'Share an essay on any topic of your choice. It can be one you\'ve already written, one that responds to a different prompt, or one of your own design.',
     word_count: 650
   }
 ];
