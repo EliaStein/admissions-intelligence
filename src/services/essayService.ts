@@ -10,7 +10,8 @@ export const essayService = {
       .order('name');
     
     if (error) {
-      console.error('Error fetching schools:', error);
+      console.error('Error fetching schools:', error.message);
+      console.error('Error details:', error);
       return [];
     }
     
@@ -32,7 +33,8 @@ export const essayService = {
       .eq('school_id', schoolId);
     
     if (error) {
-      console.error('Error fetching prompts:', error);
+      console.error('Error fetching prompts:', error.message);
+      console.error('Error details:', error);
       return [];
     }
     
@@ -51,7 +53,8 @@ export const essayService = {
       .upsert(essay);
       
     if (error) {
-      console.error('Error saving essay:', error);
+      console.error('Error saving essay:', error.message);
+      console.error('Error details:', error);
     }
   },
 
@@ -62,7 +65,8 @@ export const essayService = {
       .eq('id', id);
       
     if (error) {
-      console.error('Error deleting essay:', error);
+      console.error('Error deleting essay:', error.message);
+      console.error('Error details:', error);
     }
   }
 };
