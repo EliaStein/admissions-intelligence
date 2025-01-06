@@ -1,66 +1,66 @@
-import { School, ParsedSchoolData } from '../types/essay';
+import { supabase } from '../supabase';
+import { Essay } from '../types/essay';
+import { School, EssayPrompt } from '../types/prompt';
 
-const STORAGE_KEY = 'admissions_intelligence_schools';
+export const essayService = {
+  async getSchools(): Promise<School[]> {
+    const { data, error } = await supabase
+      .from('schools')
+      .select('id, name')
+      .order('name');
+    
+    if (error) {
+      console.error('Error fetching schools:', error);
+      return [];
+    }
+    
+    return data || [];
+  },
 
-class EssayService {
-  private schools: School[] = [];
-  private lastUpdate: Date | null = null;
+  async getPromptsBySchool(schoolId: string): Promise<EssayPrompt[]> {
+    const { data, error } = await supabase
+      .from('essay_prompts')
+      .select(`
+        id,
+        school_id,
+        prompt,
+        word_count,
+        schools (
+          name
+        )
+      `)
+      .eq('school_id', schoolId);
+    
+    if (error) {
+      console.error('Error fetching prompts:', error);
+      return [];
+    }
+    
+    return data?.map(prompt => ({
+      ...prompt,
+      school_name: prompt.schools.name
+    })) || [];
+  },
 
-  constructor() {
-    // Load initial data from localStorage
-    this.loadFromStorage();
-  }
+  // Keep existing methods...
+  async saveEssay(essay: Essay): Promise<void> {
+    const { error } = await supabase
+      .from('essays')
+      .upsert(essay);
+      
+    if (error) {
+      console.error('Error saving essay:', error);
+    }
+  },
 
-  private loadFromStorage() {
-    try {
-      const storedData = localStorage.getItem(STORAGE_KEY);
-      if (storedData) {
-        const { schools, lastUpdate } = JSON.parse(storedData);
-        this.schools = schools;
-        this.lastUpdate = new Date(lastUpdate);
-      }
-    } catch (error) {
-      console.error('Error loading schools from storage:', error);
+  async deleteEssay(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('essays')
+      .delete()
+      .eq('id', id);
+      
+    if (error) {
+      console.error('Error deleting essay:', error);
     }
   }
-
-  private saveToStorage() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        schools: this.schools,
-        lastUpdate: this.lastUpdate
-      }));
-    } catch (error) {
-      console.error('Error saving schools to storage:', error);
-    }
-  }
-
-  updateSchools(parsedData: ParsedSchoolData) {
-    this.schools = parsedData.schools;
-    this.lastUpdate = new Date();
-    this.saveToStorage();
-  }
-
-  getSchools(): School[] {
-    return [...this.schools];
-  }
-
-  getSchoolByName(name: string): School | undefined {
-    return this.schools.find(school => 
-      school.name.toLowerCase() === name.toLowerCase()
-    );
-  }
-
-  getLastUpdateTime(): Date | null {
-    return this.lastUpdate;
-  }
-
-  searchSchools(query: string): School[] {
-    const searchTerm = query.toLowerCase();
-    return this.schools.filter(school => 
-      school.name.toLowerCase().includes(searchTerm)
-    );
-  }
-}
-
-export const essayService = new EssayService();
+};
