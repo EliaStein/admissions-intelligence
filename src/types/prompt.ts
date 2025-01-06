@@ -3,10 +3,15 @@ export interface School {
     name: string;
   }
   
-  export interface EssayPrompt {
+  export interface BasePrompt {
     id: string;
-    school_id: string;
     prompt: string;
     word_count: number;
-    school_name: string;
   }
+  
+  export interface SchoolPrompt extends BasePrompt {
+    school_id: string;
+    school_name?: string;
+  }
+  
+  export type EssayPrompt = BasePrompt | SchoolPrompt;

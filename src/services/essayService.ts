@@ -1,6 +1,6 @@
-import { supabase } from '../../supabase';
+import { supabase } from '../lib/supabase';
 import { Essay } from '../types/essay';
-import { School, EssayPrompt } from '../types/prompt';
+import { School, SchoolPrompt } from '../types/prompt';
 
 export const essayService = {
   async getSchools(): Promise<School[]> {
@@ -17,7 +17,7 @@ export const essayService = {
     return data || [];
   },
 
-  async getPromptsBySchool(schoolId: string): Promise<EssayPrompt[]> {
+  async getPromptsBySchool(schoolId: string): Promise<SchoolPrompt[]> {
     const { data, error } = await supabase
       .from('essay_prompts')
       .select(`
@@ -37,12 +37,14 @@ export const essayService = {
     }
     
     return data?.map(prompt => ({
-      ...prompt,
-      school_name: prompt.schools.name
+      id: prompt.id,
+      school_id: prompt.school_id,
+      prompt: prompt.prompt,
+      word_count: prompt.word_count,
+      school_name: prompt.schools?.name
     })) || [];
   },
 
-  // Keep existing methods...
   async saveEssay(essay: Essay): Promise<void> {
     const { error } = await supabase
       .from('essays')

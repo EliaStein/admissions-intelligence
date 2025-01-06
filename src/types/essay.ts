@@ -1,14 +1,7 @@
-export interface EssayPrompt {
-  prompt: string;
-  wordCount: number | string;
-}
-
-export interface School {
-  name: string;
-  prompts: EssayPrompt[];
-}
-
-export interface ParsedSchoolData {
-  schools: School[];
-  errors: string[];
+export interface Essay {
+  id: string;
+  prompt_id: string;
+  content: string;
+  created_at?: string;
+  updated_at?: string;
 }
