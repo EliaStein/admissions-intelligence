@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../types/supabase';
 
 const supabaseUrl = "https://rpiwnxbkknlxouxmytgy.supabase.co";
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_KEY
+const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhcXBlb2lzYWZtdmNoa21zbHhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU4NTY1MzMsImV4cCI6MjA1MTQzMjUzM30.TDtlK2bTFvrZJy_5jnTE0t-5o9HvgM0Su-J-LJ0QZrg"
 
 // Check if we're in development and using placeholder values
 if (supabaseUrl === 'your-project-url' || supabaseAnonKey === 'your-anon-key') {
