@@ -3,10 +3,14 @@ import { Essay } from '../types/essay';
 import { School, SchoolPrompt } from '../types/prompt';
 
 export const essayService = {
-  async getSchools(): Promise<School[]> {
+  async getSchools(): Promise<(School & { prompt_count: number })[]> {
     const { data, error } = await supabase
       .from('schools')
-      .select('id, name')
+      .select(`
+        id,
+        name,
+        essay_prompts:essay_prompts(count)
+      `)
       .order('name');
     
     if (error) {
@@ -14,7 +18,11 @@ export const essayService = {
       return [];
     }
     
-    return data || [];
+    return data?.map(school => ({
+      id: school.id,
+      name: school.name,
+      prompt_count: school.essay_prompts[0].count
+    })) || [];
   },
 
   async getPromptsBySchool(schoolId: string): Promise<SchoolPrompt[]> {
