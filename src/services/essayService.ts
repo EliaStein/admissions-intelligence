@@ -10,8 +10,7 @@ export const essayService = {
       .order('name');
     
     if (error) {
-      console.error('Error fetching schools:', error.message);
-      console.error('Error details:', error);
+      console.error('Error fetching schools:', error);
       return [];
     }
     
@@ -33,28 +32,25 @@ export const essayService = {
       .eq('school_id', schoolId);
     
     if (error) {
-      console.error('Error fetching prompts:', error.message);
-      console.error('Error details:', error);
+      console.error('Error fetching prompts:', error);
       return [];
     }
     
     return data?.map(prompt => ({
-      id: prompt.id,
-      school_id: prompt.school_id,
-      prompt: prompt.prompt,
-      word_count: prompt.word_count,
-      school_name: prompt.schools?.name
+      ...prompt,
+      school_name: prompt.schools.name
     })) || [];
   },
 
   async saveEssay(essay: Essay): Promise<void> {
     const { error } = await supabase
       .from('essays')
-      .upsert(essay);
+      .insert(essay);
       
     if (error) {
       console.error('Error saving essay:', error.message);
       console.error('Error details:', error);
+      throw error;
     }
   },
 
@@ -65,8 +61,7 @@ export const essayService = {
       .eq('id', id);
       
     if (error) {
-      console.error('Error deleting essay:', error.message);
-      console.error('Error details:', error);
+      console.error('Error deleting essay:', error);
     }
   }
 };

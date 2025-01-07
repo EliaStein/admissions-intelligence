@@ -1,7 +1,10 @@
 export interface Essay {
-  id: string;
-  prompt_id: string;
-  content: string;
+  id?: string;
+  student_name: string;
+  student_email: string;
+  student_college: string | null;
+  selected_prompt: string;
+  personal_statement: boolean;
+  essay_content: string;
   created_at?: string;
-  updated_at?: string;
 }
