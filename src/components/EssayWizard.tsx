@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { PromptSelection } from './PromptSelection';
+import { StudentInfoForm } from './StudentInfoForm';
 import { EssayPrompt } from '../types/prompt';
 import { essayService } from '../services/essayService';
 import { Essay } from '../types/essay';
@@ -42,17 +43,21 @@ const PERSONAL_STATEMENT_PROMPTS = [
   }
 ];
 
+type Step = 'prompt' | 'essay' | 'info';
+
 export function EssayWizard() {
+  const [currentStep, setCurrentStep] = useState<Step>('prompt');
   const [selectedPrompt, setSelectedPrompt] = useState<EssayPrompt | null>(null);
   const [essay, setEssay] = useState('');
-  const [studentName, setStudentName] = useState('');
+  const [studentFirstName, setStudentFirstName] = useState('');
+  const [studentLastName, setStudentLastName] = useState('');
   const [studentEmail, setStudentEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   const handlePromptSelected = (prompt: EssayPrompt) => {
     setSelectedPrompt(prompt);
-    setEssay('');
+    setCurrentStep('essay');
   };
 
   const validateEmail = (email: string) => {
@@ -62,8 +67,13 @@ export function EssayWizard() {
   const handleSubmit = async () => {
     setError('');
     
-    if (!studentName.trim()) {
-      setError('Student name is required');
+    if (!studentFirstName.trim()) {
+      setError('First name is required');
+      return;
+    }
+
+    if (!studentLastName.trim()) {
+      setError('Last name is required');
       return;
     }
 
@@ -91,7 +101,8 @@ export function EssayWizard() {
     try {
       setIsSubmitting(true);
       const newEssay: Essay = {
-        student_name: studentName.trim(),
+        student_first_name: studentFirstName.trim(),
+        student_last_name: studentLastName.trim(),
         student_email: studentEmail.trim(),
         student_college: 'school_id' in selectedPrompt ? selectedPrompt.school_name || null : null,
         selected_prompt: selectedPrompt.prompt,
@@ -102,10 +113,12 @@ export function EssayWizard() {
       await essayService.saveEssay(newEssay);
       
       // Reset form
-      setStudentName('');
+      setStudentFirstName('');
+      setStudentLastName('');
       setStudentEmail('');
       setEssay('');
       setSelectedPrompt(null);
+      setCurrentStep('prompt');
     } catch (err) {
       setError('Failed to submit essay. Please try again.');
       console.error('Submit error:', err);
@@ -114,92 +127,92 @@ export function EssayWizard() {
     }
   };
 
+  const handleNextStep = () => {
+    if (!essay.trim()) {
+      setError('Please write your essay before proceeding');
+      return;
+    }
+    setError('');
+    setCurrentStep('info');
+  };
+
   const wordCount = essay.trim().split(/\s+/).filter(Boolean).length;
 
-  return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      {!selectedPrompt ? (
+  if (currentStep === 'prompt') {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
         <PromptSelection 
           onPromptSelected={handlePromptSelected} 
           personalStatementPrompts={PERSONAL_STATEMENT_PROMPTS}
         />
-      ) : (
-        <div className="space-y-4">
-          <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="font-medium text-gray-900">Writing Prompt:</h3>
-            <p className="mt-2 text-gray-600">{selectedPrompt.prompt}</p>
-            <p className="mt-1 text-sm text-gray-500">
-              Word limit: {selectedPrompt.word_count}
-            </p>
-          </div>
+      </div>
+    );
+  }
 
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="studentName" className="block text-sm font-medium text-gray-700">
-                Student Name *
-              </label>
-              <input
-                id="studentName"
-                type="text"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                value={studentName}
-                onChange={(e) => setStudentName(e.target.value)}
-                required
-              />
-            </div>
+  if (currentStep === 'info') {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <StudentInfoForm
+          studentFirstName={studentFirstName}
+          studentLastName={studentLastName}
+          studentEmail={studentEmail}
+          onFirstNameChange={setStudentFirstName}
+          onLastNameChange={setStudentLastName}
+          onEmailChange={setStudentEmail}
+          onSubmit={handleSubmit}
+          onBack={() => setCurrentStep('essay')}
+          isSubmitting={isSubmitting}
+          error={error}
+        />
+      </div>
+    );
+  }
 
-            <div>
-              <label htmlFor="studentEmail" className="block text-sm font-medium text-gray-700">
-                Student Email *
-              </label>
-              <input
-                id="studentEmail"
-                type="email"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                value={studentEmail}
-                onChange={(e) => setStudentEmail(e.target.value)}
-                required
-              />
-            </div>
+  return (
+    <div className="max-w-4xl mx-auto p-6 space-y-6">
+      <div className="bg-white p-4 rounded-lg shadow">
+        <h3 className="font-medium text-gray-900">Writing Prompt:</h3>
+        <p className="mt-2 text-gray-600">{selectedPrompt?.prompt}</p>
+        <p className="mt-1 text-sm text-gray-500">
+          Word limit: {selectedPrompt?.word_count}
+        </p>
+      </div>
 
-            <textarea
-              className="w-full h-64 p-4 border rounded-lg focus:ring-2 focus:ring-indigo-500"
-              value={essay}
-              onChange={(e) => setEssay(e.target.value)}
-              placeholder="Start writing your essay here..."
-            />
-          </div>
+      <div className="space-y-4">
+        <textarea
+          className="w-full h-64 p-4 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+          value={essay}
+          onChange={(e) => setEssay(e.target.value)}
+          placeholder="Start writing your essay here..."
+        />
+      </div>
 
-          {error && (
-            <div className="text-red-600 text-sm">{error}</div>
-          )}
-
-          <div className="flex justify-between items-center">
-            <span className={`text-sm ${wordCount > selectedPrompt.word_count ? 'text-red-600' : 'text-gray-500'}`}>
-              Words: {wordCount} / {selectedPrompt.word_count}
-            </span>
-            <div className="space-x-4">
-              <button
-                onClick={() => setSelectedPrompt(null)}
-                className="text-sm text-indigo-600 hover:text-indigo-800"
-              >
-                Choose Different Prompt
-              </button>
-              <button
-                onClick={handleSubmit}
-                disabled={isSubmitting}
-                className={`px-4 py-2 rounded-md text-white ${
-                  isSubmitting 
-                    ? 'bg-indigo-400 cursor-not-allowed' 
-                    : 'bg-indigo-600 hover:bg-indigo-700'
-                }`}
-              >
-                {isSubmitting ? 'Submitting...' : 'Submit Essay'}
-              </button>
-            </div>
-          </div>
-        </div>
+      {error && (
+        <div className="text-red-600 text-sm">{error}</div>
       )}
+
+      <div className="flex justify-between items-center">
+        <span className={`text-sm ${wordCount > (selectedPrompt?.word_count || 0) ? 'text-red-600' : 'text-gray-500'}`}>
+          Words: {wordCount} / {selectedPrompt?.word_count}
+        </span>
+        <div className="space-x-4">
+          <button
+            onClick={() => {
+              setSelectedPrompt(null);
+              setCurrentStep('prompt');
+            }}
+            className="text-sm text-indigo-600 hover:text-indigo-800"
+          >
+            Choose Different Prompt
+          </button>
+          <button
+            onClick={handleNextStep}
+            className="px-4 py-2 rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+          >
+            Next Step
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

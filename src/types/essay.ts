@@ -1,6 +1,7 @@
 export interface Essay {
   id?: string;
-  student_name: string;
+  student_first_name: string;
+  student_last_name: string;
   student_email: string;
   student_college: string | null;
   selected_prompt: string;
