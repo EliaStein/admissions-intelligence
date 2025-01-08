@@ -1,6 +1,8 @@
 import { supabase } from '../lib/supabase';
 import { Essay } from '../types/essay';
 import { School, SchoolPrompt } from '../types/prompt';
+import emailjs from '@emailjs/browser';
+import { EMAILJS_CONFIG } from '../config/emailjs';
 
 export const essayService = {
   async getSchools(): Promise<(School & { prompt_count: number })[]> {
@@ -51,14 +53,36 @@ export const essayService = {
   },
 
   async saveEssay(essay: Essay): Promise<void> {
+    // First save to Supabase
     const { error } = await supabase
       .from('essays')
       .insert(essay);
       
     if (error) {
       console.error('Error saving essay:', error.message);
-      console.error('Error details:', error);
       throw error;
+    }
+
+    // Then send email notification
+    try {
+      await emailjs.send(
+        EMAILJS_CONFIG.SERVICE_ID,
+        EMAILJS_CONFIG.TEMPLATE_ID,
+        {
+          to_email: EMAILJS_CONFIG.TO_EMAIL,
+          student_name: `${essay.student_first_name} ${essay.student_last_name}`,
+          student_email: essay.student_email,
+          college: essay.student_college || 'Personal Statement',
+          prompt: essay.selected_prompt,
+          essay_type: essay.personal_statement ? 'Personal Statement' : 'Supplemental Essay',
+          essay_content: essay.essay_content,
+          submission_date: new Date().toLocaleString()
+        },
+        EMAILJS_CONFIG.PUBLIC_KEY
+      );
+    } catch (emailError) {
+      console.error('Error sending email notification:', emailError);
+      // Don't throw here since the essay was saved successfully
     }
   },
 
