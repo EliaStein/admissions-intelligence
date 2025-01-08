@@ -1,54 +1,21 @@
-import React, { useCallback, useState } from 'react';
-import { Upload, AlertCircle, CheckCircle } from 'lucide-react';
-import { validateCSVFormat, parseCSV } from '../utils/csvParser';
-import { essayService } from '../services/essayService';
+import React, { useCallback } from 'react';
+import { Upload } from 'lucide-react';
+import { useUpload } from '../hooks/useUpload';
+import { UploadStatus } from './ui/UploadStatus';
 
 export function CSVUploader() {
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const { loading, error, stats, uploadFile } = useUpload();
 
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
-    setLoading(true);
-    setError(null);
-    setSuccess(false);
-
-    try {
-      const isValidFormat = await validateCSVFormat(file);
-      if (!isValidFormat) {
-        setError('Invalid CSV format. Please ensure the file has the required headers.');
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const content = e.target?.result as string;
-        const parsedData = parseCSV(content);
-
-        if (parsedData.errors.length > 0) {
-          setError(parsedData.errors.join('\n'));
-          return;
-        }
-
-        essayService.updateSchools(parsedData);
-        setSuccess(true);
-      };
-
-      reader.readAsText(file);
-    } catch (err) {
-      setError('Failed to process the file. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    await uploadFile(file);
+  }, [uploadFile]);
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-md">
       <div className="mb-4">
-        <h2 className="text-xl font-semibold mb-2">Upload Essay Questions</h2>
+        <h2 className="text-xl font-semibold mb-2">Upload Schools Data</h2>
         <p className="text-gray-600">Upload a CSV file containing school names and essay prompts</p>
       </div>
 
@@ -57,7 +24,7 @@ export function CSVUploader() {
           <div className="flex flex-col items-center space-y-2">
             <Upload className="w-8 h-8 text-gray-400" />
             <span className="text-sm text-gray-500">
-              Click to upload or drag and drop
+              Click to upload or drag and drop CSV file
             </span>
           </div>
         </div>
@@ -70,26 +37,11 @@ export function CSVUploader() {
         />
       </label>
 
-      {loading && (
-        <div className="mt-4 text-gray-600 flex items-center">
-          <div className="animate-spin mr-2">⌛</div>
-          Processing file...
-        </div>
-      )}
-
-      {error && (
-        <div className="mt-4 text-red-600 flex items-center">
-          <AlertCircle className="w-5 h-5 mr-2" />
-          {error}
-        </div>
-      )}
-
-      {success && (
-        <div className="mt-4 text-green-600 flex items-center">
-          <CheckCircle className="w-5 h-5 mr-2" />
-          File processed successfully!
-        </div>
-      )}
+      <UploadStatus
+        loading={loading}
+        error={error}
+        stats={stats}
+      />
     </div>
   );
 }

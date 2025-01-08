@@ -1,447 +1,359 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, FileText, MessageSquare, Loader2, Upload } from 'lucide-react';
-import emailjs from '@emailjs/browser';
-import { EMAILJS_CONFIG } from '../config/emailjs';
-import { essayService } from '../services/essayService';
-import { School } from '../types/essay';
-import { useAnalytics } from '../hooks/useAnalytics';
-import { StepIndicator } from './StepIndicator';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { PromptSelection } from './PromptSelection';
+import { StudentInfoForm } from './StudentInfoForm';
 import { SuccessMessage } from './SuccessMessage';
+import { EssayPrompt } from '../types/prompt';
+import { essayService } from '../services/essayService';
 
 type EssayType = 'personal' | 'supplemental' | null;
-type ValidationError = {
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  essay?: string;
-};
+type Step = 'type' | 'school' | 'prompt' | 'essay' | 'info';
 
 const PERSONAL_STATEMENT_PROMPTS = [
-  "Some students have a background, identity, interest, or talent that is so meaningful they believe their application would be incomplete without it. If this sounds like you, then please share your story.",
-  "The lessons we take from obstacles we encounter can be fundamental to later success. Recount a time when you faced a challenge, setback, or failure. How did it affect you, and what did you learn from the experience?",
-  "Reflect on a time when you questioned or challenged a belief or idea. What prompted your thinking? What was the outcome?",
-  "Reflect on something that someone has done for you that has made you happy or thankful in a surprising way. How has this gratitude affected or motivated you?",
-  "Discuss an accomplishment, event, or realization that sparked a period of personal growth and a new understanding of yourself or others.",
-  "Describe a topic, idea, or concept you find so engaging that it makes you lose all track of time. Why does it captivate you? What or who do you turn to when you want to learn more?",
-  "Share an essay on any topic of your choice. It can be one you've already written, one that responds to a different prompt, or one of your own design."
+  {
+    id: 'ps1',
+    prompt: 'Some students have a background, identity, interest, or talent that is so meaningful they believe their application would be incomplete without it. If this sounds like you, then please share your story.',
+    word_count: 650
+  },
+  {
+    id: 'ps2',
+    prompt: 'The lessons we take from obstacles we encounter can be fundamental to later success. Recount a time when you faced a challenge, setback, or failure. How did it affect you, and what did you learn from the experience?',
+    word_count: 650
+  },
+  {
+    id: 'ps3',
+    prompt: 'Reflect on a time when you questioned or challenged a belief or idea. What prompted your thinking? What was the outcome?',
+    word_count: 650
+  },
+  {
+    id: 'ps4',
+    prompt: 'Reflect on something that someone has done for you that has made you happy or thankful in a surprising way. How has this gratitude affected or motivated you?',
+    word_count: 650
+  },
+  {
+    id: 'ps5',
+    prompt: 'Discuss an accomplishment, event, or realization that sparked a period of personal growth and a new understanding of yourself or others.',
+    word_count: 650
+  },
+  {
+    id: 'ps6',
+    prompt: 'Describe a topic, idea, or concept you find so engaging that it makes you lose all track of time. Why does it captivate you? What or who do you turn to when you want to learn more?',
+    word_count: 650
+  },
+  {
+    id: 'ps7',
+    prompt: 'Share an essay on any topic of your choice. It can be one you\'ve already written, one that responds to a different prompt, or one of your own design.',
+    word_count: 650
+  }
 ];
 
-const validateEmail = (email: string): boolean => {
-  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return re.test(email);
-};
-
 export function EssayWizard() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const analytics = useAnalytics();
-  const [step, setStep] = useState(1);
   const [essayType, setEssayType] = useState<EssayType>(null);
-  const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
-  const [selectedPrompt, setSelectedPrompt] = useState<string>('');
-  const [essayText, setEssayText] = useState('');
-  const [essayFile, setEssayFile] = useState<File | null>(null);
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
+  const [currentStep, setCurrentStep] = useState<Step>('type');
+  const [selectedSchool, setSelectedSchool] = useState<string>('');
+  const [selectedPrompt, setSelectedPrompt] = useState<EssayPrompt | null>(null);
+  const [essay, setEssay] = useState('');
+  const [studentFirstName, setStudentFirstName] = useState('');
+  const [studentLastName, setStudentLastName] = useState('');
+  const [studentEmail, setStudentEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
-  const [errors, setErrors] = useState<ValidationError>({});
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const [schools, setSchools] = useState<School[]>([]);
+  const formRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const updateSchools = () => {
-      const currentSchools = essayService.getSchools();
-      if (currentSchools.length > 0) {
-        setSchools(currentSchools);
-      }
-    };
-
-    updateSchools();
-    const interval = setInterval(updateSchools, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    if (step > 1 && containerRef.current) {
-      containerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }, [step]);
-
-  const validateForm = (): boolean => {
-    const newErrors: ValidationError = {};
-    let isValid = true;
-
-    if (!firstName.trim()) {
-      newErrors.firstName = 'First name is required';
-      isValid = false;
-    }
-
-    if (!lastName.trim()) {
-      newErrors.lastName = 'Last name is required';
-      isValid = false;
-    }
-
-    if (!email.trim()) {
-      newErrors.email = 'Email address is required';
-      isValid = false;
-    } else if (!validateEmail(email)) {
-      newErrors.email = 'Please enter a valid email address';
-      isValid = false;
-    }
-
-    if (!essayText && !essayFile) {
-      newErrors.essay = 'Please provide an essay';
-      isValid = false;
-    }
-
-    setErrors(newErrors);
-    return isValid;
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setEssayFile(file);
-      setEssayText('');
-      setErrors((prev) => ({ ...prev, essay: undefined }));
-      analytics.trackEvent({
-        action: 'file_upload',
-        category: 'essay_input',
-        label: file.name
-      });
+  const getStepNumber = () => {
+    if (essayType === 'personal') {
+      const steps: Record<Step, number> = {
+        type: 1,
+        school: 1,
+        prompt: 2,
+        essay: 3,
+        info: 4
+      };
+      return steps[currentStep];
+    } else {
+      const steps: Record<Step, number> = {
+        type: 1,
+        school: 2,
+        prompt: 3,
+        essay: 4,
+        info: 5
+      };
+      return steps[currentStep];
     }
   };
 
-  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setEssayText(e.target.value);
-    setEssayFile(null);
-    setErrors((prev) => ({ ...prev, essay: undefined }));
+  const getTotalSteps = () => {
+    return essayType === 'personal' ? 4 : 5;
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = e.target?.result;
+        if (typeof text === 'string') {
+          setEssay(text);
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  const validateEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
   const handleSubmit = async () => {
-    if (!validateForm()) {
+    setError('');
+    
+    if (!studentFirstName.trim()) {
+      setError('First name is required');
       return;
     }
 
-    setIsSubmitting(true);
-    setSubmitError(null);
+    if (!studentLastName.trim()) {
+      setError('Last name is required');
+      return;
+    }
+
+    if (!validateEmail(studentEmail)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    if (!essay.trim()) {
+      setError('Essay content is required');
+      return;
+    }
+
+    if (!selectedPrompt) {
+      setError('Please select a prompt');
+      return;
+    }
+
+    const wordCount = essay.trim().split(/\s+/).filter(Boolean).length;
+    if (wordCount > selectedPrompt.word_count) {
+      setError(`Essay exceeds the ${selectedPrompt.word_count} word limit`);
+      return;
+    }
 
     try {
-      const essayContent = essayFile 
-        ? await essayFile.text() 
-        : essayText;
-
-      const templateParams = {
-        first_name: firstName,
-        reply_to: email,
-        essay_text: essayContent,
-        essay_prompt: selectedPrompt,
-        school_name: selectedSchool?.name || 'Personal Statement',
-        essay_type: essayType || 'unknown'
-      };
-
-      const response = await emailjs.send(
-        EMAILJS_CONFIG.SERVICE_ID,
-        EMAILJS_CONFIG.TEMPLATE_ID,
-        templateParams,
-        EMAILJS_CONFIG.PUBLIC_KEY
-      );
-
-      if (response.status !== 200) {
-        throw new Error('Failed to send email');
-      }
-      
-      analytics.trackEssaySubmission({
-        essayType: essayType || 'unknown',
-        school: selectedSchool?.name,
-        promptType: selectedPrompt,
-        submissionMethod: essayFile ? 'file' : 'text'
+      setIsSubmitting(true);
+      await essayService.saveEssay({
+        student_first_name: studentFirstName.trim(),
+        student_last_name: studentLastName.trim(),
+        student_email: studentEmail.trim(),
+        student_college: 'school_id' in selectedPrompt ? selectedPrompt.school_name || null : null,
+        selected_prompt: selectedPrompt.prompt,
+        personal_statement: essayType === 'personal',
+        essay_content: essay.trim()
       });
-
+      
       setIsSuccess(true);
-    } catch (error) {
-      console.error('Error submitting essay:', error);
-      setSubmitError('Failed to submit essay. Please try again.');
-      analytics.trackError('Essay submission failed', 'EssaySubmission');
+    } catch (err) {
+      setError('Failed to submit essay. Please try again.');
+      console.error('Submit error:', err);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const resetForm = () => {
-    setStep(1);
+    setStudentFirstName('');
+    setStudentLastName('');
+    setStudentEmail('');
+    setEssay('');
+    setSelectedPrompt(null);
+    setCurrentStep('type');
     setEssayType(null);
-    setSelectedSchool(null);
-    setSelectedPrompt('');
-    setEssayText('');
-    setEssayFile(null);
-    setFirstName('');
-    setLastName('');
-    setEmail('');
     setIsSuccess(false);
-    setErrors({});
-    setSubmitError(null);
-    analytics.trackEvent({
-      action: 'form_reset',
-      category: 'user_flow'
-    });
+    setError('');
   };
 
-  const goBack = () => {
-    if (step > 1) {
-      analytics.trackNavigation({
-        from: `Step ${step}`,
-        to: `Step ${step - 1}`
-      });
-      setStep(step - 1);
+  useEffect(() => {
+    if (formRef.current && currentStep === 'info') {
+      formRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [currentStep]);
+
+  const renderStepIndicator = () => (
+    <div className="mb-8">
+      <div className="flex justify-center items-center space-x-3">
+        {Array.from({ length: getTotalSteps() }).map((_, i) => (
+          <React.Fragment key={i}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm
+              ${i + 1 === getStepNumber() 
+                ? 'bg-primary-600 text-white' 
+                : i + 1 < getStepNumber()
+                  ? 'bg-gray-200 text-gray-700'
+                  : 'bg-gray-100 text-gray-400'
+              }`}
+            >
+              {i + 1}
+            </div>
+            {i < getTotalSteps() - 1 && (
+              <div className={`w-12 h-0.5 ${
+                i + 1 < getStepNumber() ? 'bg-gray-200' : 'bg-gray-100'
+              }`} />
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderContent = () => {
+    if (isSuccess) {
+      return <SuccessMessage onReset={resetForm} />;
+    }
+
+    switch (currentStep) {
+      case 'type':
+        return (
+          <div className="space-y-6">
+            <h2 className="text-xl font-semibold text-center mb-8">What essay would you like help with?</h2>
+            <div className="grid grid-cols-1 gap-4">
+              <button
+                onClick={() => {
+                  setEssayType('personal');
+                  setCurrentStep('prompt');
+                }}
+                className="w-full p-6 border-2 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-colors group"
+              >
+                <h3 className="text-lg font-medium mb-2 group-hover:text-primary-600">Personal Statement</h3>
+                <p className="text-sm text-gray-500">Write your college application essay</p>
+              </button>
+              <button
+                onClick={() => {
+                  setEssayType('supplemental');
+                  setCurrentStep('school');
+                }}
+                className="w-full p-6 border-2 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-colors group"
+              >
+                <h3 className="text-lg font-medium mb-2 group-hover:text-primary-600">Supplemental Essays</h3>
+                <p className="text-sm text-gray-500">Write school-specific essays</p>
+              </button>
+            </div>
+          </div>
+        );
+
+      case 'school':
+      case 'prompt':
+        return (
+          <PromptSelection 
+            onPromptSelected={(prompt) => {
+              setSelectedPrompt(prompt);
+              setCurrentStep('essay');
+            }}
+            personalStatementPrompts={PERSONAL_STATEMENT_PROMPTS}
+            essayType={essayType}
+            selectedSchool={selectedSchool}
+            onSchoolSelect={setSelectedSchool}
+          />
+        );
+
+      case 'essay':
+        return (
+          <div className="space-y-6">
+            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+              <h3 className="font-medium text-gray-900 mb-2">Writing Prompt:</h3>
+              <p className="text-gray-600">{selectedPrompt?.prompt}</p>
+              <p className="mt-2 text-sm text-gray-500">
+                Word limit: {selectedPrompt?.word_count}
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Upload Essay (Optional)
+                </label>
+                <input
+                  type="file"
+                  accept=".txt,.doc,.docx"
+                  onChange={handleFileUpload}
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
+                />
+              </div>
+              
+              <textarea
+                className="w-full h-64 p-4 border rounded-lg focus:ring-2 focus:ring-primary-500 resize-none"
+                value={essay}
+                onChange={(e) => setEssay(e.target.value)}
+                placeholder="Start writing your essay here..."
+              />
+            </div>
+
+            {error && (
+              <div className="text-red-600 text-sm">{error}</div>
+            )}
+
+            <div className="flex justify-between items-center">
+              <span className={`text-sm ${
+                essay.trim().split(/\s+/).filter(Boolean).length > (selectedPrompt?.word_count || 0)
+                  ? 'text-red-600'
+                  : 'text-gray-500'
+              }`}>
+                Words: {essay.trim().split(/\s+/).filter(Boolean).length} / {selectedPrompt?.word_count}
+              </span>
+              <div className="space-x-4">
+                <button
+                  onClick={() => {
+                    setCurrentStep(essayType === 'personal' ? 'prompt' : 'school');
+                    setSelectedPrompt(null);
+                  }}
+                  className="text-sm text-primary-600 hover:text-primary-800"
+                >
+                  Choose Different Prompt
+                </button>
+                <button
+                  onClick={() => {
+                    if (!essay.trim()) {
+                      setError('Please write your essay before proceeding');
+                      return;
+                    }
+                    setError('');
+                    setCurrentStep('info');
+                  }}
+                  className="px-4 py-2 rounded-lg text-white bg-primary-600 hover:bg-primary-700 transition-colors"
+                >
+                  Request Feedback
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'info':
+        return (
+          <div ref={formRef}>
+            <StudentInfoForm
+              studentFirstName={studentFirstName}
+              studentLastName={studentLastName}
+              studentEmail={studentEmail}
+              onFirstNameChange={setStudentFirstName}
+              onLastNameChange={setStudentLastName}
+              onEmailChange={setStudentEmail}
+              onSubmit={handleSubmit}
+              onBack={() => setCurrentStep('essay')}
+              isSubmitting={isSubmitting}
+              error={error}
+            />
+          </div>
+        );
+
+      default:
+        return null;
     }
   };
 
-  const handleStepChange = (newStep: number) => {
-    analytics.trackFormStep(newStep, essayType || 'unknown');
-    setStep(newStep);
-  };
-
-  if (isSuccess) {
-    return <SuccessMessage onReset={resetForm} />;
-  }
-
-  const totalSteps = essayType === 'personal' ? 4 : 5;
-
   return (
-    <div ref={containerRef} className="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-xl">
-      <StepIndicator currentStep={step} totalSteps={totalSteps} />
-      
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-center text-gray-900 mb-8">
-          What essay would you like help with?
-        </h2>
-
-        {submitError && (
-          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">
-            {submitError}
-          </div>
-        )}
-
-        {step === 1 && (
-          <div className="space-y-4">
-            <button
-              onClick={() => {
-                setEssayType('personal');
-                handleStepChange(2);
-              }}
-              className="w-full p-4 text-left bg-white border-2 border-gray-200 rounded-lg hover:border-primary-500 transition-colors"
-            >
-              Personal Statement
-            </button>
-            <button
-              onClick={() => {
-                setEssayType('supplemental');
-                handleStepChange(2);
-              }}
-              className="w-full p-4 text-left bg-white border-2 border-gray-200 rounded-lg hover:border-primary-500 transition-colors"
-            >
-              Supplemental Essays
-            </button>
-          </div>
-        )}
-
-        {step === 2 && essayType === 'personal' && (
-          <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-            {PERSONAL_STATEMENT_PROMPTS.map((prompt, index) => (
-              <button
-                key={index}
-                onClick={() => {
-                  setSelectedPrompt(prompt);
-                  handleStepChange(3);
-                }}
-                className="w-full p-4 text-left bg-white border-2 border-gray-200 rounded-lg hover:border-primary-500 transition-colors"
-              >
-                {prompt}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {step === 2 && essayType === 'supplemental' && (
-          <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-            {schools.length > 0 ? (
-              schools.map((school) => (
-                <button
-                  key={school.name}
-                  onClick={() => {
-                    setSelectedSchool(school);
-                    handleStepChange(3);
-                  }}
-                  className="w-full p-4 text-left bg-white border-2 border-gray-200 rounded-lg hover:border-primary-500 transition-colors"
-                >
-                  <h3 className="font-semibold text-gray-900">{school.name}</h3>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {school.prompts.length} {school.prompts.length === 1 ? 'prompt' : 'prompts'} available
-                  </p>
-                </button>
-              ))
-            ) : (
-              <div className="text-center text-gray-600 py-8">
-                <MessageSquare className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                <p>No supplemental essays available yet.</p>
-                <p className="text-sm mt-2">Please check back later or contact support.</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {step === 3 && essayType === 'supplemental' && selectedSchool && (
-          <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-            {selectedSchool.prompts.map((prompt, index) => (
-              <button
-                key={index}
-                onClick={() => {
-                  setSelectedPrompt(prompt.prompt);
-                  handleStepChange(4);
-                }}
-                className="w-full p-4 text-left bg-white border-2 border-gray-200 rounded-lg hover:border-primary-500 transition-colors"
-              >
-                <p className="text-gray-900 mb-2">{prompt.prompt}</p>
-                <p className="text-sm text-gray-600">Word limit: {prompt.wordCount}</p>
-              </button>
-            ))}
-          </div>
-        )}
-
-        {((essayType === 'personal' && step === 3) || (essayType === 'supplemental' && step === 4)) && (
-          <div className="space-y-6">
-            <div className="space-y-4">
-              <textarea
-                placeholder="Enter your essay here..."
-                value={essayText}
-                onChange={handleTextChange}
-                disabled={!!essayFile}
-                className={`w-full h-64 p-4 border-2 rounded-lg focus:ring-primary-500 ${
-                  errors.essay ? 'border-red-500' : 'border-gray-200 focus:border-primary-500'
-                }`}
-              />
-              {errors.essay && (
-                <p className="text-sm text-red-600 mt-1">{errors.essay}</p>
-              )}
-              <div className="text-center">
-                <span className="text-gray-500">or</span>
-              </div>
-              <div className="flex justify-center">
-                <label className="cursor-pointer">
-                  <input
-                    type="file"
-                    accept=".txt,.doc,.docx,.pdf"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                  <div className="flex items-center space-x-2 text-primary-600 hover:text-primary-700">
-                    <Upload className="w-5 h-5" />
-                    <span>{essayFile ? essayFile.name : 'Upload File'}</span>
-                  </div>
-                </label>
-              </div>
-            </div>
-            {(essayText || essayFile) && (
-              <button
-                onClick={() => handleStepChange(step + 1)}
-                className="w-full bg-primary-600 text-white px-6 py-3 rounded-full hover:bg-primary-700 transition-colors"
-              >
-                Request Feedback
-              </button>
-            )}
-          </div>
-        )}
-
-        {((essayType === 'personal' && step === 4) || (essayType === 'supplemental' && step === 5)) && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  First Name
-                </label>
-                <input
-                  type="text"
-                  value={firstName}
-                  onChange={(e) => {
-                    setFirstName(e.target.value);
-                    setErrors((prev) => ({ ...prev, firstName: undefined }));
-                  }}
-                  className={`w-full p-2 border-2 rounded-lg ${
-                    errors.firstName ? 'border-red-500' : 'border-gray-200'
-                  }`}
-                />
-                {errors.firstName && (
-                  <p className="text-sm text-red-600 mt-1">{errors.firstName}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Last Name
-                </label>
-                <input
-                  type="text"
-                  value={lastName}
-                  onChange={(e) => {
-                    setLastName(e.target.value);
-                    setErrors((prev) => ({ ...prev, lastName: undefined }));
-                  }}
-                  className={`w-full p-2 border-2 rounded-lg ${
-                    errors.lastName ? 'border-red-500' : 'border-gray-200'
-                  }`}
-                />
-                {errors.lastName && (
-                  <p className="text-sm text-red-600 mt-1">{errors.lastName}</p>
-                )}
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email Address
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  setErrors((prev) => ({ ...prev, email: undefined }));
-                }}
-                className={`w-full p-2 border-2 rounded-lg ${
-                  errors.email ? 'border-red-500' : 'border-gray-200'
-                }`}
-              />
-              {errors.email && (
-                <p className="text-sm text-red-600 mt-1">{errors.email}</p>
-              )}
-            </div>
-            <button
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              className="w-full bg-primary-600 text-white px-6 py-3 rounded-full hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Submitting...</span>
-                </div>
-              ) : (
-                'Submit Essay'
-              )}
-            </button>
-          </div>
-        )}
+    <div className="max-w-4xl mx-auto p-6">
+      <div className="bg-white p-8 rounded-lg shadow-lg">
+        {renderStepIndicator()}
+        {renderContent()}
       </div>
-
-      {step > 1 && (
-        <button
-          onClick={goBack}
-          className="flex items-center text-gray-600 hover:text-primary-600 transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          Back
-        </button>
-      )}
     </div>
   );
 }
