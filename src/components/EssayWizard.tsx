@@ -356,7 +356,7 @@ export function EssayWizard() {
               studentLastName={studentLastName}
               studentEmail={studentEmail}
               onFirstNameChange={setStudentFirstName}
-              onLastNameChange={setLastNameName}
+              onLastNameChange={setStudentLastName}
               onEmailChange={setStudentEmail}
               onSubmit={handleSubmit}
               onBack={() => setCurrentStep('essay')}
