@@ -178,27 +178,41 @@ export function EssayWizard() {
   }, [currentStep]);
 
   const renderStepIndicator = () => (
-    <div className="mb-8">
-      <div className="flex justify-center items-center space-x-3">
+    <div className="mb-12">
+      <div className="flex justify-center items-center">
         {Array.from({ length: getTotalSteps() }).map((_, i) => (
           <React.Fragment key={i}>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm
-              ${i + 1 === getStepNumber() 
-                ? 'bg-primary-600 text-white' 
-                : i + 1 < getStepNumber()
-                  ? 'bg-gray-200 text-gray-700'
-                  : 'bg-gray-100 text-gray-400'
-              }`}
+            <div 
+              className={`
+                relative flex items-center justify-center
+                w-8 h-8 sm:w-12 sm:h-12 rounded-full transition-all duration-200
+                ${i + 1 === getStepNumber() 
+                  ? 'bg-primary-600 text-white ring-4 ring-primary-100' 
+                  : i + 1 < getStepNumber()
+                    ? 'bg-primary-100 text-primary-600'
+                    : 'bg-gray-100 text-gray-400'
+                }
+              `}
             >
-              {i + 1}
+              <span className="relative z-10 hidden sm:inline text-lg font-medium">{i + 1}</span>
+              <span className="relative z-10 sm:hidden w-2 h-2 rounded-full bg-current"></span>
             </div>
             {i < getTotalSteps() - 1 && (
-              <div className={`w-12 h-0.5 ${
-                i + 1 < getStepNumber() ? 'bg-gray-200' : 'bg-gray-100'
-              }`} />
+              <div 
+                className={`
+                  h-1 mx-2 sm:mx-4 transition-all duration-200 w-12 sm:w-24
+                  ${i + 1 < getStepNumber() 
+                    ? 'bg-primary-100' 
+                    : 'bg-gray-100'
+                  }
+                `}
+              />
             )}
           </React.Fragment>
         ))}
+      </div>
+      <div className="flex justify-center mt-4 text-sm text-gray-500">
+        Step {getStepNumber()} of {getTotalSteps()}
       </div>
     </div>
   );
@@ -250,6 +264,15 @@ export function EssayWizard() {
             essayType={essayType}
             selectedSchool={selectedSchool}
             onSchoolSelect={setSelectedSchool}
+            onBack={() => {
+              if (currentStep === 'prompt' && essayType === 'personal') {
+                setCurrentStep('type');
+              } else if (currentStep === 'prompt') {
+                setCurrentStep('school');
+              } else {
+                setCurrentStep('type');
+              }
+            }}
           />
         );
 
