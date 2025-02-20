@@ -52,18 +52,37 @@ export const essayService = {
     })) || [];
   },
 
-  async saveEssay(essay: Essay): Promise<void> {
-    // First save to Supabase
+  async saveEssay(essay: Essay, auth0UserId: string): Promise<void> {
+    // Get the profile ID for the Auth0 user
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('auth0_user_id', auth0UserId)
+      .single();
+
+    if (profileError || !profile) {
+      throw new Error('User profile not found');
+    }
+
+    // Save the essay with the profile ID
     const { error } = await supabase
       .from('essays')
-      .insert(essay);
+      .insert({
+        profile_id: profile.id,
+        school_id: essay.student_college ? essay.student_college : null,
+        prompt: essay.selected_prompt,
+        essay_content: essay.essay_content,
+        word_count: essay.essay_content.trim().split(/\s+/).length,
+        is_personal_statement: essay.personal_statement,
+        feedback_status: 'pending'
+      });
       
     if (error) {
       console.error('Error saving essay:', error.message);
       throw error;
     }
 
-    // Then send email notification
+    // Send email notification
     try {
       await emailjs.send(
         EMAILJS_CONFIG.SERVICE_ID,
@@ -86,14 +105,32 @@ export const essayService = {
     }
   },
 
-  async deleteEssay(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('essays')
-      .delete()
-      .eq('id', id);
-      
-    if (error) {
-      console.error('Error deleting essay:', error);
+  async getUserEssays(auth0UserId: string) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('auth0_user_id', auth0UserId)
+      .single();
+
+    if (!profile) {
+      throw new Error('User profile not found');
     }
+
+    const { data: essays, error } = await supabase
+      .from('essays')
+      .select(`
+        *,
+        schools (
+          name
+        )
+      `)
+      .eq('profile_id', profile.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      throw error;
+    }
+
+    return essays;
   }
 };
