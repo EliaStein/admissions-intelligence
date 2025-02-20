@@ -1,5 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Auth0ProviderWithHistory } from './auth/Auth0ProviderWithHistory';
+import { PrivateRoute } from './auth/PrivateRoute';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { Features } from './components/Features';
@@ -10,6 +12,7 @@ import { EssayDashboard } from './components/EssayDashboard';
 import { AdminLogin } from './components/AdminLogin';
 import { useAuth } from './hooks/useAuth';
 import { useAnalytics } from './hooks/useAnalytics';
+import { EssayWizard } from './components/EssayWizard';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -45,6 +48,10 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/essay-wizard"
+        element={<PrivateRoute component={EssayWizard} />}
+      />
     </Routes>
   );
 }
@@ -52,7 +59,9 @@ function AppRoutes() {
 export function App() {
   return (
     <Router>
-      <AppRoutes />
+      <Auth0ProviderWithHistory>
+        <AppRoutes />
+      </Auth0ProviderWithHistory>
     </Router>
   );
 }
