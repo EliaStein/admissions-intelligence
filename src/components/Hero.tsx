@@ -1,8 +1,19 @@
 import React from 'react';
 import { ShieldCheck, GraduationCap } from 'lucide-react';
 import { EssayWizard } from './EssayWizard';
+import { useAuth0 } from '@auth0/auth0-react';
 
 export function Hero() {
+  const { isAuthenticated, loginWithRedirect, isLoading } = useAuth0();
+
+  const handleSignUp = () => {
+    loginWithRedirect({
+      authorizationParams: {
+        screen_hint: 'signup',
+      },
+    });
+  };
+
   return (
     <section className="relative bg-gradient-to-b from-white via-primary-50/30 to-white">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
@@ -25,7 +36,44 @@ export function Hero() {
           </div>
 
           <div className="essay-form-section mb-16">
-            <EssayWizard />
+            {isLoading ? (
+              <div className="flex justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+              </div>
+            ) : isAuthenticated ? (
+              <EssayWizard />
+            ) : (
+              <div className="max-w-md mx-auto bg-white p-8 rounded-lg shadow-lg">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                  Get Started with Your Essay
+                </h2>
+                <p className="text-gray-600 mb-6">
+                  Join thousands of students who have improved their college essays with our AI-powered platform.
+                </p>
+                <div className="space-y-4">
+                  <button
+                    onClick={handleSignUp}
+                    className="w-full bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 transition-colors"
+                  >
+                    Create Account
+                  </button>
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-200"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-2 bg-white text-gray-500">or</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => loginWithRedirect()}
+                    className="w-full bg-white text-primary-600 px-6 py-3 rounded-lg border-2 border-primary-600 hover:bg-primary-50 transition-colors"
+                  >
+                    Log In to Existing Account
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="mt-16">
