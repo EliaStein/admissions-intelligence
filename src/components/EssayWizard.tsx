@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { useAuth0 } from '@auth0/auth0-react';
 import { PromptSelection } from './PromptSelection';
 import { StudentInfoForm } from './StudentInfoForm';
 import { SuccessMessage } from './SuccessMessage';
@@ -47,6 +48,7 @@ const PERSONAL_STATEMENT_PROMPTS = [
 ];
 
 export function EssayWizard() {
+  const { user } = useAuth0();
   const [essayType, setEssayType] = useState<EssayType>(null);
   const [currentStep, setCurrentStep] = useState<Step>('type');
   const [selectedSchool, setSelectedSchool] = useState<string>('');
@@ -107,6 +109,11 @@ export function EssayWizard() {
   const handleSubmit = async () => {
     setError('');
     
+    if (!user) {
+      setError('You must be logged in to submit an essay');
+      return;
+    }
+
     if (!studentFirstName.trim()) {
       setError('First name is required');
       return;
@@ -148,7 +155,7 @@ export function EssayWizard() {
         selected_prompt: selectedPrompt.prompt,
         personal_statement: essayType === 'personal',
         essay_content: essay.trim()
-      });
+      }, user.sub);
       
       setIsSuccess(true);
     } catch (err) {
