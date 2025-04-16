@@ -460,18 +460,20 @@ export function EssayWizard() {
                       setError('Please write your essay before proceeding');
                       return;
                     }
+                    
                     setError('');
                     
-                    // If user is authenticated, submit directly instead of going to info step
                     if (user && userProfileLoaded) {
+                      // For authenticated users, submit directly
                       handleSubmit();
                     } else {
+                      // For unauthenticated users, go to the info step
                       setCurrentStep('info');
                     }
                   }}
                   className="px-4 py-2 rounded-lg text-white bg-primary-600 hover:bg-primary-700 transition-colors"
                 >
-                  Request Feedback
+                  {isSubmitting ? 'Submitting...' : 'Request Feedback'}
                 </button>
               </div>
             </div>
