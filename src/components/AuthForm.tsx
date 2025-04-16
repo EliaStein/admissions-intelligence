@@ -46,11 +46,29 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
 
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
-        if (error) throw error;
+        
+        if (error) {
+          // More specific error messages based on error type
+          if (error.message.includes("Invalid login credentials")) {
+            // Check if email exists but password is wrong
+            const { count } = await supabase
+              .from('users')
+              .select('*', { count: 'exact', head: true })
+              .eq('email', email.toLowerCase());
+              
+            if (count && count > 0) {
+              throw new Error('Incorrect password. Please try again or reset your password.');
+            } else {
+              throw new Error('No account found with this email address. Please check the email or create a new account.');
+            }
+          } else {
+            throw error;
+          }
+        }
       } else {
         // Validate password requirements
         if (!validatePassword(password)) {
