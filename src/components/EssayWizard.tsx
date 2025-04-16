@@ -4,9 +4,11 @@ import { StudentInfoForm } from './StudentInfoForm';
 import { SuccessMessage } from './SuccessMessage';
 import { EssayPrompt } from '../types/prompt';
 import { essayService } from '../services/essayService';
+import { useAuth } from '../hooks/useAuth';
+import { supabase } from '../lib/supabase';
 
 type EssayType = 'personal' | 'supplemental' | null;
-type Step = 'type' | 'school' | 'prompt' | 'essay' | 'info';
+type Step = 'type' | 'school' | 'prompt' | 'essay' | 'info' | 'confirm';
 
 const PERSONAL_STATEMENT_PROMPTS = [
   {
@@ -47,6 +49,7 @@ const PERSONAL_STATEMENT_PROMPTS = [
 ];
 
 export function EssayWizard() {
+  const { user } = useAuth();
   const [essayType, setEssayType] = useState<EssayType>(null);
   const [currentStep, setCurrentStep] = useState<Step>('type');
   const [selectedSchool, setSelectedSchool] = useState<string>('');
@@ -58,32 +61,86 @@ export function EssayWizard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
+  const [userProfileLoaded, setUserProfileLoaded] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
 
+  // Load user profile data when component mounts
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      if (user) {
+        try {
+          const { data, error } = await supabase
+            .from('users')
+            .select('first_name, last_name, email')
+            .eq('id', user.id)
+            .single();
+          
+          if (error) throw error;
+          
+          if (data) {
+            setStudentFirstName(data.first_name);
+            setStudentLastName(data.last_name);
+            setStudentEmail(data.email);
+            setUserProfileLoaded(true);
+          }
+        } catch (err) {
+          console.error('Error loading user profile:', err);
+        }
+      }
+    };
+    
+    loadUserProfile();
+  }, [user]);
+
+  // Map steps to numbers based on essay type and auth status
   const getStepNumber = () => {
-    if (essayType === 'personal') {
-      const steps: Record<Step, number> = {
-        type: 1,
-        school: 1,
-        prompt: 2,
-        essay: 3,
-        info: 4
-      };
-      return steps[currentStep];
+    if (!user) {
+      // For unauthenticated users
+      if (essayType === 'personal') {
+        switch (currentStep) {
+          case 'type': return 1;
+          case 'prompt': return 2;
+          case 'essay': return 3;
+          case 'info': return 4;
+          default: return 1;
+        }
+      } else { // supplemental
+        switch (currentStep) {
+          case 'type': return 1;
+          case 'school': return 2;
+          case 'prompt': return 3;
+          case 'essay': return 4;
+          case 'info': return 5;
+          default: return 1;
+        }
+      }
     } else {
-      const steps: Record<Step, number> = {
-        type: 1,
-        school: 2,
-        prompt: 3,
-        essay: 4,
-        info: 5
-      };
-      return steps[currentStep];
+      // For authenticated users
+      if (essayType === 'personal') {
+        switch (currentStep) {
+          case 'type': return 1;
+          case 'prompt': return 2;
+          case 'essay': return 3;
+          default: return 1;
+        }
+      } else { // supplemental
+        switch (currentStep) {
+          case 'type': return 1;
+          case 'school': return 2;
+          case 'prompt': return 3;
+          case 'essay': return 4;
+          default: return 1;
+        }
+      }
     }
   };
 
   const getTotalSteps = () => {
-    return essayType === 'personal' ? 4 : 5;
+    if (!user) {
+      return essayType === 'personal' ? 4 : 5;
+    } else {
+      return essayType === 'personal' ? 3 : 4;
+    }
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -107,6 +164,47 @@ export function EssayWizard() {
   const handleSubmit = async () => {
     setError('');
     
+    // For authenticated users, validate only the essay content
+    if (user) {
+      if (!essay.trim()) {
+        setError('Essay content is required');
+        return;
+      }
+
+      if (!selectedPrompt) {
+        setError('Please select a prompt');
+        return;
+      }
+
+      const wordCount = essay.trim().split(/\s+/).filter(Boolean).length;
+      if (wordCount > selectedPrompt.word_count) {
+        setError(`Essay exceeds the ${selectedPrompt.word_count} word limit`);
+        return;
+      }
+
+      try {
+        setIsSubmitting(true);
+        await essayService.saveEssay({
+          student_first_name: studentFirstName.trim(),
+          student_last_name: studentLastName.trim(),
+          student_email: studentEmail.trim(),
+          student_college: 'school_id' in selectedPrompt ? selectedPrompt.school_name || null : null,
+          selected_prompt: selectedPrompt.prompt,
+          personal_statement: essayType === 'personal',
+          essay_content: essay.trim()
+        });
+        
+        setIsSuccess(true);
+      } catch (err) {
+        setError('Failed to submit essay. Please try again.');
+        console.error('Submit error:', err);
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
+    
+    // For non-authenticated users, validate all fields
     if (!studentFirstName.trim()) {
       setError('First name is required');
       return;
@@ -160,11 +258,12 @@ export function EssayWizard() {
   };
 
   const resetForm = () => {
-    setStudentFirstName('');
-    setStudentLastName('');
-    setStudentEmail('');
+    setStudentFirstName(user ? studentFirstName : '');
+    setStudentLastName(user ? studentLastName : '');
+    setStudentEmail(user ? studentEmail : '');
     setEssay('');
     setSelectedPrompt(null);
+    setSelectedSchool('');
     setCurrentStep('type');
     setEssayType(null);
     setIsSuccess(false);
@@ -253,6 +352,28 @@ export function EssayWizard() {
         );
 
       case 'school':
+        return (
+          <PromptSelection 
+            onPromptSelected={(prompt) => {
+              setSelectedPrompt(prompt);
+              setCurrentStep('essay');
+            }}
+            personalStatementPrompts={PERSONAL_STATEMENT_PROMPTS}
+            essayType={essayType}
+            selectedSchool={selectedSchool}
+            onSchoolSelect={(schoolId) => {
+              setSelectedSchool(schoolId);
+              // If a school is selected, move to the prompt selection step
+              if (schoolId) {
+                setCurrentStep('prompt');
+              }
+            }}
+            onBack={() => {
+              setCurrentStep('type');
+            }}
+          />
+        );
+
       case 'prompt':
         return (
           <PromptSelection 
@@ -263,14 +384,17 @@ export function EssayWizard() {
             personalStatementPrompts={PERSONAL_STATEMENT_PROMPTS}
             essayType={essayType}
             selectedSchool={selectedSchool}
-            onSchoolSelect={setSelectedSchool}
-            onBack={() => {
-              if (currentStep === 'prompt' && essayType === 'personal') {
-                setCurrentStep('type');
-              } else if (currentStep === 'prompt') {
+            onSchoolSelect={(schoolId) => {
+              setSelectedSchool(schoolId);
+              if (!schoolId && essayType === 'supplemental') {
                 setCurrentStep('school');
-              } else {
+              }
+            }}
+            onBack={() => {
+              if (essayType === 'personal') {
                 setCurrentStep('type');
+              } else {
+                setCurrentStep('school');
               }
             }}
           />
@@ -323,7 +447,7 @@ export function EssayWizard() {
               <div className="space-x-4">
                 <button
                   onClick={() => {
-                    setCurrentStep(essayType === 'personal' ? 'prompt' : 'school');
+                    setCurrentStep(essayType === 'personal' ? 'prompt' : 'prompt');
                     setSelectedPrompt(null);
                   }}
                   className="text-sm text-primary-600 hover:text-primary-800"
@@ -336,12 +460,20 @@ export function EssayWizard() {
                       setError('Please write your essay before proceeding');
                       return;
                     }
+                    
                     setError('');
-                    setCurrentStep('info');
+                    
+                    if (user && userProfileLoaded) {
+                      // For authenticated users, submit directly
+                      handleSubmit();
+                    } else {
+                      // For unauthenticated users, go to the info step
+                      setCurrentStep('info');
+                    }
                   }}
                   className="px-4 py-2 rounded-lg text-white bg-primary-600 hover:bg-primary-700 transition-colors"
                 >
-                  Request Feedback
+                  {isSubmitting ? 'Submitting...' : 'Request Feedback'}
                 </button>
               </div>
             </div>
@@ -349,6 +481,7 @@ export function EssayWizard() {
         );
 
       case 'info':
+        // Only needed for non-authenticated users, authenticated users should never reach this case
         return (
           <div ref={formRef}>
             <StudentInfoForm

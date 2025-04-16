@@ -1,8 +1,12 @@
 import React from 'react';
 import { ShieldCheck, GraduationCap } from 'lucide-react';
 import { EssayWizard } from './EssayWizard';
+import { useAuth } from '../hooks/useAuth';
+import { AuthForm } from './AuthForm';
 
 export function Hero() {
+  const { user } = useAuth();
+
   return (
     <section className="relative bg-gradient-to-b from-white via-primary-50/30 to-white">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
@@ -25,7 +29,7 @@ export function Hero() {
           </div>
 
           <div className="essay-form-section mb-16">
-            <EssayWizard />
+            {user ? <EssayWizard /> : <AuthForm />}
           </div>
 
           <div className="mt-16">

@@ -8,13 +8,11 @@ import { Testimonials } from './components/Testimonials';
 import { Footer } from './components/Footer';
 import { EssayDashboard } from './components/EssayDashboard';
 import { AdminLogin } from './components/AdminLogin';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { EssayWizard } from './components/EssayWizard';
+import { Profile } from './components/Profile';
 import { useAuth } from './hooks/useAuth';
 import { useAnalytics } from './hooks/useAnalytics';
-
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth();
-  return isAuthenticated ? <>{children}</> : <AdminLogin />;
-}
 
 function HomePage() {
   return (
@@ -32,15 +30,42 @@ function HomePage() {
 }
 
 function AppRoutes() {
-  useAnalytics(); // Initialize analytics inside Router context
+  useAnalytics();
+  const { isAuthenticated } = useAuth();
   
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route
-        path="/admin/essays"
+        path="/essay-wizard"
         element={
           <ProtectedRoute>
+            <div className="min-h-screen bg-gray-50">
+              <Header />
+              <div className="essay-form-section py-12">
+                <EssayWizard />
+              </div>
+              <Footer />
+            </div>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <div className="min-h-screen bg-gray-50">
+              <Header />
+              <Profile />
+              <Footer />
+            </div>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/essays"
+        element={
+          <ProtectedRoute adminOnly>
             <EssayDashboard />
           </ProtectedRoute>
         }

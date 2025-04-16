@@ -23,11 +23,4 @@ try {
   );
 }
 
-let supabase;
-try {
-  supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
-} catch (error) {
-  throw new Error(`Failed to create Supabase client: ${error.message}`);
-}
-
-export { supabase };
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
