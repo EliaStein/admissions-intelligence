@@ -235,7 +235,7 @@ export function EssayWizard() {
       }
 
       const wordCount = essay.trim().split(/\s+/).filter(Boolean).length;
-      if (wordCount > selectedPrompt.word_count) {
+      if (wordCount > selectedPrompt.word_count * 2) {
         setError(`Essay exceeds the ${selectedPrompt.word_count} word limit`);
         return;
       }
@@ -289,7 +289,7 @@ export function EssayWizard() {
     }
 
     const wordCount = essay.trim().split(/\s+/).filter(Boolean).length;
-    if (wordCount > selectedPrompt.word_count) {
+    if (wordCount > selectedPrompt.word_count * 2) {
       setError(`Essay exceeds the ${selectedPrompt.word_count} word limit`);
       return;
     }
