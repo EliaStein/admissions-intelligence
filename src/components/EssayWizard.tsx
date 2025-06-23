@@ -10,10 +10,8 @@ import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import mammoth from 'mammoth';
 
-// Dynamic import for PDF.js to handle server-side rendering
-let pdfjsLib: any = null;
-
 // Configure PDF.js worker for Next.js (client-side only)
+let pdfjsLib: any = null;
 if (typeof window !== 'undefined') {
   // Use dynamic import to load PDF.js only on the client side
   import('pdfjs-dist').then((pdfjs) => {
@@ -171,17 +169,13 @@ export function EssayWizard() {
       let extractedText = '';
 
       if (fileExtension === 'docx') {
-        // Handle .docx files using mammoth
         const arrayBuffer = await file.arrayBuffer();
         const result = await mammoth.extractRawText({ arrayBuffer });
         extractedText = result.value;
       } else if (fileExtension === 'doc') {
-        // .doc files are not supported in browser environments due to their complex binary format
-        // Suggest user to convert to .docx or .txt format
         setError('Legacy .doc files are not supported in the browser. Please save your document as .docx or .txt format and try again.');
         return;
       } else if (fileExtension === 'pdf') {
-        // Handle PDF files using pdfjs-dist (client-side only)
         if (!pdfjsLib) {
           setError('PDF processing is not available. Please try again in a moment.');
           return;
@@ -197,7 +191,6 @@ export function EssayWizard() {
           const textContent = await page.getTextContent();
           const pageText = textContent.items
             .map((item: any) => {
-              // PDF.js text items can be either TextItem or TextMarkedContent
               if ('str' in item) {
                 return item.str;
               }
@@ -209,13 +202,12 @@ export function EssayWizard() {
 
         extractedText = fullText.trim();
       } else if (fileExtension === 'txt') {
-        // Handle .txt files using FileReader
         const reader = new FileReader();
         reader.onload = (e) => {
           const text = e.target?.result;
           if (typeof text === 'string') {
             setEssay(text);
-            setError(''); // Clear any previous errors
+            setError('');
           }
         };
         reader.readAsText(file);

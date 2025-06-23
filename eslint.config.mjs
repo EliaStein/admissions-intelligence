@@ -31,7 +31,7 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      // Turn specific errors into warnings
+      // For backwards compatibility TODO: go to strict mode
       '@typescript-eslint/no-unused-vars': 'warn',
       '@typescript-eslint/no-explicit-any': 'warn',
       'react/no-unescaped-entities': 'warn',

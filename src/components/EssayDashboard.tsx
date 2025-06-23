@@ -18,14 +18,14 @@ export function EssayDashboard() {
       try {
         const schoolsData = await essayService.getSchools();
         setSchools(schoolsData);
-        setLastUpdate(new Date()); // For now, just use current time
+        setLastUpdate(new Date()); // For now, just use current time TODO: add timestamp to schools table
       } catch (error) {
         console.error('Error loading schools:', error);
       }
     };
 
     updateSchoolsList();
-    const interval = setInterval(updateSchoolsList, 5000); // Check every 5 seconds instead of 1
+    const interval = setInterval(updateSchoolsList, 1000);
     return () => clearInterval(interval);
   }, []);
 
