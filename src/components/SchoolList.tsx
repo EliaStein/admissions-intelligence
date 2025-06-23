@@ -11,7 +11,7 @@ interface SchoolListProps {
 }
 
 export function SchoolList({ schools: propSchools }: SchoolListProps) {
-  const observer = useRef<IntersectionObserver>();
+  const observer = useRef<IntersectionObserver | null>(null);
   const {
     schools: hookSchools,
     loading,

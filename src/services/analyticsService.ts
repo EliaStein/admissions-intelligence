@@ -4,8 +4,8 @@ import type { AnalyticsEvent, EssaySubmissionEvent, NavigationEvent } from '../c
 declare global {
   interface Window {
     gtag: (
-      command: 'event' | 'config' | 'set',
-      action: string,
+      command: 'event' | 'config' | 'set' | 'js',
+      action: string | Date,
       params?: Record<string, any>
     ) => void;
     dataLayer: any[];
