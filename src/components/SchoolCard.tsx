@@ -1,13 +1,15 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp, GraduationCap } from 'lucide-react';
 import { schoolService } from '../services/schoolService';
 import type { Database } from '../types/supabase';
 
-type School = Database['public']['Tables']['schools']['Row'];
+type DatabaseSchool = Database['public']['Tables']['schools']['Row'];
 type EssayPrompt = Database['public']['Tables']['essay_prompts']['Row'];
 
 interface SchoolCardProps {
-  school: School;
+  school: DatabaseSchool | { id: string; name: string; prompt_count?: number };
 }
 
 export function SchoolCard({ school }: SchoolCardProps) {

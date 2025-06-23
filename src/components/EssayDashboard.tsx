@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { CSVUploader } from './CSVUploader';
 import { SchoolList } from './SchoolList';
@@ -12,13 +14,18 @@ export function EssayDashboard() {
   const { logout } = useAuth();
 
   useEffect(() => {
-    const updateSchoolsList = () => {
-      setSchools(essayService.getSchools());
-      setLastUpdate(essayService.getLastUpdateTime());
+    const updateSchoolsList = async () => {
+      try {
+        const schoolsData = await essayService.getSchools();
+        setSchools(schoolsData);
+        setLastUpdate(new Date()); // For now, just use current time
+      } catch (error) {
+        console.error('Error loading schools:', error);
+      }
     };
 
     updateSchoolsList();
-    const interval = setInterval(updateSchoolsList, 1000);
+    const interval = setInterval(updateSchoolsList, 5000); // Check every 5 seconds instead of 1
     return () => clearInterval(interval);
   }, []);
 

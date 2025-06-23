@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { PromptSelection } from './PromptSelection';
 import { StudentInfoForm } from './StudentInfoForm';
@@ -9,8 +11,13 @@ import { supabase } from '../lib/supabase';
 import mammoth from 'mammoth';
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Configure PDF.js worker using CDN
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+// Configure PDF.js worker for Next.js
+if (typeof window !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+    'pdfjs-dist/build/pdf.worker.min.mjs',
+    import.meta.url
+  ).toString();
+}
 
 type EssayType = 'personal' | 'supplemental' | null;
 type Step = 'type' | 'school' | 'prompt' | 'essay' | 'info' | 'confirm';
@@ -390,7 +397,7 @@ export function EssayWizard() {
                   setEssayType('personal');
                   setCurrentStep('prompt');
                 }}
-                className="w-full p-6 border-2 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-colors group"
+                className="w-full p-6 border-2 rounded-lg border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-colors group"
               >
                 <h3 className="text-lg font-medium mb-2 group-hover:text-primary-600">Personal Statement</h3>
                 <p className="text-sm text-gray-500">Write your college application essay</p>
@@ -400,7 +407,7 @@ export function EssayWizard() {
                   setEssayType('supplemental');
                   setCurrentStep('school');
                 }}
-                className="w-full p-6 border-2 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-colors group"
+                className="w-full p-6 border-2 rounded-lg border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-colors group"
               >
                 <h3 className="text-lg font-medium mb-2 group-hover:text-primary-600">Supplemental Essays</h3>
                 <p className="text-sm text-gray-500">Write school-specific essays</p>
@@ -480,13 +487,13 @@ export function EssayWizard() {
                   onChange={handleFileUpload}
                   className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
                 />
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 ml-2 text-xs text-gray-500 text-left">
                   Supported formats: .txt, .docx, .pdf (For .doc files, please save as .docx first)
                 </p>
               </div>
               
               <textarea
-                className="w-full h-64 p-4 border rounded-lg focus:ring-2 focus:ring-primary-500 resize-none"
+                className="w-full h-64 p-4 border rounded-lg focus:ring-2 border-gray-200 focus:ring-primary-500 resize-none"
                 value={essay}
                 onChange={(e) => setEssay(e.target.value)}
                 placeholder="Start writing your essay here..."

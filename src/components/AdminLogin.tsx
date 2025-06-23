@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { Lock } from 'lucide-react';

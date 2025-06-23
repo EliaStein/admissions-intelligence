@@ -58,11 +58,16 @@ export const schoolService = {
   },
 
   subscribeToSchools(callback: (schools: School[]) => void) {
-    return supabase
-      .from('schools')
-      .on('*', (payload) => {
-        this.getSchools().then(({ schools }) => callback(schools));
-      })
+    const channel = supabase
+      .channel('schools-changes')
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'schools' },
+        (payload) => {
+          this.getSchools().then(({ schools }) => callback(schools));
+        }
+      )
       .subscribe();
+
+    return channel;
   }
 };

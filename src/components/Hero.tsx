@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { ShieldCheck, GraduationCap } from 'lucide-react';
 import { EssayWizard } from './EssayWizard';
@@ -8,7 +10,7 @@ export function Hero() {
   const { user } = useAuth();
 
   return (
-    <section className="relative bg-gradient-to-b from-white via-primary-50/30 to-white">
+    <section className="relative bg-linear-to-b from-white via-primary-50/30 to-white">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
         <div className="text-center">
           <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-8">

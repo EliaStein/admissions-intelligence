@@ -48,7 +48,7 @@ export const essayService = {
     
     return data?.map(prompt => ({
       ...prompt,
-      school_name: prompt.schools.name
+      school_name: (prompt.schools as any)?.name || ''
     })) || [];
   },
 

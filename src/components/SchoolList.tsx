@@ -1,18 +1,28 @@
+'use client';
+
 import React, { useRef, useCallback } from 'react';
 import { Search } from 'lucide-react';
 import { SchoolCard } from './SchoolCard';
 import { useSchools } from '../hooks/useSchools';
+import { School } from '../types/essay';
 
-export function SchoolList() {
+interface SchoolListProps {
+  schools?: School[];
+}
+
+export function SchoolList({ schools: propSchools }: SchoolListProps) {
   const observer = useRef<IntersectionObserver>();
   const {
-    schools,
+    schools: hookSchools,
     loading,
     error,
     hasMore,
     loadMore,
     handleSearch
   } = useSchools();
+
+  // Use prop schools if provided, otherwise use hook schools
+  const schools = propSchools || hookSchools;
 
   const lastSchoolElementRef = useCallback((node: HTMLDivElement | null) => {
     if (loading) return;

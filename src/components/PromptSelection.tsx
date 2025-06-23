@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { essayService } from '../services/essayService';
 import { School, BasePrompt, SchoolPrompt } from '../types/prompt';
@@ -77,7 +79,7 @@ export function PromptSelection({
           <h2 className="text-xl font-semibold">Select Personal Statement Prompt</h2>
           <button
             onClick={onBack}
-            className="text-sm text-primary-600 hover:text-primary-800"
+            className="text-sm text-primary-600  hover:text-primary-800"
           >
             Back
           </button>
@@ -87,7 +89,7 @@ export function PromptSelection({
             <button
               key={prompt.id}
               onClick={() => onPromptSelected(prompt)}
-              className="w-full text-left p-4 border rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-colors"
+              className="w-full text-left p-4 border rounded-lg border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-colors"
             >
               <p className="text-gray-900">{prompt.prompt}</p>
               <p className="text-sm text-gray-500 mt-2">
@@ -108,7 +110,7 @@ export function PromptSelection({
           <h2 className="text-xl font-semibold">Select School</h2>
           <button
             onClick={onBack}
-            className="text-sm text-primary-600 hover:text-primary-800"
+            className="text-sm text-primary-600 border-gray-200 hover:text-primary-800"
           >
             Back
           </button>
@@ -118,7 +120,7 @@ export function PromptSelection({
             <button
               key={school.id}
               onClick={() => onSchoolSelect(school.id)}
-              className="w-full text-left p-4 border rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-colors"
+              className="w-full text-left p-4 border rounded-lg border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-colors"
             >
               <h3 className="font-medium text-gray-900">{school.name}</h3>
               <p className="text-sm text-gray-500 mt-1">
@@ -142,14 +144,14 @@ export function PromptSelection({
           </h2>
           <button
             onClick={() => onSchoolSelect('')}
-            className="text-sm text-primary-600 hover:text-primary-800 mt-2"
+            className="text-sm text-primary-600 border-gray-200 hover:text-primary-800 mt-2"
           >
             Choose Different School
           </button>
         </div>
         <button
           onClick={onBack}
-          className="text-sm text-primary-600 hover:text-primary-800"
+          className="text-sm text-primary-600 border-gray-200 hover:text-primary-800"
         >
           Back
         </button>
@@ -160,7 +162,7 @@ export function PromptSelection({
           <button
             key={prompt.id}
             onClick={() => onPromptSelected(prompt)}
-            className="w-full text-left p-4 border rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-colors"
+            className="w-full text-left p-4 border rounded-lg border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-colors"
           >
             <p className="text-gray-900">{prompt.prompt}</p>
             <p className="text-sm text-gray-500 mt-2">
