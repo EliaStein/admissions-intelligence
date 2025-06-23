@@ -6,6 +6,11 @@ import { EssayPrompt } from '../types/prompt';
 import { essayService } from '../services/essayService';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
+import mammoth from 'mammoth';
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Configure PDF.js worker using CDN
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
 type EssayType = 'personal' | 'supplemental' | null;
 type Step = 'type' | 'school' | 'prompt' | 'essay' | 'info' | 'confirm';
@@ -143,17 +148,70 @@ export function EssayWizard() {
     }
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const text = e.target?.result;
-        if (typeof text === 'string') {
-          setEssay(text);
+    if (!file) return;
+
+    const fileExtension = file.name.toLowerCase().split('.').pop();
+
+    try {
+      let extractedText = '';
+
+      if (fileExtension === 'docx') {
+        // Handle .docx files using mammoth
+        const arrayBuffer = await file.arrayBuffer();
+        const result = await mammoth.extractRawText({ arrayBuffer });
+        extractedText = result.value;
+      } else if (fileExtension === 'doc') {
+        // .doc files are not supported in browser environments due to their complex binary format
+        // Suggest user to convert to .docx or .txt format
+        setError('Legacy .doc files are not supported in the browser. Please save your document as .docx or .txt format and try again.');
+        return;
+      } else if (fileExtension === 'pdf') {
+        // Handle PDF files using pdfjs-dist
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let fullText = '';
+
+        // Extract text from all pages
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+          const page = await pdf.getPage(pageNum);
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items
+            .map((item: any) => {
+              // PDF.js text items can be either TextItem or TextMarkedContent
+              if ('str' in item) {
+                return item.str;
+              }
+              return '';
+            })
+            .join(' ');
+          fullText += pageText + '\n';
         }
-      };
-      reader.readAsText(file);
+
+        extractedText = fullText.trim();
+      } else if (fileExtension === 'txt') {
+        // Handle .txt files using FileReader
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const text = e.target?.result;
+          if (typeof text === 'string') {
+            setEssay(text);
+            setError(''); // Clear any previous errors
+          }
+        };
+        reader.readAsText(file);
+        return;
+      } else {
+        setError('Unsupported file type. Please upload a .txt, .docx, or .pdf file.');
+        return;
+      }
+
+      setEssay(extractedText);
+      setError(''); // Clear any previous errors
+    } catch (error) {
+      console.error('Error extracting text from file:', error);
+      setError('Failed to extract text from the file. Please try again or use a different file.');
     }
   };
 
@@ -418,10 +476,13 @@ export function EssayWizard() {
                 </label>
                 <input
                   type="file"
-                  accept=".txt,.doc,.docx"
+                  accept=".txt,.docx,.pdf"
                   onChange={handleFileUpload}
                   className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
                 />
+                <p className="mt-1 text-xs text-gray-500">
+                  Supported formats: .txt, .docx, .pdf (For .doc files, please save as .docx first)
+                </p>
               </div>
               
               <textarea
