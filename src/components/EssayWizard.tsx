@@ -9,14 +9,20 @@ import { essayService } from '../services/essayService';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import mammoth from 'mammoth';
-import * as pdfjsLib from 'pdfjs-dist';
 
-// Configure PDF.js worker for Next.js
+// Dynamic import for PDF.js to handle server-side rendering
+let pdfjsLib: any = null;
+
+// Configure PDF.js worker for Next.js (client-side only)
 if (typeof window !== 'undefined') {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-    'pdfjs-dist/build/pdf.worker.min.mjs',
-    import.meta.url
-  ).toString();
+  // Use dynamic import to load PDF.js only on the client side
+  import('pdfjs-dist').then((pdfjs) => {
+    pdfjsLib = pdfjs;
+    pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+      'pdfjs-dist/build/pdf.worker.min.mjs',
+      import.meta.url
+    ).toString();
+  });
 }
 
 type EssayType = 'personal' | 'supplemental' | null;
@@ -175,7 +181,12 @@ export function EssayWizard() {
         setError('Legacy .doc files are not supported in the browser. Please save your document as .docx or .txt format and try again.');
         return;
       } else if (fileExtension === 'pdf') {
-        // Handle PDF files using pdfjs-dist
+        // Handle PDF files using pdfjs-dist (client-side only)
+        if (!pdfjsLib) {
+          setError('PDF processing is not available. Please try again in a moment.');
+          return;
+        }
+
         const arrayBuffer = await file.arrayBuffer();
         const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
         let fullText = '';
