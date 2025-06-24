@@ -1,0 +1,2 @@
+export const supabaseUrl = 'https://rpiwnxbkknlxouxmytgy.supabase.co';
+export const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwaXdueGJra25seG91eG15dGd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU4NTc3MDUsImV4cCI6MjA1MTQzMzcwNX0.FW0jlpyjyAPOnHDKMKpVj05RQJEHpxAnGJK2PHPo5gU';

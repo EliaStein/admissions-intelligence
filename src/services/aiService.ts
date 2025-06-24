@@ -1,3 +1,5 @@
+import 'server-only';
+
 import OpenAI from 'openai';
 import { CONFIG_KEYS, ConfigService } from './configService';
 import { API_PERSONAL_STATEMENT_AND_RULES_PROMPT, CAPS_FEEDBACK_PROMPT, SUPPLEMENTAL_FEEDBACK_PROMPT } from '../prompts/aiService.prompt';
