@@ -1,10 +1,10 @@
 import 'server-only';
-import { createClient, GoTrueAdminApi } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { CONFIG_KEYS, ConfigService } from '../services/configService';
 import { supabaseUrl } from '../config/supabase';
 
 // Access auth admin api
-let adminAuthClient: GoTrueAdminApi | null = null;
+let adminAuthClient: SupabaseClient<any, "public", any> | null = null;
 
 export async function getAdminClient() {
   if (adminAuthClient) return adminAuthClient;
@@ -18,5 +18,5 @@ export async function getAdminClient() {
       persistSession: false
     }
   })
-  return adminAuthClient = supabase.auth.admin;
+  return adminAuthClient = supabase;
 }

@@ -8,7 +8,6 @@ import { EssayPrompt } from '../types/prompt';
 import { essayService } from '../services/essayService';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
-import { submitEssayForFeedback } from '../utils/aiFeedbackClient';
 import { fileProcessingService } from '../services/fileProcessingService';
 import { PERSONAL_STATEMENT_PROMPTS } from '../prompts/personalStatement.prompt';
 
@@ -173,8 +172,7 @@ export function EssayWizard() {
           email: user.email
         };
 
-        await submitEssayForFeedback(essayData, selectedPrompt.word_count, userInfo);
-        await essayService.saveEssay(essayData);
+        await essayService.saveEssay(essayData, selectedPrompt.word_count, userInfo);
 
         setIsSuccess(true);
       } catch (err) {
@@ -231,8 +229,7 @@ export function EssayWizard() {
         essay_content: essay.trim()
       };
 
-      await submitEssayForFeedback(essayData, selectedPrompt.word_count, {email: studentEmail});
-      await essayService.saveEssay(essayData);
+      await essayService.saveEssay(essayData, selectedPrompt.word_count, {email: studentEmail});
 
       setIsSuccess(true);
     } catch (err) {
