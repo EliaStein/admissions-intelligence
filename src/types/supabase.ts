@@ -55,6 +55,26 @@ export interface Database {
           updated_at?: string
         }
       }
+      config: {
+        Row: {
+          id: string
+          value: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          value: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          value?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
   }
 }

@@ -8,6 +8,7 @@ import { EssayPrompt } from '../types/prompt';
 import { essayService } from '../services/essayService';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
+import { submitEssayForFeedback } from '../utils/aiFeedbackClient';
 import mammoth from 'mammoth';
 
 // Configure PDF.js worker for Next.js (client-side only)
@@ -231,7 +232,7 @@ export function EssayWizard() {
 
   const handleSubmit = async () => {
     setError('');
-    
+
     // For authenticated users, validate only the essay content
     if (user) {
       if (!essay.trim()) {
@@ -252,7 +253,8 @@ export function EssayWizard() {
 
       try {
         setIsSubmitting(true);
-        await essayService.saveEssay({
+
+        const essayData = {
           student_first_name: studentFirstName.trim(),
           student_last_name: studentLastName.trim(),
           student_email: studentEmail.trim(),
@@ -260,18 +262,26 @@ export function EssayWizard() {
           selected_prompt: selectedPrompt.prompt,
           personal_statement: essayType === 'personal',
           essay_content: essay.trim()
-        });
-        
+        };
+
+        const userInfo = {
+          user_id: user.id,
+          email: user.email
+        };
+
+        await submitEssayForFeedback(essayData, userInfo);
+        await essayService.saveEssay(essayData);
+
         setIsSuccess(true);
       } catch (err) {
-        setError('Failed to submit essay. Please try again.');
+        setError('Failed to submit essay for feedback. Please try again.');
         console.error('Submit error:', err);
       } finally {
         setIsSubmitting(false);
       }
       return;
     }
-    
+
     // For non-authenticated users, validate all fields
     if (!studentFirstName.trim()) {
       setError('First name is required');
@@ -306,7 +316,8 @@ export function EssayWizard() {
 
     try {
       setIsSubmitting(true);
-      await essayService.saveEssay({
+
+      const essayData = {
         student_first_name: studentFirstName.trim(),
         student_last_name: studentLastName.trim(),
         student_email: studentEmail.trim(),
@@ -314,11 +325,14 @@ export function EssayWizard() {
         selected_prompt: selectedPrompt.prompt,
         personal_statement: essayType === 'personal',
         essay_content: essay.trim()
-      });
-      
+      };
+
+      await submitEssayForFeedback(essayData);
+      await essayService.saveEssay(essayData);
+
       setIsSuccess(true);
     } catch (err) {
-      setError('Failed to submit essay. Please try again.');
+      setError('Failed to submit essay for feedback. Please try again.');
       console.error('Submit error:', err);
     } finally {
       setIsSubmitting(false);
