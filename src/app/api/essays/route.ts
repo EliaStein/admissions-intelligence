@@ -41,8 +41,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate AI feedback if word_count is provided
-    let aiFeedbackResponse = null;
     if (wordCount && data) {
       try {
         const aiFeedbackRequest: AiFeedbackRequest = {
@@ -61,8 +59,26 @@ export async function POST(request: NextRequest) {
           ...(userInfo && { user_info: userInfo })
         };
 
-        aiFeedbackResponse = await AIService.processAIFeedbackRequest(aiFeedbackRequest);
-        console.log('AI feedback generated successfully');
+        // run in background
+        AIService.processAIFeedbackRequest(aiFeedbackRequest).then(async (feedback) => {
+          try {
+            // Save the AI feedback to the essays table
+            const { error: updateError } = await supabaseAdmin
+              .from('essays')
+              .update({ essay_feedback: feedback.feedback })
+              .eq('id', data.id);
+
+            if (updateError) {
+              console.error('Error saving AI feedback to database:', updateError.message);
+            } else {
+              console.log('AI feedback saved successfully to database for essay:', data.id);
+            }
+          } catch (saveError) {
+            console.error('Error saving AI feedback:', saveError);
+          }
+        }).catch(error => {
+          console.error('Error generating AI feedback:', error);
+        });
       } catch (aiError) {
         console.error('Error generating AI feedback:', aiError);
         // Don't fail the request if AI feedback fails, just log it
@@ -90,7 +106,6 @@ export async function POST(request: NextRequest) {
         }
       );
 
-      console.log('Email notification sent successfully');
     } catch (emailError) {
       console.error('Error sending email notification:', emailError);
       // Don't fail the request if email fails, just log it
@@ -100,7 +115,6 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'Essay saved successfully',
       essay: data,
-      ...(aiFeedbackResponse && { aiFeedback: aiFeedbackResponse })
     });
 
   } catch (error) {

@@ -77,7 +77,6 @@ export const essayService = {
       }
 
       const result = await response.json();
-      console.log('Essay saved successfully:', result.message);
       return result;
     } catch (error) {
       console.error('Error saving essay:', error);

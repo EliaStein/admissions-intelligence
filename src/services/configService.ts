@@ -14,7 +14,6 @@ export class ConfigService {
         .select('value')
         .eq('id', key)
         .single();
-      console.log({ data, error })
       if (error) {
         console.error(`Error fetching config value for key '${key}':`, error);
         return null;

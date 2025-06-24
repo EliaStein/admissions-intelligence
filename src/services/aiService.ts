@@ -86,15 +86,9 @@ export class AIService {
     const validation = this.validateEssayRequest(body);
     if (!validation.isValid) throw new Error(validation.error);
 
-    const { essay, user_info } = body;
+    const { essay } = body;
     const calculatedWordCount = this.countWords(essay.essay_content);
 
-    console.log('=== AI Feedback Request Received ===');
-    console.log('Essay Data:', {
-      essay, user_info
-    });
-
-    console.log('=== Generating AI Feedback ===');
     const feedback = await this.generateFeedback(
       essay.selected_prompt,
       essay.essay_content,
@@ -102,9 +96,6 @@ export class AIService {
       calculatedWordCount,
       essay.word_count
     );
-
-    console.log('AI feedback generated successfully');
-    console.log('=== End AI Feedback Request ===\n');
 
     return {
       success: true,
