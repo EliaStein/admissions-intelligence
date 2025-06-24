@@ -1,20 +1,14 @@
 import { Essay } from '../types/essay';
+import { AiFeedbackRequest, AiFeedbackResponse } from '../services/aiService';
 
-interface AiFeedbackRequest {
+// Legacy interface for backward compatibility
+interface LegacyAiFeedbackRequest {
   essay: Essay;
   user_info?: {
     user_id?: string;
     email?: string;
     [key: string]: any;
   };
-}
-
-interface AiFeedbackResponse {
-  success: boolean;
-  message: string;
-  received_at: string;
-  essay_id: string;
-  word_count: number;
 }
 
 interface AiFeedbackError {
@@ -24,11 +18,23 @@ interface AiFeedbackError {
 
 export async function submitEssayForFeedback(
   essay: Essay,
-  userInfo?: AiFeedbackRequest['user_info']
+  wordCount: number,
+  userInfo?: LegacyAiFeedbackRequest['user_info'],
 ): Promise<AiFeedbackResponse> {
   try {
     const requestBody: AiFeedbackRequest = {
-      essay,
+      essay: {
+        id: essay.id,
+        student_first_name: essay.student_first_name,
+        student_last_name: essay.student_last_name,
+        student_email: essay.student_email,
+        student_college: essay.student_college,
+        selected_prompt: essay.selected_prompt,
+        personal_statement: essay.personal_statement,
+        essay_content: essay.essay_content,
+        created_at: essay.created_at,
+        word_count: wordCount,
+      },
       ...(userInfo && { user_info: userInfo })
     };
 

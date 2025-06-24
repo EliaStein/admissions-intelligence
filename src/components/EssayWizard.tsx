@@ -269,7 +269,7 @@ export function EssayWizard() {
           email: user.email
         };
 
-        await submitEssayForFeedback(essayData, userInfo);
+        await submitEssayForFeedback(essayData, selectedPrompt.word_count, userInfo);
         await essayService.saveEssay(essayData);
 
         setIsSuccess(true);
@@ -327,7 +327,7 @@ export function EssayWizard() {
         essay_content: essay.trim()
       };
 
-      await submitEssayForFeedback(essayData);
+      await submitEssayForFeedback(essayData, selectedPrompt.word_count, {email: studentEmail});
       await essayService.saveEssay(essayData);
 
       setIsSuccess(true);
