@@ -9,61 +9,12 @@ import { essayService } from '../services/essayService';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import { submitEssayForFeedback } from '../utils/aiFeedbackClient';
-import mammoth from 'mammoth';
-
-// Configure PDF.js worker for Next.js (client-side only)
-let pdfjsLib: any = null;
-if (typeof window !== 'undefined') {
-  // Use dynamic import to load PDF.js only on the client side
-  import('pdfjs-dist').then((pdfjs) => {
-    pdfjsLib = pdfjs;
-    pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-      'pdfjs-dist/build/pdf.worker.min.mjs',
-      import.meta.url
-    ).toString();
-  });
-}
+import { fileProcessingService } from '../services/fileProcessingService';
+import { PERSONAL_STATEMENT_PROMPTS } from '../prompts/personalStatement.prompt';
 
 type EssayType = 'personal' | 'supplemental' | null;
 type Step = 'type' | 'school' | 'prompt' | 'essay' | 'info' | 'confirm';
 
-const PERSONAL_STATEMENT_PROMPTS = [
-  {
-    id: 'ps1',
-    prompt: 'Some students have a background, identity, interest, or talent that is so meaningful they believe their application would be incomplete without it. If this sounds like you, then please share your story.',
-    word_count: 650
-  },
-  {
-    id: 'ps2',
-    prompt: 'The lessons we take from obstacles we encounter can be fundamental to later success. Recount a time when you faced a challenge, setback, or failure. How did it affect you, and what did you learn from the experience?',
-    word_count: 650
-  },
-  {
-    id: 'ps3',
-    prompt: 'Reflect on a time when you questioned or challenged a belief or idea. What prompted your thinking? What was the outcome?',
-    word_count: 650
-  },
-  {
-    id: 'ps4',
-    prompt: 'Reflect on something that someone has done for you that has made you happy or thankful in a surprising way. How has this gratitude affected or motivated you?',
-    word_count: 650
-  },
-  {
-    id: 'ps5',
-    prompt: 'Discuss an accomplishment, event, or realization that sparked a period of personal growth and a new understanding of yourself or others.',
-    word_count: 650
-  },
-  {
-    id: 'ps6',
-    prompt: 'Describe a topic, idea, or concept you find so engaging that it makes you lose all track of time. Why does it captivate you? What or who do you turn to when you want to learn more?',
-    word_count: 650
-  },
-  {
-    id: 'ps7',
-    prompt: 'Share an essay on any topic of your choice. It can be one you\'ve already written, one that responds to a different prompt, or one of your own design.',
-    word_count: 650
-  }
-];
 
 export function EssayWizard() {
   const { user } = useAuth();
@@ -164,65 +115,18 @@ export function EssayWizard() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const fileExtension = file.name.toLowerCase().split('.').pop();
-
     try {
-      let extractedText = '';
+      const result = await fileProcessingService.processFile(file);
 
-      if (fileExtension === 'docx') {
-        const arrayBuffer = await file.arrayBuffer();
-        const result = await mammoth.extractRawText({ arrayBuffer });
-        extractedText = result.value;
-      } else if (fileExtension === 'doc') {
-        setError('Legacy .doc files are not supported in the browser. Please save your document as .docx or .txt format and try again.');
-        return;
-      } else if (fileExtension === 'pdf') {
-        if (!pdfjsLib) {
-          setError('PDF processing is not available. Please try again in a moment.');
-          return;
-        }
-
-        const arrayBuffer = await file.arrayBuffer();
-        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-        let fullText = '';
-
-        // Extract text from all pages
-        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-          const page = await pdf.getPage(pageNum);
-          const textContent = await page.getTextContent();
-          const pageText = textContent.items
-            .map((item: any) => {
-              if ('str' in item) {
-                return item.str;
-              }
-              return '';
-            })
-            .join(' ');
-          fullText += pageText + '\n';
-        }
-
-        extractedText = fullText.trim();
-      } else if (fileExtension === 'txt') {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const text = e.target?.result;
-          if (typeof text === 'string') {
-            setEssay(text);
-            setError('');
-          }
-        };
-        reader.readAsText(file);
-        return;
+      if (result.success) {
+        setEssay(result.content);
+        setError('');
       } else {
-        setError('Unsupported file type. Please upload a .txt, .docx, or .pdf file.');
-        return;
+        setError(result.error || 'Failed to process the file.');
       }
-
-      setEssay(extractedText);
-      setError(''); // Clear any previous errors
     } catch (error) {
-      console.error('Error extracting text from file:', error);
-      setError('Failed to extract text from the file. Please try again or use a different file.');
+      console.error('Error processing file:', error);
+      setError('Failed to process the file. Please try again or use a different file.');
     }
   };
 

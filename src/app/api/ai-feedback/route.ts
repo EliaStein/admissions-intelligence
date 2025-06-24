@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AiFeedbackRequest, AIService } from '../../../services/aiService';
+import { AIService } from '../../../services/aiService';
+import { AiFeedbackRequest } from '../../../types/aiService';
 
 export async function POST(request: NextRequest) {
   try {

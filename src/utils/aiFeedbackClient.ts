@@ -1,5 +1,5 @@
 import { Essay } from '../types/essay';
-import { AiFeedbackRequest, AiFeedbackResponse } from '../services/aiService';
+import { AiFeedbackRequest, AiFeedbackResponse } from '../types/aiService';
 
 // Legacy interface for backward compatibility
 interface LegacyAiFeedbackRequest {
