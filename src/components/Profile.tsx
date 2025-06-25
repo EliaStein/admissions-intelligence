@@ -252,24 +252,39 @@ export function Profile() {
         <div className="mt-6 pt-6 border-t border-gray-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
+<<<<<<< HEAD
               <div>
                 <p className="text-sm text-gray-500">Available Credits</p>
                 <p className=" font-bold text-primary-600">
                   <CreditCard className="h-6 w-6 mb-2 mr-2 text-primary-600 inline-block"/>
                   <span className='text-2xl'>{creditsLoading ? '-' : credits}</span>
                 </p>
+=======
+              <CreditCard className="h-6 w-6 text-blue-600" />
+              <div>
+                <p className="text-sm text-gray-500">Available Credits</p>
+                <p className="text-2xl font-bold text-blue-600">{credits}</p>
+>>>>>>> 011134a (wip - pricing layout, stripe price and service outline)
               </div>
             </div>
             <button
               onClick={handlePurchaseCredits}
+<<<<<<< HEAD
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+=======
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+>>>>>>> 011134a (wip - pricing layout, stripe price and service outline)
             >
               <Plus className="h-4 w-4 mr-2" />
               Buy More Credits
             </button>
           </div>
           <p className="text-xs text-gray-500 mt-2">
+<<<<<<< HEAD
             Each essay feedback costs 1 credit. Purchase more credits to continue getting feedback.
+=======
+            Each essay feedback costs 1 credit. Purchase more credits to continue getting AI-powered feedback.
+>>>>>>> 011134a (wip - pricing layout, stripe price and service outline)
           </p>
         </div>
       </div>
