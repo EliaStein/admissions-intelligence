@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
         };
 
         // run in background
-        AIService.processAIFeedbackRequest(aiFeedbackRequest).then(async (feedback) => {
+        await AIService.processAIFeedbackRequest(aiFeedbackRequest).then(async (feedback) => {
           try {
             const { error: updateError } = await supabaseAdmin
               .from('essays')
