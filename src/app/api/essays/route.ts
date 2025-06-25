@@ -5,6 +5,8 @@ import emailjs from '@emailjs/nodejs';
 import { EMAILJS_CONFIG } from '../../../config/emailjs';
 import { AIService } from '../../../services/aiService';
 import { AiFeedbackRequest } from '../../../types/aiService';
+import { CreditService } from '../../../services/creditService';
+import { supabase } from '../../../lib/supabase';
 
 interface EssaySubmissionRequest {
   essay: Essay;
@@ -24,6 +26,24 @@ export async function POST(request: NextRequest) {
     const essay: Essay = 'essay' in body ? body.essay : body as Essay;
     const wordCount = body.word_count;
     const userInfo = body.user_info;
+
+    // Get user ID from userInfo or try to extract from essay email
+    const userId = userInfo?.user_id;
+
+    // If we have word count (meaning AI feedback is requested) and user ID, check credits
+    if (wordCount && userId) {
+      const hasSufficientCredits = await CreditService.hasSufficientCredits(userId, 1);
+      if (!hasSufficientCredits) {
+        return NextResponse.json(
+          {
+            error: 'Insufficient credits',
+            message: 'You need at least 1 credit to get AI feedback. Please purchase more credits.',
+            requiresCredits: true
+          },
+          { status: 402 } // Payment Required
+        );
+      }
+    }
 
     const supabaseAdmin = await getAdminClient();
 
@@ -67,6 +87,20 @@ export async function POST(request: NextRequest) {
 
           if (updateError) {
             throw updateError;
+          }
+
+          // Consume credits after successful AI feedback processing
+          if (userId) {
+            const creditConsumed = await CreditService.consumeCredits(
+              userId,
+              1,
+              `AI feedback for essay: ${data.id}`
+            );
+
+            if (!creditConsumed) {
+              console.error('Failed to consume credits for user:', userId);
+              // Note: We don't fail the request here since the feedback was already generated
+            }
           }
         })
       } catch (aiError) {

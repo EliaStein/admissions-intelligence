@@ -11,6 +11,7 @@
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
     "@emailjs/nodejs": "^5.0.2",
+    "@stripe/stripe-js": "^7.4.0",
     "@supabase/supabase-js": "^2.50.0",
     "lucide-react": "^0.522.0",
     "mammoth": "^1.9.1",
@@ -20,6 +21,7 @@
     "pdfjs-dist": "^5.3.31",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "stripe": "^18.2.1",
     "word-extractor": "^1.0.4"
   },
   "devDependencies": {

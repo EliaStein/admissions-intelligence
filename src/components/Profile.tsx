@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
-import { FileText, Calendar, PenLine, X } from 'lucide-react';
+import { useCredits } from '../hooks/useCredits';
+import { FileText, Calendar, PenLine, X, CreditCard, Plus } from 'lucide-react';
 import Link from 'next/link';
 
 interface UserProfile {
@@ -69,6 +70,7 @@ function EssayModal({ essay, onClose }: EssayModalProps) {
 
 export function Profile() {
   const { user } = useAuth();
+  const { credits } = useCredits();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [essays, setEssays] = useState<Essay[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,13 +85,13 @@ export function Profile() {
         // Fetch user profile
         const { data: profileData, error: profileError } = await supabase
           .from('users')
-          .select('*')
+          .select('first_name, last_name, email, role, created_at')
           .eq('id', user.id)
           .single();
 
         if (profileError) throw profileError;
         if (!profileData) throw new Error('Profile not found');
-        
+
         setProfile(profileData);
 
         // Fetch user's essays
@@ -111,6 +113,11 @@ export function Profile() {
 
     loadProfile();
   }, [user]);
+
+  const handlePurchaseCredits = () => {
+    // Navigate to credit purchase page
+    window.location.href = '/purchase-credits';
+  };
 
   if (loading) {
     return (
@@ -175,6 +182,29 @@ export function Profile() {
               {new Date(profile.created_at).toLocaleDateString()}
             </p>
           </div>
+        </div>
+
+        {/* Credits Section */}
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <CreditCard className="h-6 w-6 text-blue-600" />
+              <div>
+                <p className="text-sm text-gray-500">Available Credits</p>
+                <p className="text-2xl font-bold text-blue-600">{credits}</p>
+              </div>
+            </div>
+            <button
+              onClick={handlePurchaseCredits}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Buy More Credits
+            </button>
+          </div>
+          <p className="text-xs text-gray-500 mt-2">
+            Each essay feedback costs 1 credit. Purchase more credits to continue getting AI-powered feedback.
+          </p>
         </div>
       </div>
 
