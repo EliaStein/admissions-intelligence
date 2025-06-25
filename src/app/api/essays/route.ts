@@ -60,24 +60,17 @@ export async function POST(request: NextRequest) {
         };
 
         await AIService.processAIFeedbackRequest(aiFeedbackRequest).then(async (feedback) => {
-          try {
-            const { error: updateError } = await supabaseAdmin
-              .from('essays')
-              .update({ essay_feedback: feedback.feedback })
-              .eq('id', data.id);
+          const { error: updateError } = await supabaseAdmin
+            .from('essays')
+            .update({ essay_feedback: feedback.feedback })
+            .eq('id', data.id);
 
-            if (updateError) {
-              console.error('Error saving AI feedback to database:', updateError.message);
-            } else {
-              console.log('AI feedback saved successfully to database for essay:', data.id);
-            }
-          } catch (saveError) {
-            console.error('Error saving AI feedback:', saveError);
+          if (updateError) {
+            throw updateError;
           }
         })
       } catch (aiError) {
         console.error('Error generating AI feedback:', aiError);
-        // Don't fail the request if AI feedback fails, just log it
         return NextResponse.json(
           { error: 'Failed to save essay', details: aiError },
           { status: 500 }
