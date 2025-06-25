@@ -21,7 +21,6 @@ export function SchoolList({ schools: propSchools }: SchoolListProps) {
     handleSearch
   } = useSchools();
 
-  // Use prop schools if provided, otherwise use hook schools
   const schools = propSchools || hookSchools;
 
   const lastSchoolElementRef = useCallback((node: HTMLDivElement | null) => {

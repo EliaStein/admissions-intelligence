@@ -22,7 +22,6 @@ export async function POST(request: NextRequest) {
 
     const fileExtension = file.name.toLowerCase().split('.').pop();
 
-    // Only handle .doc files
     if (fileExtension !== 'doc') {
       return NextResponse.json(
         {

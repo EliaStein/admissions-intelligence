@@ -3,7 +3,6 @@ import mammoth from 'mammoth';
 // Configure PDF.js worker for Next.js (client-side only)
 let pdfjsLib: any = null;
 if (typeof window !== 'undefined') {
-  // Use dynamic import to load PDF.js only on the client side
   import('pdfjs-dist').then((pdfjs) => {
     pdfjsLib = pdfjs;
     pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(

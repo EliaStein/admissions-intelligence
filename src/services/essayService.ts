@@ -62,7 +62,6 @@ export const essayService = {
         ...(userInfo && { user_info: userInfo })
       };
 
-      // Save essay via API endpoint
       const response = await fetch('/api/essays', {
         method: 'POST',
         headers: {

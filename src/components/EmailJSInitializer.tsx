@@ -6,7 +6,6 @@ import { EMAILJS_CONFIG } from '@/config/emailjs';
 
 export function EmailJSInitializer() {
   useEffect(() => {
-    // Initialize EmailJS at the application root
     emailjs.init(EMAILJS_CONFIG.PUBLIC_KEY);
   }, []);
 

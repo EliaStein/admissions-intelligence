@@ -58,7 +58,6 @@ export function Journey() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Form implementation would go here */}
           <div className="text-center">
             <button
               type="submit"

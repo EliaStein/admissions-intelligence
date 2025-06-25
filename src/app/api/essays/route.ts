@@ -62,7 +62,6 @@ export async function POST(request: NextRequest) {
         // run in background
         AIService.processAIFeedbackRequest(aiFeedbackRequest).then(async (feedback) => {
           try {
-            // Save the AI feedback to the essays table
             const { error: updateError } = await supabaseAdmin
               .from('essays')
               .update({ essay_feedback: feedback.feedback })
