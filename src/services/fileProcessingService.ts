@@ -33,11 +33,8 @@ export const fileProcessingService = {
           break;
 
         case 'doc':
-          return {
-            success: false,
-            content: '',
-            error: 'Legacy .doc files are not supported in the browser. Please save your document as .docx or .txt format and try again.'
-          };
+          extractedText = await this.processDocFile(file);
+          break;
 
         case 'pdf': {
           const pdfResult = await this.processPdfFile(file);
@@ -55,7 +52,7 @@ export const fileProcessingService = {
           return {
             success: false,
             content: '',
-            error: 'Unsupported file type. Please upload a .txt, .docx, or .pdf file.'
+            error: 'Unsupported file type. Please upload a .txt, .doc, .docx, or .pdf file.'
           };
       }
 
@@ -77,6 +74,29 @@ export const fileProcessingService = {
     const arrayBuffer = await file.arrayBuffer();
     const result = await mammoth.extractRawText({ arrayBuffer });
     return result.value;
+  },
+
+  async processDocFile(file: File): Promise<string> {
+    // Use the server-side extract-text API for .doc files
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch('/api/extract-text', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to extract text from .doc file');
+    }
+
+    const result = await response.json();
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to extract text from .doc file');
+    }
+
+    return result.content;
   },
 
   async processPdfFile(file: File): Promise<FileProcessingResult> {
