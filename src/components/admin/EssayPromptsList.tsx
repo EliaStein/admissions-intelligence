@@ -177,7 +177,7 @@ export function EssayPromptsList() {
     <div className="space-y-6">
       {/* Header */}
       <div className="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h3 className="text-lg font-medium text-gray-900 flex items-center">
               <FileText className="w-5 h-5 mr-2" />
@@ -185,10 +185,10 @@ export function EssayPromptsList() {
             </h3>
             <p className="text-gray-600 mt-1">Manage essay prompts for different schools</p>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
             <button
               onClick={downloadCSV}
-              className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+              className="inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm"
               disabled={essayPrompts.length === 0}
             >
               <Download className="w-4 h-4 mr-2" />
@@ -196,14 +196,14 @@ export function EssayPromptsList() {
             </button>
             <button
               onClick={() => setShowImportModal(true)}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center justify-center px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors text-sm"
             >
               <Upload className="w-4 h-4 mr-2" />
               Import CSV
             </button>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
+              className="inline-flex items-center justify-center px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors text-sm"
             >
               <Plus className="w-4 h-4 mr-2" />
               Add New Prompt
