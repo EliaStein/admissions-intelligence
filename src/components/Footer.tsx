@@ -12,7 +12,7 @@ export function Footer() {
               <span className="text-xl font-bold text-white">(A)dmissions (I)ntelligence</span>
             </div>
             <p className="text-sm">
-              Empowering students to craft compelling college essays through AI-powered feedback.
+              Empowering students to craft compelling college essays through feedback.
             </p>
           </div>
           

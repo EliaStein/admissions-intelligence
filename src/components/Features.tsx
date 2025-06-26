@@ -50,7 +50,7 @@ export function Features() {
             Powerful Features for Perfect Essays
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Our AI-powered platform combines advanced technology with admissions expertise
+            Our platform combines advanced technology with admissions expertise
             to help you craft the perfect college essay.
           </p>
         </div>

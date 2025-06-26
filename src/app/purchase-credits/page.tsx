@@ -130,8 +130,8 @@ export default function PurchaseCreditsPage() {
                 </Link>
               </div>
 
-              <div className="flex flex-col lg:flex-row items-start justify-between gap-8 mb-10">
-                <div className="flex-1 text-center lg:text-left">
+              <div className="flex flex-col md:flex-row items-start justify-between gap-8 mb-10">
+                <div className="flex-1 text-center md:text-left">
                   <h1 className="text-4xl font-bold text-gray-900 mb-4">
                     Purchase Credits
                   </h1>
@@ -156,7 +156,7 @@ export default function PurchaseCreditsPage() {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-6 w-full max-w-sm lg:max-w-xs">
+                <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-6 w-full max-w-sm md:max-w-xs">
                   <h3 className="text-2xl font-bold text-gray-900 mb-2">
                     Single Review
                   </h3>

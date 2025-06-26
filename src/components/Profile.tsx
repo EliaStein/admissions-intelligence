@@ -205,7 +205,7 @@ export function Profile() {
             </button>
           </div>
           <p className="text-xs text-gray-500 mt-2">
-            Each essay feedback costs 1 credit. Purchase more credits to continue getting AI-powered feedback.
+            Each essay feedback costs 1 credit. Purchase more credits to continue getting feedback.
           </p>
         </div>
       </div>

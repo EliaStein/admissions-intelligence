@@ -32,7 +32,7 @@ export function Testimonials() {
             Success Stories
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Join thousands of students who have improved their college essays with our AI-powered platform.
+            Join thousands of students who have improved their college essays with our platform.
           </p>
         </div>
 
