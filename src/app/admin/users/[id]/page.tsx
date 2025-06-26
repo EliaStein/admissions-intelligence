@@ -87,7 +87,8 @@ export default function UserDetailPage() {
     }
   };
 
-  const truncateText = (text: string, maxLength: number = 150) => {
+  const truncateText = (text: string | null | undefined, maxLength: number = 150) => {
+    if (!text || typeof text !== 'string') return 'No content';
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
   };
