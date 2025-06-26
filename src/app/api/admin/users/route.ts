@@ -49,8 +49,7 @@ export async function GET(request: NextRequest) {
         role,
         credits,
         is_active,
-        created_at,
-        updated_at
+        created_at
       `)
       .order('created_at', { ascending: false });
 
