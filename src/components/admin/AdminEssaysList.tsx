@@ -534,14 +534,59 @@ interface EssayViewModalProps {
 }
 
 function EssayViewModal({ essay, onClose }: EssayViewModalProps) {
+  const [activeTab, setActiveTab] = React.useState<'content' | 'feedback' | 'prompt' | 'personal'>('content');
+
+  const tabs = [
+    { id: 'content' as const, label: 'Essay Content' },
+    { id: 'feedback' as const, label: 'AI Feedback' },
+    { id: 'prompt' as const, label: 'Prompt' },
+  ];
+
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div
+      className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+      onClick={handleBackdropClick}
+    >
       <div className="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
         <div className="mt-3">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium text-gray-900">
-              Essay by {essay.student_first_name} {essay.student_last_name}
-            </h3>
+            <div>
+              <h3 className="text-lg font-medium text-gray-900">
+                Essay by {essay.student_first_name} {essay.student_last_name}
+              </h3>
+              <div className="grid grid-cols-2 gap-4 text-sm mt-2">
+                <div>
+                  <span className="font-medium text-gray-700">Email:</span>
+                  <span className="ml-2 text-gray-900">{essay.student_email}</span>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-700">College:</span>
+                  <span className="ml-2 text-gray-900">{essay.student_college || 'N/A'}</span>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-700">Type:</span>
+                  <span className="ml-2">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      essay.personal_statement
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'bg-green-100 text-green-800'
+                    }`}>
+                      {essay.personal_statement ? 'Personal Statement' : 'Supplemental Essay'}
+                    </span>
+                  </span>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-700">Created:</span>
+                  <span className="ml-2 text-gray-900">{new Date(essay.created_at).toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600"
@@ -552,57 +597,68 @@ function EssayViewModal({ essay, onClose }: EssayViewModalProps) {
               </svg>
             </button>
           </div>
-          
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4 text-sm">
+
+          {/* Tab Navigation */}
+          <div className="border-b border-gray-200 mb-4">
+            <nav className="flex space-x-8" aria-label="Tabs">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`
+                    py-2 px-1 border-b-2 font-medium text-sm transition-colors
+                    ${activeTab === tab.id
+                      ? 'border-primary-500 text-primary-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }
+                  `}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </nav>
+          </div>
+
+          {/* Tab Content */}
+          <div className="max-h-96 overflow-y-auto">
+            {activeTab === 'content' && (
               <div>
-                <span className="font-medium text-gray-700">Email:</span>
-                <span className="ml-2 text-gray-900">{essay.student_email}</span>
-              </div>
-              <div>
-                <span className="font-medium text-gray-700">College:</span>
-                <span className="ml-2 text-gray-900">{essay.student_college || 'N/A'}</span>
-              </div>
-              <div>
-                <span className="font-medium text-gray-700">Type:</span>
-                <span className="ml-2">
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                    essay.personal_statement 
-                      ? 'bg-blue-100 text-blue-800' 
-                      : 'bg-green-100 text-green-800'
-                  }`}>
-                    {essay.personal_statement ? 'Personal Statement' : 'Supplemental Essay'}
-                  </span>
-                </span>
-              </div>
-              <div>
-                <span className="font-medium text-gray-700">Created:</span>
-                <span className="ml-2 text-gray-900">{new Date(essay.created_at).toLocaleString()}</span>
-              </div>
-            </div>
-            
-            <div>
-              <h4 className="font-medium text-gray-700 mb-2">Prompt:</h4>
-              <p className="text-gray-900 bg-gray-50 p-3 rounded-md">{essay.selected_prompt}</p>
-            </div>
-            
-            <div>
-              <h4 className="font-medium text-gray-700 mb-2">Essay Content:</h4>
-              <div className="text-gray-900 bg-gray-50 p-4 rounded-md max-h-96 overflow-y-auto whitespace-pre-wrap">
-                {essay.essay_content}
-              </div>
-            </div>
-            
-            {essay.essay_feedback && (
-              <div>
-                <h4 className="font-medium text-gray-700 mb-2">AI Feedback:</h4>
-                <div className="text-gray-900 bg-blue-50 p-4 rounded-md max-h-96 overflow-y-auto whitespace-pre-wrap">
-                  {essay.essay_feedback}
+                <h4 className="font-medium text-gray-700 mb-2">Essay Content:</h4>
+                <div className="text-gray-900 bg-gray-50 p-4 rounded-md whitespace-pre-wrap">
+                  {essay.essay_content}
                 </div>
               </div>
             )}
+
+            {activeTab === 'feedback' && (
+              <div>
+                <h4 className="font-medium text-gray-700 mb-2">AI Feedback:</h4>
+                {essay.essay_feedback ? (
+                  <div className="text-gray-900 bg-blue-50 p-4 rounded-md whitespace-pre-wrap">
+                    {essay.essay_feedback}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="text-gray-400 mb-2">
+                      <FileText className="w-12 h-12 mx-auto" />
+                    </div>
+                    <p className="text-gray-500">No AI feedback available for this essay.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'prompt' && (
+              <div>
+                <h4 className="font-medium text-gray-700 mb-2">Writing Prompt:</h4>
+                <div className="text-gray-900 bg-gray-50 p-3 rounded-md">
+                  {essay.selected_prompt}
+                </div>
+              </div>
+            )}
+
           </div>
-          
+
           <div className="flex justify-end mt-6">
             <button
               onClick={onClose}

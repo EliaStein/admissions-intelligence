@@ -181,9 +181,6 @@ export function EssayPromptsList() {
                 Created
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                ID
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -221,11 +218,6 @@ export function EssayPromptsList() {
                   <div className="flex items-center text-sm text-gray-900">
                     <Calendar className="w-4 h-4 mr-2 text-gray-400" />
                     {formatDate(prompt.created_at)}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-xs text-gray-500 font-mono">
-                    {prompt.id.slice(0, 8)}...
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">

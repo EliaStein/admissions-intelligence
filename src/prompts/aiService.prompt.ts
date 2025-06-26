@@ -108,7 +108,7 @@ Address each header in order, offering concrete suggestions:
 5. LENGTH RULE
 ────────────────────────────────────────────────────────────────────────
 • If word count > ${maxWordCount}: recommend specific sentences or clauses to cut.
-• If word count < ${maxWordCount - 50}: suggest where to add richer reflection or detail.
+• If word count < ${maxWordCount} - 50: suggest where to add richer reflection or detail.
 
 ────────────────────────────────────────────────────────────────────────
 6. SAFE-COMPLETION REMINDERS

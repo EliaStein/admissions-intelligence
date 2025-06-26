@@ -97,7 +97,7 @@ export async function GET(request: NextRequest) {
         'Essay Type',
         'Prompt',
         'Essay Content',
-        'AI Feedback',
+        'Feedback',
         'Created At',
         'Updated At'
       ];

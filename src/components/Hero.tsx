@@ -16,7 +16,7 @@ export function Hero() {
           <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-8">
             Transform Your College Essay
             <br />
-            <span className="text-primary-600">with Expert-Trained AI Feedback</span>
+            <span className="text-primary-600">with Expert-Trained Feedback</span>
           </h1>
           
           <p className="text-xl text-gray-600 mb-6 max-w-2xl mx-auto">
