@@ -14,7 +14,7 @@ export default function AdminEssayPromptsPage() {
       <div className="min-h-screen bg-gray-50">
         <Header />
         
-        <main className="max-w-7xl mx-auto px-4 py-8 mt-16">
+        <main className="max-w-7xl mx-auto px-4 py-8 mt-0">
           <div className="mb-8">
             <Link
               href="/admin"

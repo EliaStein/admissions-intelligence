@@ -2,7 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { User, Mail, Calendar, CreditCard, Shield } from 'lucide-react';
+import { User, Mail, Calendar, CreditCard, Edit, Trash2, Eye } from 'lucide-react';
+import { UserEditModal } from './UserEditModal';
+import { useRouter } from 'next/navigation';
 
 interface UserData {
   id: string;
@@ -20,10 +22,52 @@ export function UsersList() {
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editingUser, setEditingUser] = useState<UserData | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     fetchUsers();
   }, []);
+
+
+
+  const handleEditUser = (user: UserData) => {
+    setEditingUser(user);
+  };
+
+  const handleViewUser = (userId: string) => {
+    router.push(`/admin/users/${userId}`);
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session');
+      }
+
+      const response = await fetch(`/api/admin/users/${userId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete user');
+      }
+
+      // Refresh the users list
+      fetchUsers();
+    } catch (err) {
+      console.error('Error deleting user:', err);
+      setError(err instanceof Error ? err.message : 'Failed to delete user');
+    }
+  };
 
   const fetchUsers = async () => {
     try {
@@ -110,6 +154,9 @@ export function UsersList() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Created
               </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -148,6 +195,31 @@ export function UsersList() {
                     {formatDate(user.created_at)}
                   </div>
                 </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => handleViewUser(user.id)}
+                      className="text-green-600 hover:text-green-900 p-1 rounded"
+                      title="View User Details"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleEditUser(user)}
+                      className="text-blue-600 hover:text-blue-900 p-1 rounded"
+                      title="Edit User"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteUser(user.id)}
+                      className="text-red-600 hover:text-red-900 p-1 rounded"
+                      title="Delete User"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -160,6 +232,19 @@ export function UsersList() {
           <h3 className="mt-2 text-sm font-medium text-gray-900">No users found</h3>
           <p className="mt-1 text-sm text-gray-500">No users have been registered yet.</p>
         </div>
+      )}
+
+      {/* User Edit Modal */}
+      {editingUser && (
+        <UserEditModal
+          user={editingUser}
+          onClose={() => setEditingUser(null)}
+          onSave={(updatedUser: UserData) => {
+            // Update the user in the list
+            setUsers(users.map(u => u.id === updatedUser.id ? updatedUser : u));
+            setEditingUser(null);
+          }}
+        />
       )}
     </div>
   );

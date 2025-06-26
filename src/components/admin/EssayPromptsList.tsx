@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { FileText, School, Calendar, Hash } from 'lucide-react';
+import { FileText, School, Calendar, Hash, Plus, Edit, Trash2 } from 'lucide-react';
+import { EssayPromptModal } from './EssayPromptModal';
 
 interface EssayPromptData {
   id: string;
@@ -20,10 +21,58 @@ export function EssayPromptsList() {
   const [essayPrompts, setEssayPrompts] = useState<EssayPromptData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingPrompt, setEditingPrompt] = useState<EssayPromptData | null>(null);
+  const [schools, setSchools] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
     fetchEssayPrompts();
+    fetchSchools();
   }, []);
+
+  const fetchSchools = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('schools')
+        .select('id, name')
+        .order('name');
+
+      if (error) throw error;
+      setSchools(data || []);
+    } catch (err) {
+      console.error('Error fetching schools:', err);
+    }
+  };
+
+  const handleDeletePrompt = async (promptId: string) => {
+    if (!confirm('Are you sure you want to delete this essay prompt? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session');
+      }
+
+      const response = await fetch(`/api/admin/essay-prompts?id=${promptId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete essay prompt');
+      }
+
+      // Refresh the prompts list
+      fetchEssayPrompts();
+    } catch (err) {
+      console.error('Error deleting essay prompt:', err);
+      setError(err instanceof Error ? err.message : 'Failed to delete essay prompt');
+    }
+  };
 
   const fetchEssayPrompts = async () => {
     try {
@@ -91,13 +140,29 @@ export function EssayPromptsList() {
   }
 
   return (
-    <div className="bg-white shadow-sm rounded-lg border border-gray-200">
-      <div className="px-6 py-4 border-b border-gray-200">
-        <h3 className="text-lg font-medium text-gray-900 flex items-center">
-          <FileText className="w-5 h-5 mr-2" />
-          Essay Prompts ({essayPrompts.length})
-        </h3>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-medium text-gray-900 flex items-center">
+              <FileText className="w-5 h-5 mr-2" />
+              Essay Prompts ({essayPrompts.length})
+            </h3>
+            <p className="text-gray-600 mt-1">Manage essay prompts for different schools</p>
+          </div>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add New Prompt
+          </button>
+        </div>
       </div>
+
+      {/* Table */}
+      <div className="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
 
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
@@ -117,6 +182,9 @@ export function EssayPromptsList() {
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 ID
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
               </th>
             </tr>
           </thead>
@@ -160,10 +228,29 @@ export function EssayPromptsList() {
                     {prompt.id.slice(0, 8)}...
                   </div>
                 </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => setEditingPrompt(prompt)}
+                      className="text-blue-600 hover:text-blue-900 p-1 rounded"
+                      title="Edit Prompt"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDeletePrompt(prompt.id)}
+                      className="text-red-600 hover:text-red-900 p-1 rounded"
+                      title="Delete Prompt"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
+      </div>
       </div>
 
       {essayPrompts.length === 0 && (
@@ -172,6 +259,31 @@ export function EssayPromptsList() {
           <h3 className="mt-2 text-sm font-medium text-gray-900">No essay prompts found</h3>
           <p className="mt-1 text-sm text-gray-500">No essay prompts have been created yet.</p>
         </div>
+      )}
+
+      {/* Create Modal */}
+      {showCreateModal && (
+        <EssayPromptModal
+          schools={schools}
+          onClose={() => setShowCreateModal(false)}
+          onSave={() => {
+            setShowCreateModal(false);
+            fetchEssayPrompts();
+          }}
+        />
+      )}
+
+      {/* Edit Modal */}
+      {editingPrompt && (
+        <EssayPromptModal
+          schools={schools}
+          prompt={editingPrompt}
+          onClose={() => setEditingPrompt(null)}
+          onSave={() => {
+            setEditingPrompt(null);
+            fetchEssayPrompts();
+          }}
+        />
       )}
     </div>
   );
