@@ -12,7 +12,6 @@ interface CheckoutRequest {
 
 export async function POST(request: NextRequest) {
   try {
-    // Get Stripe secret key from config
     const stripeSecretKey = await ConfigService.getConfigValue(CONFIG_KEYS.STRIPE_SECRET_KEY);
     if (!stripeSecretKey) {
       return NextResponse.json(
@@ -23,7 +22,7 @@ export async function POST(request: NextRequest) {
 
     const stripe = new Stripe(stripeSecretKey);
 
-    // Get the authenticated user
+    // Guard: Get the authorization header
     const authHeader = request.headers.get('authorization');
     if (!authHeader) {
       return NextResponse.json(
@@ -32,10 +31,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Extract the token from the Authorization header
-    const token = authHeader.replace('Bearer ', '');
-    
     // Verify the token with Supabase
+    const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) {
       return NextResponse.json(
@@ -54,7 +51,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [

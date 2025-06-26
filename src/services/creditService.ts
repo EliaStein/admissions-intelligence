@@ -14,9 +14,6 @@ export interface CreditTransaction {
 }
 
 export class CreditService {
-  /**
-   * Get the current credit balance for a user
-   */
   static async getCreditBalance(userId: string): Promise<number> {
     try {
       const { data, error } = await supabase
@@ -37,9 +34,6 @@ export class CreditService {
     }
   }
 
-  /**
-   * Check if a user has sufficient credits
-   */
   static async hasSufficientCredits(userId: string, requiredCredits: number = 1): Promise<boolean> {
     try {
       const currentCredits = await this.getCreditBalance(userId);
@@ -50,9 +44,6 @@ export class CreditService {
     }
   }
 
-  /**
-   * Consume credits for a user (server-side only)
-   */
   static async consumeCredits(userId: string, amount: number = 1, description: string = 'Essay feedback'): Promise<boolean> {
     try {
       const supabaseAdmin = await getAdminClient();
@@ -94,14 +85,10 @@ export class CreditService {
     }
   }
 
-  /**
-   * Add credits to a user (server-side only, typically after payment)
-   */
-  static async addCredits(userId: string, amount: number, description: string = 'Credit purchase'): Promise<boolean> {
+  static async addCredits(userId: string, amount: number): Promise<boolean> {
     try {
       const supabaseAdmin = await getAdminClient();
 
-      // Get current credits
       const { data: userData, error: fetchError } = await supabaseAdmin
         .from('users')
         .select('credits')
@@ -109,25 +96,24 @@ export class CreditService {
         .single();
 
       if (fetchError) {
-        console.error('Error fetching user credits:', fetchError);
+        console.error('[Error] fetching user credits:', fetchError);
         return false;
       }
 
       const currentCredits = userData?.credits || 0;
       const newCredits = currentCredits + amount;
 
-      // Add credits
       const { error: updateError } = await supabaseAdmin
         .from('users')
         .update({ credits: newCredits })
         .eq('id', userId);
 
       if (updateError) {
-        console.error('Error adding credits:', updateError);
+        console.error('[Error] adding credits:', updateError);
         return false;
       }
 
-      console.log(`Successfully added ${amount} credits for user ${userId}. New balance: ${newCredits}`);
+      console.log(`[Success] added ${amount} credits for user ${userId}. New balance: ${newCredits}`);
       return true;
     } catch (error) {
       console.error('Error in addCredits:', error);
@@ -135,9 +121,6 @@ export class CreditService {
     }
   }
 
-  /**
-   * Get credit balance for the current authenticated user (client-side)
-   */
   static async getCurrentUserCredits(): Promise<number> {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -147,7 +130,7 @@ export class CreditService {
 
       return await this.getCreditBalance(session.user.id);
     } catch (error) {
-      console.error('Error getting current user credits:', error);
+      console.error('[Error] getting current user credits:', error);
       throw error;
     }
   }
