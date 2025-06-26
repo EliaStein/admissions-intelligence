@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 
 interface StudentInfoFormProps {
   studentFirstName: string;
@@ -137,7 +138,20 @@ export function StudentInfoForm({
 
       {error && (
         <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm">
-          {error}
+          {error === 'INSUFFICIENT_CREDITS' ? (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span>
+                You need at least 1 credit to get feedback.
+              </span>
+              <Link href="/purchase-credits">
+                <button className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1">
+                  Purchase Credits
+                </button>
+              </Link>
+            </div>
+          ) : (
+            error
+          )}
         </div>
       )}
 

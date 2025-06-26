@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import Link from 'next/link';
 import { PromptSelection } from './PromptSelection';
 import { StudentInfoForm } from './StudentInfoForm';
 import { SuccessMessage } from './SuccessMessage';
@@ -176,7 +177,13 @@ export function EssayWizard() {
 
         setIsSuccess(true);
       } catch (err) {
-        setError('Failed to submit essay for feedback. Please try again.');
+        // Check if this is a credit-related error
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        if (errorMessage.includes('You need at least 1 credit to get AI feedback')) {
+          setError('INSUFFICIENT_CREDITS');
+        } else {
+          setError('Failed to submit essay for feedback. Please try again.');
+        }
         console.error('Submit error:', err);
       } finally {
         setIsSubmitting(false);
@@ -233,7 +240,13 @@ export function EssayWizard() {
 
       setIsSuccess(true);
     } catch (err) {
-      setError('Failed to submit essay for feedback. Please try again.');
+      // Check if this is a credit-related error
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      if (errorMessage.includes('You need at least 1 credit to get AI feedback')) {
+        setError('INSUFFICIENT_CREDITS');
+      } else {
+        setError('Failed to submit essay for feedback. Please try again.');
+      }
       console.error('Submit error:', err);
     } finally {
       setIsSubmitting(false);
@@ -419,7 +432,22 @@ export function EssayWizard() {
             </div>
 
             {error && (
-              <div className="text-red-600 text-sm">{error}</div>
+              <div className="text-red-600 text-sm">
+                {error === 'INSUFFICIENT_CREDITS' ? (
+                  <div className="flex items-center gap-2">
+                    <span>
+                      You need at least 1 credit to get feedback.
+                    </span>
+                    <Link href="/purchase-credits">
+                      <button className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1">
+                        Purchase Credits
+                      </button>
+                    </Link>
+                  </div>
+                ) : (
+                  error
+                )}
+              </div>
             )}
 
             <div className="flex justify-between items-center">

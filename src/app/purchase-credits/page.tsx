@@ -119,7 +119,7 @@ export default function PurchaseCreditsPage() {
         <section className="py-10">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             {/* Header */}
-            <div className="mb-16">
+            <div className="mb-25">
               <div className="mb-8">
                 <Link
                   href="/profile"
@@ -192,7 +192,7 @@ export default function PurchaseCreditsPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-30">
               {creditPackages.slice(1).map((pkg) => (
                 <div
                   key={pkg.id}
