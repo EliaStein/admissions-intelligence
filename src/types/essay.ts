@@ -9,3 +9,9 @@ export interface Essay {
   essay_content: string;
   created_at?: string;
 }
+
+export interface School {
+  id: string;
+  name: string;
+  prompt_count?: number;
+}

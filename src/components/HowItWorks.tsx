@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { FileText, MessageSquare, Pen, Send } from 'lucide-react';
 
@@ -63,13 +65,13 @@ export function HowItWorks() {
         </div>
 
         <div className="relative">
-          <div className="hidden lg:block absolute top-1/2 left-0 right-0 h-0.5 bg-gradient-to-r from-primary-100 via-secondary-100 to-primary-100 -translate-y-1/2" />
+          <div className="hidden lg:block absolute top-1/2 left-0 right-0 h-0.5 bg-linear-to-r from-primary-100 via-secondary-100 to-primary-100 -translate-y-1/2" />
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {steps.map((step, index) => (
               <div key={index} className="relative">
                 <div className="bg-white p-6 rounded-xl text-center group hover:border-secondary-500 border-2 border-transparent transition-colors">
-                  <div className="w-16 h-16 bg-gradient-to-br from-primary-100 to-secondary-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:from-primary-200 group-hover:to-secondary-200 transition-colors">
+                  <div className="w-16 h-16 bg-linear-to-br from-primary-100 to-secondary-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:from-primary-200 group-hover:to-secondary-200 transition-colors">
                     <div className="text-primary-600 group-hover:text-primary-700">{step.icon}</div>
                   </div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">

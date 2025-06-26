@@ -1,17 +1,17 @@
 import { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { usePathname } from 'next/navigation';
 import { analyticsService } from '../services/analyticsService';
 
 export function useAnalytics() {
-  const location = useLocation();
+  const pathname = usePathname();
 
   useEffect(() => {
     analyticsService.init();
   }, []);
 
   useEffect(() => {
-    analyticsService.trackPageView(location.pathname);
-  }, [location]);
+    analyticsService.trackPageView(pathname);
+  }, [pathname]);
 
   return analyticsService;
 }

@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { PromptSelection } from './PromptSelection';
 import { StudentInfoForm } from './StudentInfoForm';
@@ -6,47 +8,12 @@ import { EssayPrompt } from '../types/prompt';
 import { essayService } from '../services/essayService';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
+import { fileProcessingService } from '../services/fileProcessingService';
+import { PERSONAL_STATEMENT_PROMPTS } from '../prompts/personalStatement.prompt';
 
 type EssayType = 'personal' | 'supplemental' | null;
 type Step = 'type' | 'school' | 'prompt' | 'essay' | 'info' | 'confirm';
 
-const PERSONAL_STATEMENT_PROMPTS = [
-  {
-    id: 'ps1',
-    prompt: 'Some students have a background, identity, interest, or talent that is so meaningful they believe their application would be incomplete without it. If this sounds like you, then please share your story.',
-    word_count: 650
-  },
-  {
-    id: 'ps2',
-    prompt: 'The lessons we take from obstacles we encounter can be fundamental to later success. Recount a time when you faced a challenge, setback, or failure. How did it affect you, and what did you learn from the experience?',
-    word_count: 650
-  },
-  {
-    id: 'ps3',
-    prompt: 'Reflect on a time when you questioned or challenged a belief or idea. What prompted your thinking? What was the outcome?',
-    word_count: 650
-  },
-  {
-    id: 'ps4',
-    prompt: 'Reflect on something that someone has done for you that has made you happy or thankful in a surprising way. How has this gratitude affected or motivated you?',
-    word_count: 650
-  },
-  {
-    id: 'ps5',
-    prompt: 'Discuss an accomplishment, event, or realization that sparked a period of personal growth and a new understanding of yourself or others.',
-    word_count: 650
-  },
-  {
-    id: 'ps6',
-    prompt: 'Describe a topic, idea, or concept you find so engaging that it makes you lose all track of time. Why does it captivate you? What or who do you turn to when you want to learn more?',
-    word_count: 650
-  },
-  {
-    id: 'ps7',
-    prompt: 'Share an essay on any topic of your choice. It can be one you\'ve already written, one that responds to a different prompt, or one of your own design.',
-    word_count: 650
-  }
-];
 
 export function EssayWizard() {
   const { user } = useAuth();
@@ -143,17 +110,22 @@ export function EssayWizard() {
     }
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const text = e.target?.result;
-        if (typeof text === 'string') {
-          setEssay(text);
-        }
-      };
-      reader.readAsText(file);
+    if (!file) return;
+
+    try {
+      const result = await fileProcessingService.processFile(file);
+
+      if (result.success) {
+        setEssay(result.content);
+        setError('');
+      } else {
+        setError(result.error || 'Failed to process the file.');
+      }
+    } catch (error) {
+      console.error('Error processing file:', error);
+      setError('Failed to process the file. Please try again or use a different file.');
     }
   };
 
@@ -163,7 +135,7 @@ export function EssayWizard() {
 
   const handleSubmit = async () => {
     setError('');
-    
+
     // For authenticated users, validate only the essay content
     if (user) {
       if (!essay.trim()) {
@@ -177,14 +149,15 @@ export function EssayWizard() {
       }
 
       const wordCount = essay.trim().split(/\s+/).filter(Boolean).length;
-      if (wordCount > selectedPrompt.word_count) {
+      if (wordCount > selectedPrompt.word_count * 2) {
         setError(`Essay exceeds the ${selectedPrompt.word_count} word limit`);
         return;
       }
 
       try {
         setIsSubmitting(true);
-        await essayService.saveEssay({
+
+        const essayData = {
           student_first_name: studentFirstName.trim(),
           student_last_name: studentLastName.trim(),
           student_email: studentEmail.trim(),
@@ -192,18 +165,25 @@ export function EssayWizard() {
           selected_prompt: selectedPrompt.prompt,
           personal_statement: essayType === 'personal',
           essay_content: essay.trim()
-        });
-        
+        };
+
+        const userInfo = {
+          user_id: user.id,
+          email: user.email
+        };
+
+        await essayService.saveEssay(essayData, selectedPrompt.word_count, userInfo);
+
         setIsSuccess(true);
       } catch (err) {
-        setError('Failed to submit essay. Please try again.');
+        setError('Failed to submit essay for feedback. Please try again.');
         console.error('Submit error:', err);
       } finally {
         setIsSubmitting(false);
       }
       return;
     }
-    
+
     // For non-authenticated users, validate all fields
     if (!studentFirstName.trim()) {
       setError('First name is required');
@@ -231,14 +211,15 @@ export function EssayWizard() {
     }
 
     const wordCount = essay.trim().split(/\s+/).filter(Boolean).length;
-    if (wordCount > selectedPrompt.word_count) {
+    if (wordCount > selectedPrompt.word_count * 2) {
       setError(`Essay exceeds the ${selectedPrompt.word_count} word limit`);
       return;
     }
 
     try {
       setIsSubmitting(true);
-      await essayService.saveEssay({
+
+      const essayData = {
         student_first_name: studentFirstName.trim(),
         student_last_name: studentLastName.trim(),
         student_email: studentEmail.trim(),
@@ -246,11 +227,13 @@ export function EssayWizard() {
         selected_prompt: selectedPrompt.prompt,
         personal_statement: essayType === 'personal',
         essay_content: essay.trim()
-      });
-      
+      };
+
+      await essayService.saveEssay(essayData, selectedPrompt.word_count, {email: studentEmail});
+
       setIsSuccess(true);
     } catch (err) {
-      setError('Failed to submit essay. Please try again.');
+      setError('Failed to submit essay for feedback. Please try again.');
       console.error('Submit error:', err);
     } finally {
       setIsSubmitting(false);
@@ -332,7 +315,7 @@ export function EssayWizard() {
                   setEssayType('personal');
                   setCurrentStep('prompt');
                 }}
-                className="w-full p-6 border-2 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-colors group"
+                className="w-full p-6 border-2 rounded-lg border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-colors group"
               >
                 <h3 className="text-lg font-medium mb-2 group-hover:text-primary-600">Personal Statement</h3>
                 <p className="text-sm text-gray-500">Write your college application essay</p>
@@ -342,7 +325,7 @@ export function EssayWizard() {
                   setEssayType('supplemental');
                   setCurrentStep('school');
                 }}
-                className="w-full p-6 border-2 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-colors group"
+                className="w-full p-6 border-2 rounded-lg border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-colors group"
               >
                 <h3 className="text-lg font-medium mb-2 group-hover:text-primary-600">Supplemental Essays</h3>
                 <p className="text-sm text-gray-500">Write school-specific essays</p>
@@ -418,14 +401,17 @@ export function EssayWizard() {
                 </label>
                 <input
                   type="file"
-                  accept=".txt,.doc,.docx"
+                  accept=".txt,.docx,.pdf,.doc"
                   onChange={handleFileUpload}
                   className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
                 />
+                <p className="mt-1 ml-2 text-xs text-gray-500 text-left">
+                  Supported formats: .txt, .docx, .pdf, .doc
+                </p>
               </div>
               
               <textarea
-                className="w-full h-64 p-4 border rounded-lg focus:ring-2 focus:ring-primary-500 resize-none"
+                className="w-full h-64 p-4 border rounded-lg focus:ring-2 border-gray-200 focus:ring-primary-500 resize-none"
                 value={essay}
                 onChange={(e) => setEssay(e.target.value)}
                 placeholder="Start writing your essay here..."

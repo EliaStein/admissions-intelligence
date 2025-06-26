@@ -20,7 +20,7 @@ export function UploadStatus({ loading, error, stats }: UploadStatusProps) {
   if (error) {
     return (
       <div className="mt-4 text-red-600 flex items-center">
-        <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0" />
+        <AlertCircle className="w-5 h-5 mr-2 shrink-0" />
         <div className="text-sm whitespace-pre-wrap">{error}</div>
       </div>
     );

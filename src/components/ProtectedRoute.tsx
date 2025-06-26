@@ -1,5 +1,7 @@
+'use client';
+
 import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '../hooks/useAuth';
 import { AuthForm } from './AuthForm';
 
@@ -10,7 +12,8 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children, adminOnly = false }: ProtectedRouteProps) {
   const { user, loading } = useAuth();
-  const location = useLocation();
+  const router = useRouter();
+  const pathname = usePathname();
 
   if (loading) {
     return (
@@ -25,8 +28,9 @@ export function ProtectedRoute({ children, adminOnly = false }: ProtectedRoutePr
   }
 
   // For admin routes, check if the user has admin access
-  if (adminOnly && location.pathname.startsWith('/admin')) {
-    return <Navigate to="/" replace />;
+  if (adminOnly && pathname.startsWith('/admin')) {
+    router.push('/');
+    return null;
   }
 
   return <>{children}</>;

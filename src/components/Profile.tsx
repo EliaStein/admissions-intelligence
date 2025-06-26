@@ -1,8 +1,10 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { FileText, Calendar, PenLine, X } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 
 interface UserProfile {
   first_name: string;
@@ -28,9 +30,9 @@ interface EssayModalProps {
 
 function EssayModal({ essay, onClose }: EssayModalProps) {
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
-        <div className="p-6 flex justify-between items-start border-b">
+        <div className="p-6 flex justify-between items-start border-b border-gray-200">
           <div>
             <h3 className="text-xl font-semibold text-gray-900">
               {essay.personal_statement ? 'Personal Statement' : essay.student_college}
@@ -137,7 +139,7 @@ export function Profile() {
             We couldn't find your profile information. This might be because your account was recently created.
           </p>
           <Link
-            to="/"
+            href="/"
             className="text-primary-600 hover:text-primary-700 font-medium"
           >
             Return to Home
@@ -182,8 +184,8 @@ export function Profile() {
           <h2 className="text-2xl font-bold text-gray-900">Your Essays</h2>
           {essays.length > 0 && (
             <Link
-              to="/essay-wizard"
-              className="flex items-center text-primary-600 hover:text-primary-700 transition-colors"
+              href="/essay-wizard"
+              className="flex items-center text-primary-600 border-gray-200 hover:text-primary-700 transition-colors"
             >
               <PenLine className="w-4 h-4 mr-2" />
               Write New Essay
@@ -201,8 +203,8 @@ export function Profile() {
               Start your college application journey by writing your first essay.
             </p>
             <Link
-              to="/essay-wizard"
-              className="inline-flex items-center px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+              href="/essay-wizard"
+              className="inline-flex items-center px-6 py-3 bg-primary-600 text-white rounded-lg border-gray-200 hover:bg-primary-700 transition-colors"
             >
               <PenLine className="w-5 h-5 mr-2" />
               Write Your First Essay
@@ -214,7 +216,7 @@ export function Profile() {
               <button
                 key={essay.id}
                 onClick={() => setSelectedEssay(essay)}
-                className="w-full text-left border rounded-lg p-4 hover:border-primary-500 hover:bg-gray-50 transition-colors"
+                className="w-full text-left border rounded-lg p-4 border-gray-200 hover:border-primary-500 hover:bg-gray-50 transition-colors"
               >
                 <div className="flex items-start justify-between">
                   <div>

@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Mail, Lock, User, Loader2, AlertCircle } from 'lucide-react';
@@ -247,7 +249,7 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
 
           {error && (
             <div className="flex items-center text-sm text-red-600 bg-red-50 p-3 rounded-md">
-              <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
+              <AlertCircle className="h-5 w-5 mr-2 shrink-0" />
               <span>{error}</span>
             </div>
           )}

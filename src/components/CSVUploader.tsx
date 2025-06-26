@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useCallback } from 'react';
 import { Upload } from 'lucide-react';
 import { useUpload } from '../hooks/useUpload';

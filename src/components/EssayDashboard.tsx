@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { CSVUploader } from './CSVUploader';
 import { SchoolList } from './SchoolList';
@@ -12,9 +14,14 @@ export function EssayDashboard() {
   const { logout } = useAuth();
 
   useEffect(() => {
-    const updateSchoolsList = () => {
-      setSchools(essayService.getSchools());
-      setLastUpdate(essayService.getLastUpdateTime());
+    const updateSchoolsList = async () => {
+      try {
+        const schoolsData = await essayService.getSchools();
+        setSchools(schoolsData);
+        setLastUpdate(new Date()); // For now, just use current time TODO: add timestamp to schools table
+      } catch (error) {
+        console.error('Error loading schools:', error);
+      }
     };
 
     updateSchoolsList();
