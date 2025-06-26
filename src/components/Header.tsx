@@ -3,12 +3,14 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Menu, X, GraduationCap, LogOut, User } from 'lucide-react';
+import { Menu, X, GraduationCap, LogOut, User, Settings } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { useAdmin } from '../hooks/useAdmin';
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, signOut } = useAuth();
+  const { isAdmin } = useAdmin();
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -46,6 +48,15 @@ export function Header() {
                   <User className="w-4 h-4 mr-2" />
                   Profile
                 </Link>
+                {isAdmin && (
+                  <Link
+                    href="/admin"
+                    className="text-gray-600 hover:text-primary-600 flex items-center"
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    Admin
+                  </Link>
+                )}
                 <button
                   onClick={handleSignOut}
                   className="text-gray-600 hover:text-primary-600 flex items-center"
@@ -112,6 +123,18 @@ export function Header() {
                       Profile
                     </span>
                   </Link>
+                  {isAdmin && (
+                    <Link
+                      href="/admin"
+                      className="block px-3 py-2 text-gray-600 hover:text-primary-600"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <span className="flex items-center">
+                        <Settings className="w-4 h-4 mr-2" />
+                        Admin
+                      </span>
+                    </Link>
+                  )}
                   <button
                     onClick={async () => {
                       await handleSignOut();
