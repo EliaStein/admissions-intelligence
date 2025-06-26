@@ -87,7 +87,7 @@ export default function AdminDashboard() {
 
           {/* Quick Stats */}
           <div className="mt-12">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Quick Overview</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">Overview</h2>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <div className="text-2xl font-bold text-blue-600">-</div>
