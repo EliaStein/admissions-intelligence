@@ -3,7 +3,7 @@ import { getAdminClient } from '../../../../../lib/supabase-admin-client';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Get the authorization header
@@ -41,7 +41,8 @@ export async function GET(
       );
     }
 
-    const userId = params.id;
+    // Await params before accessing properties
+    const { id: userId } = await params;
 
     // Get user information
     const { data: userData, error: userError } = await supabase
@@ -103,7 +104,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Get the authorization header
@@ -141,7 +142,8 @@ export async function PUT(
       );
     }
 
-    const userId = params.id;
+    // Await params before accessing properties
+    const { id: userId } = await params;
     const updateData = await request.json();
 
     // Validate the update data
@@ -231,7 +233,9 @@ export async function DELETE(
       );
     }
 
-    const userId = params.id;
+    // Await params before accessing properties
+    const resolvedParams = await params;
+    const userId = resolvedParams.id;
 
     // Prevent admin from deleting themselves
     if (userId === user.id) {

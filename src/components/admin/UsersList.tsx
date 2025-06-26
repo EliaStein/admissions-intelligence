@@ -171,7 +171,13 @@ export function UsersList() {
                     </div>
                     <div className="ml-4">
                       <div className="text-sm font-medium text-gray-900">
-                        {user.first_name} {user.last_name}
+                        <button
+                          onClick={() => handleViewUser(user.id)}
+                          className="hover:text-primary-600 hover:underline transition-colors cursor-pointer text-left"
+                          title="View User Details"
+                        >
+                          {user.first_name} {user.last_name}
+                        </button>
                       </div>
                       <div className="text-sm text-gray-500">ID: {user.id.slice(0, 8)}...</div>
                     </div>

@@ -3,11 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { ArrowLeft, User, Mail, Calendar, CreditCard, FileText, Clock, School } from 'lucide-react';
+import { ArrowLeft, User, Mail, Calendar, CreditCard, FileText, Clock, School, Edit } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { UserEditModal } from '@/components/admin/UserEditModal';
 
 interface UserData {
   id: string;
@@ -18,6 +19,7 @@ interface UserData {
   credits: number;
   is_active: boolean;
   created_at: string;
+  updated_at: string;
 }
 
 interface EssayData {
@@ -49,6 +51,7 @@ export default function UserDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedEssay, setSelectedEssay] = useState<EssayData | null>(null);
+  const [editingUser, setEditingUser] = useState<UserData | null>(null);
 
   useEffect(() => {
     if (userId) {
@@ -84,6 +87,12 @@ export default function UserDetailPage() {
       setError(err instanceof Error ? err.message : 'Failed to fetch user details');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEditUser = () => {
+    if (user) {
+      setEditingUser(user);
     }
   };
 
@@ -178,10 +187,19 @@ export default function UserDetailPage() {
           {/* User Information Card */}
           <div className="bg-white shadow-sm rounded-lg border border-gray-200 mb-8">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900 flex items-center">
-                <User className="w-5 h-5 mr-2" />
-                User Information
-              </h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium text-gray-900 flex items-center">
+                  <User className="w-5 h-5 mr-2" />
+                  User Information
+                </h3>
+                <button
+                  onClick={handleEditUser}
+                  className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit User
+                </button>
+              </div>
             </div>
             <div className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -318,6 +336,19 @@ export default function UserDetailPage() {
         <EssayViewModal
           essay={selectedEssay}
           onClose={() => setSelectedEssay(null)}
+        />
+      )}
+
+      {/* User Edit Modal */}
+      {editingUser && (
+        <UserEditModal
+          user={editingUser}
+          onClose={() => setEditingUser(null)}
+          onSave={(updatedUser: UserData) => {
+            // Update the user data
+            setUser(updatedUser);
+            setEditingUser(null);
+          }}
         />
       )}
     </ProtectedRoute>
