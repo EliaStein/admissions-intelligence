@@ -2,8 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { FileText, School, Calendar, Hash, Plus, Edit, Trash2 } from 'lucide-react';
+import { FileText, School, Calendar, Hash, Plus, Edit, Trash2, Download, Upload } from 'lucide-react';
 import { EssayPromptModal } from './EssayPromptModal';
+import { CSVImportModal } from './CSVImportModal';
+import Papa from 'papaparse';
 
 interface EssayPromptData {
   id: string;
@@ -24,6 +26,7 @@ export function EssayPromptsList() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingPrompt, setEditingPrompt] = useState<EssayPromptData | null>(null);
   const [schools, setSchools] = useState<{ id: string; name: string }[]>([]);
+  const [showImportModal, setShowImportModal] = useState(false);
 
   useEffect(() => {
     fetchEssayPrompts();
@@ -117,6 +120,37 @@ export function EssayPromptsList() {
     return text.substring(0, maxLength) + '...';
   };
 
+  const downloadCSV = () => {
+    const csvData = essayPrompts.map(prompt => ({
+      'School': prompt.schools?.name || 'No School',
+      'Prompt': prompt.prompt,
+      'Word Count': prompt.word_count,
+      'Created Date': formatDate(prompt.created_at),
+      'Updated Date': formatDate(prompt.updated_at),
+      'ID': prompt.id
+    }));
+
+    const csv = Papa.unparse(csvData, {
+      header: true,
+      quotes: true,
+      quoteChar: '"',
+      escapeChar: '"',
+      delimiter: ',',
+      newline: '\n'
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `essay-prompts-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -151,13 +185,30 @@ export function EssayPromptsList() {
             </h3>
             <p className="text-gray-600 mt-1">Manage essay prompts for different schools</p>
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add New Prompt
-          </button>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={downloadCSV}
+              className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+              disabled={essayPrompts.length === 0}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Download CSV
+            </button>
+            <button
+              onClick={() => setShowImportModal(true)}
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Import CSV
+            </button>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add New Prompt
+            </button>
+          </div>
         </div>
       </div>
 
@@ -203,7 +254,7 @@ export function EssayPromptsList() {
                     </div>
                     {prompt.prompt.length > 80 && (
                       <div className="text-xs text-gray-500">
-                        Full text: {prompt.prompt.length} characters
+                        {prompt.prompt.length} characters
                       </div>
                     )}
                   </div>
@@ -273,6 +324,17 @@ export function EssayPromptsList() {
           onClose={() => setEditingPrompt(null)}
           onSave={() => {
             setEditingPrompt(null);
+            fetchEssayPrompts();
+          }}
+        />
+      )}
+
+      {/* CSV Import Modal */}
+      {showImportModal && (
+        <CSVImportModal
+          onClose={() => setShowImportModal(false)}
+          onImportComplete={() => {
+            setShowImportModal(false);
             fetchEssayPrompts();
           }}
         />

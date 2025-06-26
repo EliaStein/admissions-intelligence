@@ -86,8 +86,17 @@ export function EssayPromptModal({ schools, prompt, onClose, onSave }: EssayProm
     }));
   };
 
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div
+      className="fixed inset-0 bg-black/50 overflow-y-auto h-full w-full z-50"
+      onClick={handleBackdropClick}
+    >
       <div className="relative top-20 mx-auto p-5 border w-11/12 max-w-2xl shadow-lg rounded-md bg-white">
         <div className="mt-3">
           <div className="flex items-center justify-between mb-4">
