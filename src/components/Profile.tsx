@@ -1,41 +1,125 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../hooks/useAuth';
+import { useCredits } from '../hooks/useCredits';
+import { FileText, Calendar, PenLine, X, CreditCard, Plus } from 'lucide-react';
 import Link from 'next/link';
-import { CreditCard, Calendar, Pen } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/lib/supabase';
 
-interface UserData {
-  id: string;
-  email: string;
+interface UserProfile {
   first_name: string;
   last_name: string;
+  email: string;
   role: string;
-  credits: number;
-  is_active: boolean;
   created_at: string;
 }
 
 interface Essay {
   id: string;
-  student_first_name: string;
-  student_last_name: string;
-  student_email: string;
-  student_college: string | null;
   selected_prompt: string;
+  student_college: string | null;
   personal_statement: boolean;
-  essay_content: string;
-  essay_feedback: string | null;
   created_at: string;
+  essay_content: string;
 }
 
-export default function Profile() {
+interface EssayModalProps {
+  essay: Essay;
+  onClose: () => void;
+}
+
+function EssayModal({ essay, onClose }: EssayModalProps) {
+  const [activeTab, setActiveTab] = useState<'essay' | 'prompt'>('essay');
+
+  const tabs = [
+    { id: 'essay' as const, label: 'Your Essay' },
+    { id: 'prompt' as const, label: 'Prompt' },
+  ];
+
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+      onClick={handleBackdropClick}
+    >
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+        <div className="p-6 flex justify-between items-start border-b border-gray-200">
+          <div>
+            <h3 className="text-xl font-semibold text-gray-900">
+              {essay.personal_statement ? 'Personal Statement' : essay.student_college}
+            </h3>
+            <p className="text-sm text-gray-500 mt-1">
+              Submitted on {new Date(essay.created_at).toLocaleDateString()}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-500 transition-colors"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        <div className="p-6">
+          {/* Tab Navigation */}
+          <div className="border-b border-gray-200 mb-4">
+            <nav className="flex space-x-8" aria-label="Tabs">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`
+                    py-2 px-1 border-b-2 font-medium text-sm transition-colors
+                    ${activeTab === tab.id
+                      ? 'border-primary-500 text-primary-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }
+                  `}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </nav>
+          </div>
+
+          {/* Tab Content */}
+          <div className="overflow-y-auto max-h-[calc(90vh-280px)]">
+            {activeTab === 'essay' && (
+              <div>
+                <div className="whitespace-pre-wrap text-gray-800 font-serif bg-gray-50 p-4 rounded-lg">
+                  {essay.essay_content}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'prompt' && (
+              <div>
+                <div className="text-gray-600 bg-gray-50 p-4 rounded-lg">
+                  {essay.selected_prompt}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function Profile() {
   const { user } = useAuth();
-  const [userData, setUserData] = useState<UserData | null>(null);
+  const { credits } = useCredits();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [essays, setEssays] = useState<Essay[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedEssay, setSelectedEssay] = useState<Essay | null>(null);
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
 
   useEffect(() => {
@@ -49,71 +133,78 @@ export default function Profile() {
   }, []);
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      if (!user) return;
-
+    async function loadProfile() {
       try {
-        setLoading(true);
-        setError(null);
+        if (!user) return;
 
-        // Fetch user data
-        const { data: userInfo, error: userError } = await supabase
+        // Fetch user profile
+        const { data: profileData, error: profileError } = await supabase
           .from('users')
-          .select('*')
+          .select('first_name, last_name, email, role, created_at')
           .eq('id', user.id)
           .single();
 
-        if (userError) throw userError;
-        setUserData(userInfo);
+        if (profileError) throw profileError;
+        if (!profileData) throw new Error('Profile not found');
 
-        // Fetch user essays based on email
-        const { data: essayData, error: essayError } = await supabase
+        setProfile(profileData);
+
+        // Fetch user's essays
+        const { data: essaysData, error: essaysError } = await supabase
           .from('essays')
-          .select('id, student_first_name, student_last_name, student_email, student_college, selected_prompt, personal_statement, essay_content, essay_feedback, created_at')
-          .eq('student_email', userInfo.email)
+          .select('*')
+          .eq('student_email', user.email)
           .order('created_at', { ascending: false });
 
-        if (essayError) throw essayError;
-        setEssays(essayData || []);
-
+        if (essaysError) throw essaysError;
+        setEssays(essaysData || []);
       } catch (err) {
-        console.error('Error fetching user data:', err);
-        setError(err instanceof Error ? err.message : 'Failed to fetch user data');
+        console.error('Profile loading error:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load profile');
       } finally {
         setLoading(false);
       }
-    };
+    }
 
-    fetchUserData();
+    loadProfile();
   }, [user]);
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
+  const handlePurchaseCredits = () => {
+    // Navigate to credit purchase page
+    window.location.href = '/purchase-credits';
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
       </div>
     );
   }
 
-  if (error || !userData) {
+  if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Error Loading Profile</h2>
-          <p className="text-gray-600 mb-6">{error || 'Failed to load user data'}</p>
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="bg-red-50 text-red-600 p-4 rounded-lg">
+          {error}
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-medium text-gray-900 mb-4">Profile Not Found</h2>
+          <p className="text-gray-600 mb-6">
+            We couldn't find your profile information. This might be because your account was recently created.
+          </p>
           <Link
             href="/"
-            className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 transition-colors"
+            className="text-primary-600 hover:text-primary-700 font-medium"
           >
-            Go to Home
+            Return to Home
           </Link>
         </div>
       </div>
@@ -121,131 +212,162 @@ export default function Profile() {
   }
 
   return (
-    <main className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-4xl mx-auto px-4 py-8">
       {/* Payment Success Modal */}
       {showPaymentSuccess && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <div className="text-center">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
+            <div className="p-6">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Payment Successful!</h3>
+                <p className="text-gray-600 mb-6">Your credits have been added to your account.</p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Link
+                    href="/essay-wizard"
+                    className="inline-flex items-center justify-center bg-primary-600 text-white px-6 py-2 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors font-medium"
+                  >
+                    <PenLine className="w-4 h-4 mr-2" />
+                    Write Essay
+                  </Link>
+                  <button
+                    onClick={() => setShowPaymentSuccess(false)}
+                    className="bg-gray-100 text-gray-700 px-6 py-2 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors font-medium"
+                  >
+                    Continue
+                  </button>
+                </div>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Payment Successful!</h3>
-              <p className="text-gray-600 mb-6">Your credits have been added to your account.</p>
-              <button
-                onClick={() => setShowPaymentSuccess(false)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-              >
-                Continue
-              </button>
             </div>
           </div>
         </div>
       )}
 
       {/* Profile Information */}
-      <div className="bg-white shadow-sm rounded-lg border border-gray-200 p-6 mb-6">
-        <h2 className="text-xl font-semibold text-gray-800 mb-6">Profile Information</h2>
-
+      <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Profile Information</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">Name</label>
-            <p className="text-gray-800 font-medium">{userData.first_name} {userData.last_name}</p>
+            <p className="text-sm text-gray-500">Name</p>
+            <p className="text-lg font-medium text-gray-900">
+              {profile.first_name} {profile.last_name}
+            </p>
           </div>
-
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">Email</label>
-            <p className="text-gray-800">{userData.email}</p>
+            <p className="text-sm text-gray-500">Email</p>
+            <p className="text-lg font-medium text-gray-900">{profile.email}</p>
           </div>
-
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">Account Type</label>
-            <p className="text-gray-800 capitalize">{userData.role}</p>
+            <p className="text-sm text-gray-500">Account Type</p>
+            <p className="text-lg font-medium text-gray-900 capitalize">{profile.role}</p>
           </div>
-
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">Member Since</label>
-            <p className="text-gray-800">{formatDate(userData.created_at)}</p>
+            <p className="text-sm text-gray-500">Member Since</p>
+            <p className="text-lg font-medium text-gray-900">
+              {new Date(profile.created_at).toLocaleDateString()}
+            </p>
           </div>
         </div>
 
+        {/* Credits Section */}
         <div className="mt-6 pt-6 border-t border-gray-200">
           <div className="flex items-center justify-between">
-            <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">Available Credits</label>
-              <div className="flex items-center">
-                <CreditCard className="w-5 h-5 text-primary-600 mr-2" />
-                <span className="text-2xl font-bold text-primary-600">{loading ? '-' : userData.credits}</span>
+            <div className="flex items-center space-x-3">
+              <div>
+                <p className="text-sm text-gray-500">Available Credits</p>
+                <p className=" font-bold text-primary-600">
+                  <CreditCard className="h-6 w-6 mb-2 mr-2 text-primary-600 inline-block"/>
+                  <span className='text-2xl'>{credits}</span>
+                </p>
               </div>
             </div>
-            <Link
-              href="/purchase-credits"
-              className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 transition-colors inline-flex items-center text-sm font-medium"
+            <button
+              onClick={handlePurchaseCredits}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
             >
-              + Buy More Credits
-            </Link>
+              <Plus className="h-4 w-4 mr-2" />
+              Buy More Credits
+            </button>
           </div>
-          <p className="text-sm text-gray-500 mt-2">Each essay feedback costs 1 credit. Purchase more credits to continue getting feedback.</p>
+          <p className="text-xs text-gray-500 mt-2">
+            Each essay feedback costs 1 credit. Purchase more credits to continue getting feedback.
+          </p>
         </div>
       </div>
 
-      {/* Essays Section */}
-      <div className="bg-white shadow-sm rounded-lg border border-gray-200">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-semibold text-gray-800">Your Essays</h3>
+      {/* Essays */}
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold text-gray-900">Your Essays</h2>
+          {essays.length > 0 && (
             <Link
               href="/essay-wizard"
-              className="text-primary-600 hover:text-primary-700 transition-colors inline-flex items-center text-sm font-medium"
+              className="flex items-center text-primary-600 border-gray-200 hover:text-primary-700 transition-colors"
             >
-              <Edit className="w-4 h-4 mr-1" />
+              <PenLine className="w-4 h-4 mr-2" />
               Write New Essay
             </Link>
-          </div>
+          )}
         </div>
 
         {essays.length === 0 ? (
           <div className="text-center py-12">
-            <div className="text-gray-400 mb-4">
-              <Edit className="mx-auto h-12 w-12" />
-            </div>
-            <h3 className="text-lg font-medium text-gray-800 mb-2">No essays yet</h3>
-            <p className="text-gray-500 mb-6">Get started by writing your first essay.</p>
+            <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-xl font-medium text-gray-900 mb-2">
+              No Essays Yet
+            </h3>
+            <p className="text-gray-500 mb-8">
+              Start your college application journey by writing your first essay.
+            </p>
             <Link
               href="/essay-wizard"
-              className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 transition-colors inline-flex items-center text-sm font-medium"
+              className="inline-flex items-center px-6 py-3 bg-primary-600 text-white rounded-lg border-gray-200 hover:bg-primary-700 transition-colors"
             >
-              <Edit className="w-4 h-4 mr-2" />
+              <PenLine className="w-5 h-5 mr-2" />
               Write Your First Essay
             </Link>
           </div>
         ) : (
-          <div className="divide-y divide-gray-200">
+          <div className="space-y-4">
             {essays.map((essay) => (
-              <div key={essay.id} className="p-6">
+              <button
+                key={essay.id}
+                onClick={() => setSelectedEssay(essay)}
+                className="w-full text-left border rounded-lg p-4 border-gray-200 hover:border-primary-500 hover:bg-gray-50 transition-colors"
+              >
                 <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="text-lg font-medium text-gray-800">
-                        {essay.student_college || (essay.personal_statement ? 'Personal Statement' : 'Supplemental Essay')}
-                      </h4>
-                      <div className="flex items-center text-sm text-gray-500">
-                        <Calendar className="w-4 h-4 mr-1" />
-                        {formatDate(essay.created_at)}
-                      </div>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-                      {essay.selected_prompt}
+                  <div className="flex-1 mr-4">
+                    <h3 className="font-medium text-gray-900">
+                      {essay.personal_statement ? 'Personal Statement' : essay.student_college}
+                    </h3>
+                    <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+                      {essay.essay_content.length > 150
+                        ? `${essay.essay_content.substring(0, 150)}...`
+                        : essay.essay_content}
                     </p>
                   </div>
+                  <div className="flex items-center text-sm text-gray-500 flex-shrink-0">
+                    <Calendar className="w-4 h-4 mr-1" />
+                    {new Date(essay.created_at).toLocaleDateString()}
+                  </div>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         )}
       </div>
-    </main>
+
+      {/* Essay Modal */}
+      {selectedEssay && (
+        <EssayModal
+          essay={selectedEssay}
+          onClose={() => setSelectedEssay(null)}
+        />
+      )}
+    </div>
   );
 }
