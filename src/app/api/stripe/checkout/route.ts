@@ -63,6 +63,7 @@ export async function POST(request: NextRequest) {
       success_url: successUrl || `${request.nextUrl.origin}/profile?payment=success`,
       cancel_url: cancelUrl || `${request.nextUrl.origin}/purchase-credits?payment=cancelled`,
       customer_email: user.email,
+      allow_promotion_codes: true,
       metadata: {
         userId: user.id,
         credits: credits.toString(),

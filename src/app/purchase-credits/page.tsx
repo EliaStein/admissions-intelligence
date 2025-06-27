@@ -11,15 +11,16 @@ import { supabase } from '@/lib/supabase';
 import { CreditPackage, creditPackages } from '../../config/products';
 
 export default function PurchaseCreditsPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [currentCredits, setCurrentCredits] = useState<number>(0);
-  const [loading, setLoading] = useState(true);
+  const [creditsLoading, setCreditsLoading] = useState(true);
   const [purchasing, setPurchasing] = useState<string | null>(null);
 
   useEffect(() => {
     const loadCurrentCredits = async () => {
-      if (user) {
+      if (!authLoading && user) {
         try {
+          setCreditsLoading(true);
           // Get the user's session token
           const { data: { session } } = await supabase.auth.getSession();
           if (!session) {
@@ -40,13 +41,17 @@ export default function PurchaseCreditsPage() {
           setCurrentCredits(data.credits);
         } catch (error) {
           console.error('Error loading credits:', error);
+        } finally {
+          setCreditsLoading(false);
         }
+      } else if (!authLoading && !user) {
+        // If auth is done loading and there's no user, stop loading credits
+        setCreditsLoading(false);
       }
-      setLoading(false);
     };
 
     loadCurrentCredits();
-  }, [user]);
+  }, [user, authLoading]);
 
   const handlePurchase = async (pkg: CreditPackage) => {
     if (!user) return;
@@ -94,7 +99,7 @@ export default function PurchaseCreditsPage() {
     }
   };
 
-  if (loading) {
+  if (authLoading) {
     return (
       <ProtectedRoute>
         <div className="min-h-screen bg-gray-50">
@@ -148,7 +153,7 @@ export default function PurchaseCreditsPage() {
                         <div className="text-left">
                           <p className="text-sm text-gray-600">Current Balance</p>
                           <p className="text-lg font-semibold text-gray-900">
-                            {currentCredits} credits
+                            {creditsLoading ? '-' : currentCredits} credits
                           </p>
                         </div>
                       </div>
