@@ -1,16 +1,19 @@
-import { AdminEssaysList } from '@/components/admin/AdminEssaysList';
+'use client';
+
+import React from 'react';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
-import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { UsersList } from '@/components/admin/UsersList';
 
-export default function AdminEssaysPage() {
+export default function AdminUsersPage() {
   return (
     <ProtectedRoute adminOnly>
       <div className="min-h-screen bg-gray-50">
         <Header />
-
+        
         <main className="max-w-7xl mx-auto px-4 py-8 mt-0">
           <div className="mb-8">
             <Link
@@ -20,11 +23,11 @@ export default function AdminEssaysPage() {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Admin Dashboard
             </Link>
-            <h1 className="text-3xl font-bold text-gray-900">Essays Management</h1>
-            <p className="text-gray-600 mt-2">View and manage all submitted essays</p>
+            <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
+            <p className="text-gray-600 mt-2">View and manage all registered users</p>
           </div>
 
-          <AdminEssaysList />
+          <UsersList />
         </main>
 
         <Footer />

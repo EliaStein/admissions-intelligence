@@ -90,26 +90,6 @@ export interface Database {
           updated_at?: string
         }
       }
-      config: {
-        Row: {
-          id: string
-          value: string
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id: string
-          value: string
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          value?: string
-          created_at?: string
-          updated_at?: string
-        }
-      }
       admins: {
         Row: {
           id: string
@@ -128,6 +108,44 @@ export interface Database {
           user_id?: string
           created_at?: string
           updated_at?: string
+        }
+      }
+      essays: {
+        Row: {
+          id: string
+          student_first_name: string
+          student_last_name: string
+          student_email: string
+          student_college: string | null
+          selected_prompt: string
+          personal_statement: boolean
+          essay_content: string
+          essay_feedback: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          student_first_name: string
+          student_last_name: string
+          student_email: string
+          student_college?: string | null
+          selected_prompt: string
+          personal_statement?: boolean
+          essay_content: string
+          essay_feedback?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          student_first_name?: string
+          student_last_name?: string
+          student_email?: string
+          student_college?: string | null
+          selected_prompt?: string
+          personal_statement?: boolean
+          essay_content?: string
+          essay_feedback?: string | null
+          created_at?: string
         }
       }
     }
