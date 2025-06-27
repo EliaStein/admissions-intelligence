@@ -12,10 +12,6 @@ interface CheckoutRequest {
 
 export async function POST(request: NextRequest) {
   try {
-<<<<<<< HEAD
-=======
-    // Get Stripe secret key from config
->>>>>>> 011134a (wip - pricing layout, stripe price and service outline)
     const stripeSecretKey = await ConfigService.getConfigValue(CONFIG_KEYS.STRIPE_SECRET_KEY);
     if (!stripeSecretKey) {
       return NextResponse.json(
@@ -26,11 +22,7 @@ export async function POST(request: NextRequest) {
 
     const stripe = new Stripe(stripeSecretKey);
 
-<<<<<<< HEAD
     // Guard: Get the authorization header
-=======
-    // Get the authenticated user
->>>>>>> 011134a (wip - pricing layout, stripe price and service outline)
     const authHeader = request.headers.get('authorization');
     if (!authHeader) {
       return NextResponse.json(
@@ -39,15 +31,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-<<<<<<< HEAD
     // Verify the token with Supabase
     const token = authHeader.replace('Bearer ', '');
-=======
-    // Extract the token from the Authorization header
-    const token = authHeader.replace('Bearer ', '');
-    
-    // Verify the token with Supabase
->>>>>>> 011134a (wip - pricing layout, stripe price and service outline)
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) {
       return NextResponse.json(
@@ -66,10 +51,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-<<<<<<< HEAD
-=======
-    // Create Stripe checkout session
->>>>>>> 011134a (wip - pricing layout, stripe price and service outline)
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
