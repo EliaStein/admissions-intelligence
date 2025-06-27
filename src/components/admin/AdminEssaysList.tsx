@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
-import { FileText, User, Calendar, Search, Filter, Edit, Trash2, Eye, ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { FileText, User, Calendar, Search, Filter, Trash2, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface EssayData {
   id: string;
@@ -32,10 +33,12 @@ interface PaginationData {
 }
 
 export function AdminEssaysList() {
+  const router = useRouter();
   const [essays, setEssays] = useState<EssayData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchQuery, setSearchQuery] = useState(''); // The actual search query used for API calls
   const [personalStatementFilter, setPersonalStatementFilter] = useState<string>('all');
   const [pagination, setPagination] = useState<PaginationData>({
     page: 1,
@@ -47,11 +50,12 @@ export function AdminEssaysList() {
   const [selectedEssays, setSelectedEssays] = useState<Set<string>>(new Set());
   const [showBulkActions, setShowBulkActions] = useState(false);
 
+  // Reset pagination when search query or filter changes
   useEffect(() => {
-    fetchEssays();
-  }, [pagination.page, searchTerm, personalStatementFilter]);
+    setPagination(prev => ({ ...prev, page: 1 }));
+  }, [searchQuery, personalStatementFilter]);
 
-  const fetchEssays = async () => {
+  const fetchEssays = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -66,8 +70,8 @@ export function AdminEssaysList() {
         limit: pagination.limit.toString(),
       });
 
-      if (searchTerm) {
-        params.append('search', searchTerm);
+      if (searchQuery) {
+        params.append('search', searchQuery);
       }
 
       if (personalStatementFilter !== 'all') {
@@ -93,7 +97,11 @@ export function AdminEssaysList() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [pagination.page, pagination.limit, searchQuery, personalStatementFilter]);
+
+  useEffect(() => {
+    fetchEssays();
+  }, [pagination.page, searchQuery, personalStatementFilter, fetchEssays]);
 
   const handleDeleteEssay = async (essayId: string) => {
     if (!confirm('Are you sure you want to delete this essay? This action cannot be undone.')) {
@@ -135,6 +143,22 @@ export function AdminEssaysList() {
     setSelectedEssays(newSelected);
     setShowBulkActions(newSelected.size > 0);
   };
+
+  const handleViewUser = (userId: string) => {
+    router.push(`/admin/users/${userId}`);
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      setSearchQuery(searchTerm);
+    }
+  };
+
+  const handleSearchSubmit = () => {
+    setSearchQuery(searchTerm);
+  };
+
+
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -182,50 +206,7 @@ export function AdminEssaysList() {
     }
   };
 
-  const handleExportEssays = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('No active session');
-      }
 
-      const params = new URLSearchParams({
-        format: 'csv',
-      });
-
-      if (searchTerm) {
-        params.append('search', searchTerm);
-      }
-
-      if (personalStatementFilter !== 'all') {
-        params.append('personal_statement', personalStatementFilter);
-      }
-
-      const response = await fetch(`/api/admin/export/essays?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to export essays');
-      }
-
-      // Create download link
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `essays-export-${new Date().toISOString().split('T')[0]}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (err) {
-      console.error('Error exporting essays:', err);
-      setError(err instanceof Error ? err.message : 'Failed to export essays');
-    }
-  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -272,15 +253,25 @@ export function AdminEssaysList() {
           
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
             {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search essays..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500 w-full sm:w-64"
-              />
+            <div className="relative flex">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="Search essays... (Press Enter to search)"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={handleSearchKeyDown}
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-l-md focus:ring-primary-500 focus:border-primary-500 w-full sm:w-64"
+                />
+              </div>
+              <button
+                onClick={handleSearchSubmit}
+                className="px-3 py-2 bg-primary-600 text-white border border-primary-600 rounded-r-md hover:bg-primary-700 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                title="Search"
+              >
+                <Search className="w-4 h-4" />
+              </button>
             </div>
 
             {/* Filter */}
@@ -297,15 +288,7 @@ export function AdminEssaysList() {
               </select>
             </div>
 
-            {/* Export Button */}
-            <button
-              onClick={handleExportEssays}
-              className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-              title="Export Essays to CSV"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Export CSV
-            </button>
+
           </div>
         </div>
         
@@ -365,9 +348,6 @@ export function AdminEssaysList() {
                   Prompt
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  User Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Created
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -395,7 +375,17 @@ export function AdminEssaysList() {
                       </div>
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-900">
-                          {essay.student_first_name} {essay.student_last_name}
+                          {essay.user_info?.id ? (
+                            <button
+                              onClick={() => handleViewUser(essay.user_info!.id)}
+                              className="hover:text-primary-600 hover:underline transition-colors cursor-pointer text-left"
+                              title="View User Details"
+                            >
+                              {essay.student_first_name} {essay.student_last_name}
+                            </button>
+                          ) : (
+                            <span>{essay.student_first_name} {essay.student_last_name}</span>
+                          )}
                         </div>
                         <div className="text-sm text-gray-500">{essay.student_email}</div>
                         {essay.student_college && (
@@ -417,16 +407,6 @@ export function AdminEssaysList() {
                     <div className="text-sm text-gray-900 max-w-xs">
                       {truncateText(essay.selected_prompt, 100)}
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {essay.user_info ? (
-                      <div className="text-sm">
-                        <div className="text-gray-900">Registered User</div>
-                        <div className="text-gray-500">{essay.user_info.credits} credits</div>
-                      </div>
-                    ) : (
-                      <span className="text-sm text-gray-500">Guest User</span>
-                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center text-sm text-gray-900">
@@ -550,7 +530,7 @@ function EssayViewModal({ essay, onClose }: EssayViewModalProps) {
 
   return (
     <div
-      className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+      className="fixed inset-0 bg-black/50 overflow-y-auto h-full w-full z-50"
       onClick={handleBackdropClick}
     >
       <div className="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">

@@ -60,8 +60,7 @@ export async function GET(request: NextRequest) {
         personal_statement,
         essay_content,
         essay_feedback,
-        created_at,
-        updated_at
+        created_at
       `, { count: 'exact' });
 
     // Apply filters
