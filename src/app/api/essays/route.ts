@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Essay } from '../../../types/essay';
 import { getAdminClient } from '../../../lib/supabase-admin-client';
-import emailjs from '@emailjs/nodejs';
-import { EMAILJS_CONFIG } from '../../../config/emailjs';
+import { EmailService } from '../../../services/emailService';
 import { AIService } from '../../../services/aiService';
 import { AiFeedbackRequest } from '../../../types/aiService';
 import { CreditService } from '../../../services/creditService';
-import { supabase } from '../../../lib/supabase';
 
 interface EssaySubmissionRequest {
   essay: Essay;
@@ -102,6 +100,22 @@ export async function POST(request: NextRequest) {
               // Note: We don't fail the request here since the feedback was already generated
             }
           }
+
+          // Send feedback email to student
+          try {
+            const studentName = `${essay.student_first_name} ${essay.student_last_name}`;
+            const essayType = essay.personal_statement ? 'Personal Statement' : 'Supplemental Essay';
+
+            await EmailService.sendEssayFeedbackEmail(
+              essay.student_email,
+              studentName,
+              essayType,
+              feedback.feedback
+            );
+          } catch (emailError) {
+            console.error('Error sending feedback email to student:', emailError);
+            // Don't fail the request if email fails, just log it
+          }
         })
       } catch (aiError) {
         console.error('Error generating AI feedback:', aiError);
@@ -110,32 +124,6 @@ export async function POST(request: NextRequest) {
           { status: 500 }
         );
       }
-    }
-
-    try {
-      const templateParams = {
-        to_email: EMAILJS_CONFIG.TO_EMAIL,
-        student_name: `${essay.student_first_name} ${essay.student_last_name}`,
-        student_email: essay.student_email,
-        college: essay.student_college || 'Personal Statement',
-        prompt: essay.selected_prompt,
-        essay_type: essay.personal_statement ? 'Personal Statement' : 'Supplemental Essay',
-        essay_content: essay.essay_content,
-        submission_date: new Date().toLocaleString()
-      };
-
-      await emailjs.send(
-        EMAILJS_CONFIG.SERVICE_ID,
-        EMAILJS_CONFIG.TEMPLATE_ID,
-        templateParams,
-        {
-          publicKey: EMAILJS_CONFIG.PUBLIC_KEY,
-        }
-      );
-
-    } catch (emailError) {
-      console.error('Error sending email notification:', emailError);
-      // Don't fail the request if email fails, just log it
     }
 
     return NextResponse.json({

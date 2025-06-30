@@ -11,12 +11,13 @@
     "stripe:emit": "stripe trigger checkout.session.completed"
   },
   "dependencies": {
-    "@emailjs/browser": "^4.4.1",
-    "@emailjs/nodejs": "^5.0.2",
+    "@sendgrid/mail": "^8.1.5",
     "@stripe/stripe-js": "^7.4.0",
     "@supabase/supabase-js": "^2.50.0",
+    "@types/marked": "^5.0.2",
     "lucide-react": "^0.522.0",
     "mammoth": "^1.9.1",
+    "marked": "^16.0.0",
     "next": "15.3.4",
     "openai": "^5.7.0",
     "papaparse": "^5.5.3",
