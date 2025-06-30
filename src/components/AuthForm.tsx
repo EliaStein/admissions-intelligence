@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Mail, Lock, User, Loader2, AlertCircle } from 'lucide-react';
+import { ReferralService } from '../services/referralService';
 
 interface AuthFormProps {
   onSuccess?: () => void;
@@ -30,6 +31,15 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Check for referral code in localStorage
+    const storedReferralCode = localStorage.getItem('referralCode');
+    if (storedReferralCode) {
+      setReferralCode(storedReferralCode);
+    }
+  }, []);
 
   const validatePassword = (pass: string): boolean => {
     return PASSWORD_REQUIREMENTS.every(req => req.regex.test(pass));
@@ -96,13 +106,49 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
               first_name: firstName,
               last_name: lastName,
               role: 'student',
-              is_active: true
+              is_active: true,
+              referral_code_used: referralCode
             });
 
           if (userError) {
             // If user table insert fails, delete the auth user
             await supabase.auth.admin.deleteUser(authData.user.id);
             throw new Error('Failed to create user profile');
+          }
+
+          // Handle referral tracking and Viral Loops integration
+          try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+              const response = await fetch('/api/referrals/signup', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify({
+                  userId: authData.user.id,
+                  email: email.toLowerCase(),
+                  firstName,
+                  lastName,
+                  referralCode,
+                }),
+              });
+
+              if (response.ok) {
+                console.log('Referral tracking completed successfully');
+              } else {
+                console.error('Referral tracking failed:', await response.text());
+              }
+            }
+
+            // Clear the referral code from localStorage
+            if (referralCode) {
+              localStorage.removeItem('referralCode');
+            }
+          } catch (referralError) {
+            console.error('Error with referral tracking:', referralError);
+            // Don't fail the signup if referral tracking fails
           }
         }
       }
@@ -136,6 +182,24 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
             </button>
           </p>
         </div>
+
+        {/* Referral Code Indicator */}
+        {!isLogin && referralCode && (
+          <div className="bg-green-50 border border-green-200 rounded-md p-4">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-green-800">
+                  🎉 You're signing up with a referral! You'll get bonus credits with your first purchase.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm space-y-2">

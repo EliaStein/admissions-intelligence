@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Providers } from './providers';
+import Script from 'next/script';
 
 
 export const metadata: Metadata = {
@@ -24,6 +25,14 @@ export default function RootLayout({
         <Providers>
           {children}
         </Providers>
+
+        {/* Viral Loops Script */}
+        <Script
+          src="https://app.viral-loops.com/widgetsV2/core/loader.js"
+          data-campaign-id={process.env.NEXT_PUBLIC_VIRAL_LOOPS_CAMPAIGN_ID || 'FSHsStRJfckdYQCLN0IvMZrMb4c'}
+          id="viral-loops-loader"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
