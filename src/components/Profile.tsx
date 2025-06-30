@@ -22,6 +22,7 @@ interface Essay {
   personal_statement: boolean;
   created_at: string;
   essay_content: string;
+  essay_feedback: string | null;
 }
 
 interface EssayModalProps {
@@ -30,12 +31,20 @@ interface EssayModalProps {
 }
 
 function EssayModal({ essay, onClose }: EssayModalProps) {
-  const [activeTab, setActiveTab] = useState<'essay' | 'prompt'>('essay');
+  const [activeTab, setActiveTab] = useState<'feedback' | 'essay' | 'prompt'>(
+    essay.essay_feedback ? 'feedback' : 'essay'
+  );
 
-  const tabs = [
-    { id: 'essay' as const, label: 'Your Essay' },
-    { id: 'prompt' as const, label: 'Prompt' },
-  ];
+  const tabs = essay.essay_feedback
+    ? [
+        { id: 'feedback' as const, label: 'Feedback' },
+        { id: 'essay' as const, label: 'Your Essay' },
+        { id: 'prompt' as const, label: 'Prompt' },
+      ]
+    : [
+        { id: 'essay' as const, label: 'Your Essay' },
+        { id: 'prompt' as const, label: 'Prompt' },
+      ];
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -90,6 +99,14 @@ function EssayModal({ essay, onClose }: EssayModalProps) {
 
           {/* Tab Content */}
           <div className="overflow-y-auto max-h-[calc(90vh-280px)]">
+            {activeTab === 'feedback' && essay.essay_feedback && (
+              <div>
+                <div className="text-gray-800 bg-blue-50 p-4 rounded-lg whitespace-pre-wrap">
+                  {essay.essay_feedback}
+                </div>
+              </div>
+            )}
+
             {activeTab === 'essay' && (
               <div>
                 <div className="whitespace-pre-wrap text-gray-800 font-serif bg-gray-50 p-4 rounded-lg">
