@@ -4,6 +4,7 @@ import { CONFIG_KEYS, ConfigService } from '../../../../services/configService';
 import { CreditService } from '../../../../services/creditService';
 import { ReferralService } from '../../../../services/referralService';
 import { ViralLoopsService } from '../../../../services/viralLoopsService';
+import { getAdminClient } from '../../../../lib/supabase-admin-client';
 
 export async function POST(request: NextRequest) {
   try {
@@ -69,7 +70,8 @@ export async function POST(request: NextRequest) {
         console.log(`Marked referral payment for user ${userId}`);
 
         // Find the referral to process reward
-        const { data: referrals, error } = await (await import('../../../../lib/supabase-admin-client')).getAdminClient()
+        const dbClient = await getAdminClient();
+        const { data: referrals, error } = await dbClient
           .from('referrals')
           .select('id, referrer_id')
           .eq('referee_id', userId)
