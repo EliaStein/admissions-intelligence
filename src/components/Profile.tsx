@@ -22,6 +22,7 @@ interface Essay {
   personal_statement: boolean;
   created_at: string;
   essay_content: string;
+  essay_feedback: string | null;
 }
 
 interface EssayModalProps {
@@ -30,12 +31,20 @@ interface EssayModalProps {
 }
 
 function EssayModal({ essay, onClose }: EssayModalProps) {
-  const [activeTab, setActiveTab] = useState<'essay' | 'prompt'>('essay');
+  const [activeTab, setActiveTab] = useState<'feedback' | 'essay' | 'prompt'>(
+    essay.essay_feedback ? 'feedback' : 'essay'
+  );
 
-  const tabs = [
-    { id: 'essay' as const, label: 'Your Essay' },
-    { id: 'prompt' as const, label: 'Prompt' },
-  ];
+  const tabs = essay.essay_feedback
+    ? [
+        { id: 'feedback' as const, label: 'Feedback' },
+        { id: 'essay' as const, label: 'Your Essay' },
+        { id: 'prompt' as const, label: 'Prompt' },
+      ]
+    : [
+        { id: 'essay' as const, label: 'Your Essay' },
+        { id: 'prompt' as const, label: 'Prompt' },
+      ];
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -90,9 +99,17 @@ function EssayModal({ essay, onClose }: EssayModalProps) {
 
           {/* Tab Content */}
           <div className="overflow-y-auto max-h-[calc(90vh-280px)]">
+            {activeTab === 'feedback' && essay.essay_feedback && (
+              <div>
+                <div className="text-gray-800 bg-blue-50 p-4 rounded-lg whitespace-pre-wrap">
+                  {essay.essay_feedback}
+                </div>
+              </div>
+            )}
+
             {activeTab === 'essay' && (
               <div>
-                <div className="whitespace-pre-wrap text-gray-800 font-serif bg-gray-50 p-4 rounded-lg">
+                <div className="whitespace-pre-line text-gray-800 bg-gray-50 p-4 rounded-lg leading-relaxed">
                   {essay.essay_content}
                 </div>
               </div>
@@ -114,7 +131,7 @@ function EssayModal({ essay, onClose }: EssayModalProps) {
 
 export function Profile() {
   const { user } = useAuth();
-  const { credits } = useCredits();
+  const { credits, loading: creditsLoading } = useCredits();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [essays, setEssays] = useState<Essay[]>([]);
   const [loading, setLoading] = useState(true);
@@ -281,7 +298,7 @@ export function Profile() {
                 <p className="text-sm text-gray-500">Available Credits</p>
                 <p className=" font-bold text-primary-600">
                   <CreditCard className="h-6 w-6 mb-2 mr-2 text-primary-600 inline-block"/>
-                  <span className='text-2xl'>{credits}</span>
+                  <span className='text-2xl'>{creditsLoading ? '-' : credits}</span>
                 </p>
               </div>
             </div>
