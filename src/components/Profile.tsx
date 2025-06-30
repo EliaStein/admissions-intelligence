@@ -109,7 +109,7 @@ function EssayModal({ essay, onClose }: EssayModalProps) {
 
             {activeTab === 'essay' && (
               <div>
-                <div className="whitespace-pre-wrap text-gray-800 font-serif bg-gray-50 p-4 rounded-lg">
+                <div className="whitespace-pre-line text-gray-800 bg-gray-50 p-4 rounded-lg leading-relaxed">
                   {essay.essay_content}
                 </div>
               </div>
