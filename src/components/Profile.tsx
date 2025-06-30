@@ -114,7 +114,7 @@ function EssayModal({ essay, onClose }: EssayModalProps) {
 
 export function Profile() {
   const { user } = useAuth();
-  const { credits } = useCredits();
+  const { credits, loading: creditsLoading } = useCredits();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [essays, setEssays] = useState<Essay[]>([]);
   const [loading, setLoading] = useState(true);
@@ -281,7 +281,7 @@ export function Profile() {
                 <p className="text-sm text-gray-500">Available Credits</p>
                 <p className=" font-bold text-primary-600">
                   <CreditCard className="h-6 w-6 mb-2 mr-2 text-primary-600 inline-block"/>
-                  <span className='text-2xl'>{credits}</span>
+                  <span className='text-2xl'>{creditsLoading ? '-' : credits}</span>
                 </p>
               </div>
             </div>
