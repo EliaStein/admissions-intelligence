@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { X, Users, Gift } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import SharingOptionsWidget from './SharingOptionsWidget';
+import ReferralUrlWidget from './ReferralUrlWidget';
 
 interface ReferralModalProps {
   isOpen: boolean;
@@ -24,20 +26,21 @@ export function ReferralModal({ isOpen, onClose }: ReferralModalProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isOpen && user?.email) {
-      initializeViralLoops();
+  const initializeViralLoops = useCallback(async () => {
+    if (!user?.email) {
+      // Don't try to initialize if there's no email
+      setError('User email is not available.');
+      setIsLoading(false);
+      return;
     }
-  }, [isOpen, user?.email]);
-
-  const initializeViralLoops = async () => {
+    
     try {
       setIsLoading(true);
       setError(null);
 
       let attempts = 0;
       const maxAttempts = 10;
-      
+
       while (!window.ViralLoops && attempts < maxAttempts) {
         await new Promise(resolve => setTimeout(resolve, 100));
         attempts++;
@@ -47,17 +50,22 @@ export function ReferralModal({ isOpen, onClose }: ReferralModalProps) {
         throw new Error('Viral Loops failed to load. Please refresh the page and try again.');
       }
 
-      // Initialize with user email
       const campaign = await window.ViralLoops.getCampaign();
-      campaign.identify({ email: user!.email as string});
-      
+      campaign.identify({ email: user.email });
+
       setIsLoading(false);
     } catch (err) {
       console.error('Error initializing Viral Loops:', err);
       setError(err instanceof Error ? err.message : 'Failed to load referral system');
       setIsLoading(false);
     }
-  };
+  }, [user?.email]);
+
+  useEffect(() => {
+    if (isOpen) {
+      initializeViralLoops();
+    }
+  }, [isOpen, initializeViralLoops]);
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -135,9 +143,9 @@ export function ReferralModal({ isOpen, onClose }: ReferralModalProps) {
 
               {/* Viral Loops Widgets Container */}
               <div className="relative">
-                <referral-url-widget ucid='FSHsStRJfckdYQCLN0IvMZrMb4c'></referral-url-widget>
+                <SharingOptionsWidget ucid='FSHsStRJfckdYQCLN0IvMZrMb4c' />
                 <div className="relative -mt-4 bg-white pt-2 z-10">
-                  <sharing-options-widget ucid='FSHsStRJfckdYQCLN0IvMZrMb4c'></sharing-options-widget>
+                  <ReferralUrlWidget ucid='FSHsStRJfckdYQCLN0IvMZrMb4c' />
                 </div>
               </div>
             </div>
