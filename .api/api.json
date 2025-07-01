@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "apis": [
+    {
+      "identifier": "viral-loops-docs",
+      "source": "@viral-loops-docs/v3.0#bucuhmb96z5fc",
+      "integrity": "sha512-bG5Rx0/VaTnkxlOR5r/FYq3cMK5XirzIucaYDwkxd1SXD6ctX+q2RZ7bCCLwjQIWOsAmy5hDfoobaYd6+y2ucg==",
+      "installerVersion": "6.1.3"
+    }
+  ]
+}

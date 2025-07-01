@@ -84,20 +84,12 @@ export class UserService {
         };
       }
 
-      if (referralCode) {
-        try {
-          await this.handleReferralTracking({
-            userId: authData.user.id,
-            email: email.toLowerCase(),
-            firstName,
-            lastName,
-            referralCode
-          });
-        } catch (referralError) {
-          console.error('Error with referral tracking:', referralError);
-          // Don't fail the user creation if referral tracking fails
-        }
-      }
+      await ViralLoopsService.registerParticipant({
+        email,
+        firstname: firstName,
+        lastname: lastName,
+        referralCode
+      });
 
       return {
         success: true,
@@ -110,46 +102,6 @@ export class UserService {
         success: false,
         error: error instanceof Error ? error.message : 'Internal server error'
       };
-    }
-  }
-
-  private static async handleReferralTracking(data: {
-    userId: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-    referralCode: string;
-  }): Promise<void> {
-    const { userId, email, firstName, lastName, referralCode } = data;
-
-    let viralLoopsParticipantId: string | null = null;
-
-    try {
-      viralLoopsParticipantId = await ViralLoopsService.registerAndTrackSignup(
-        email,
-        firstName,
-        lastName,
-        referralCode
-      );
-
-      if (viralLoopsParticipantId) {
-        console.log('Successfully registered with Viral Loops:', viralLoopsParticipantId);
-      }
-    } catch (viralLoopsError) {
-      console.error('Error with Viral Loops integration:', viralLoopsError);
-      // Continue with referral tracking even if Viral Loops fails
-    }
-
-    try {
-      // Mark referral as signed up
-      const signupSuccess = await ReferralService.markReferralSignup(referralCode, userId);
-      if (signupSuccess) {
-        console.log('Referral signup marked successfully');
-      } else {
-        console.error('Failed to mark referral signup');
-      }
-    } catch (referralError) {
-      console.error('Error marking referral signup:', referralError);
     }
   }
 

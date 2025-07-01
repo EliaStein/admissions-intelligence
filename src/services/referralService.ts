@@ -18,7 +18,7 @@ export class ReferralService {
   ): Promise<Referral | null> {
     try {
       const supabaseAdmin = await getAdminClient();
-      
+
       const referralData: ReferralInsert = {
         referrer_id: referrerId,
         referee_email: refereeEmail.toLowerCase(),
@@ -73,7 +73,7 @@ export class ReferralService {
   static async findReferralByCode(referralCode: string): Promise<Referral | null> {
     try {
       const supabaseAdmin = await getAdminClient();
-      
+
       const { data, error } = await supabaseAdmin
         .from('referrals')
         .select('*')
@@ -97,42 +97,12 @@ export class ReferralService {
   }
 
   /**
-   * Mark referral as signed up
-   */
-  static async markReferralSignup(referralCode: string, refereeId: string): Promise<boolean> {
-    try {
-      const supabaseAdmin = await getAdminClient();
-      
-      const updateData: ReferralUpdate = {
-        referee_id: refereeId,
-        signup_completed: true,
-        signup_at: new Date().toISOString(),
-      };
-
-      const { error } = await supabaseAdmin
-        .from('referrals')
-        .update(updateData)
-        .eq('referral_code', referralCode);
-
-      if (error) {
-        console.error('Error marking referral signup:', error);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Error in markReferralSignup:', error);
-      return false;
-    }
-  }
-
-  /**
    * Mark referral as payment completed
    */
   static async markReferralPayment(refereeId: string): Promise<boolean> {
     try {
       const supabaseAdmin = await getAdminClient();
-      
+
       const updateData: ReferralUpdate = {
         payment_completed: true,
         payment_at: new Date().toISOString(),
@@ -163,7 +133,7 @@ export class ReferralService {
   static async processReferralReward(referralId: string, rewardCredits: number = 1): Promise<boolean> {
     try {
       const supabaseAdmin = await getAdminClient();
-      
+
       // Get the referral
       const { data: referral, error: referralError } = await supabaseAdmin
         .from('referrals')
@@ -232,7 +202,7 @@ export class ReferralService {
   }> {
     try {
       const referrals = await this.getUserReferrals(userId);
-      
+
       return {
         totalReferrals: referrals.length,
         signedUpReferrals: referrals.filter(r => r.signup_completed).length,
