@@ -19,7 +19,7 @@ export class ViralLoopsService {
           lastname: participant.lastname || '',
           email: participant.email
         },
-        referrer: participant.referralCode ? { referralCode: participant.referralCode } : undefined,
+        referrer: { referralCode: participant.referralCode },
         publicToken: process.env.VIRAL_LOOPS_CAMPAIGN_ID || '',
       }, {
         apiToken: process.env.VIRAL_LOOPS_API_TOKEN
@@ -30,7 +30,7 @@ export class ViralLoopsService {
 
       return data;
     } catch (error) {
-      throw new Error('Error registering participant with Viral Loops:' + error.message);
+      console.error(JSON.stringify(error));
     }
   }
 
