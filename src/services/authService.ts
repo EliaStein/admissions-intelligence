@@ -30,7 +30,7 @@ export const authService = {
       const errorData = await response.json();
       throw new Error(errorData.error || 'Registration failed');
     }
-
+    await this.signIn(userData.email, userData.password);
     return await response.json();
   },
 
