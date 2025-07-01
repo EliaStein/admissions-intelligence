@@ -41,7 +41,7 @@ export default tseslint.config(
       '@typescript-eslint/no-namespace': 'warn',
     },
   },
-  // Allow namespaces in type declaration files for ViralLoops
+  // Allow namespaces in type declaration files for ViralLoops widgets
   {
     files: ['**/*.d.ts'],
     rules: {
