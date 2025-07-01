@@ -11,6 +11,29 @@ export const authService = {
     return data;
   },
 
+  async signUp(userData: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    referralCode?: string;
+  }) {
+    const response = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Registration failed');
+    }
+    await this.signIn(userData.email, userData.password);
+    return await response.json();
+  },
+
   async signOut() {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
@@ -25,7 +48,7 @@ export const authService = {
   async isAdmin() {
     const session = await this.getCurrentSession();
     if (!session) return false;
-    
+
     const { data, error } = await supabase
       .from('admins')
       .select('id')

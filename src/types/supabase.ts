@@ -18,6 +18,7 @@ export interface Database {
           role: string
           is_active: boolean
           credits: number
+          referral_code_used: string | null
           created_at: string
           updated_at: string
         }
@@ -29,6 +30,7 @@ export interface Database {
           role?: string
           is_active?: boolean
           credits?: number
+          referral_code_used?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -40,6 +42,7 @@ export interface Database {
           role?: string
           is_active?: boolean
           credits?: number
+          referral_code_used?: string | null
           created_at?: string
           updated_at?: string
         }

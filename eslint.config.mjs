@@ -38,6 +38,14 @@ export default tseslint.config(
       'prefer-rest-params': 'warn',
       '@next/next/no-img-element': 'warn',
       'react-hooks/exhaustive-deps': 'warn',
+      '@typescript-eslint/no-namespace': 'warn',
+    },
+  },
+  // Allow namespaces in type declaration files for ViralLoops widgets
+  {
+    files: ['**/*.d.ts'],
+    rules: {
+      '@typescript-eslint/no-namespace': 'off',
     },
   }
 );

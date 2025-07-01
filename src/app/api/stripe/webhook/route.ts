@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { CONFIG_KEYS, ConfigService } from '../../../../services/configService';
 import { CreditService } from '../../../../services/creditService';
+import { ReferralService } from '../../../../services/referralService';
 
 export async function POST(request: NextRequest) {
   try {
@@ -57,6 +58,8 @@ export async function POST(request: NextRequest) {
       userId,
       +credits,
     );
+
+    await ReferralService.rewardReferrer(userId);
 
     return NextResponse.json({ received: true });
 

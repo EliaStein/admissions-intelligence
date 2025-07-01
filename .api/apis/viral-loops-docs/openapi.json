@@ -1,0 +1,1951 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Viral Loops API",
+    "version": "3.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://app.viral-loops.com/api/v3"
+    }
+  ],
+  "paths": {
+    "/campaign": {
+      "get": {
+        "summary": "Campaign Info",
+        "description": "Get the public information of a campaign.\n                \n\n> 🚧 Warning \n> For this request you can use the campaign's `publicToken` or the secret `apiToken`. You should **never** expose the `apiToken` in the front-end of your application. <a href='/'> Learn more about a campaign's tokens </a>",
+        "tags": [
+          "Campaign"
+        ],
+        "parameters": [
+          {
+            "name": "publicToken",
+            "in": "query",
+            "description": "<a> Where to find it? </a>",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "apiToken",
+            "in": "header",
+            "description": "Only use the `apiToken` in secure contexts. <a> Where to find it? </a>",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "og": {
+                      "type": "object"
+                    },
+                    "doi": {
+                      "type": "object"
+                    },
+                    "type": {
+                      "type": "string"
+                    },
+                    "popup": {
+                      "type": "object"
+                    },
+                    "styles": {
+                      "type": "object"
+                    },
+                    "captcha": {
+                      "type": "object"
+                    },
+                    "twitter": {
+                      "type": "object"
+                    },
+                    "widgets": {
+                      "type": "object"
+                    },
+                    "template": {
+                      "type": "string"
+                    },
+                    "textCodes": {
+                      "type": "object"
+                    },
+                    "embeddedCta": {
+                      "type": "object"
+                    },
+                    "emailService": {
+                      "type": "string"
+                    },
+                    "genericConfig": {
+                      "type": "object"
+                    },
+                    "referralCodeField": {
+                      "type": "object"
+                    },
+                    "companyName": {
+                      "type": "string"
+                    },
+                    "brandingStyle": {
+                      "type": "string"
+                    },
+                    "landingPage": {
+                      "type": "string"
+                    },
+                    "expirationType": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "expirationDate": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "campaignName": {
+                      "type": "string"
+                    },
+                    "integrations": {
+                      "type": "object"
+                    },
+                    "gdprJson": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Programmer error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server side error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/campaign/stats": {
+      "get": {
+        "summary": "Campaign Stats",
+        "description": "Get the number of leads and the total referral count of your campaign.",
+        "tags": [
+          "Campaign"
+        ],
+        "parameters": [
+          {
+            "name": "apiToken",
+            "in": "header",
+            "description": "Only use the `apiToken` in secure contexts. <a> Where to find it? </a>",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "leadCount": {
+                      "type": "integer"
+                    },
+                    "referralCountTotal": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Programmer error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server side error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/campaign/participant": {
+      "post": {
+        "summary": "Participant Registration",
+        "description": "Register a new participant for a campaign\n                \n\n> 🚧 Warning \n> For this request you can use the campaign's `publicToken` or the secret `apiToken`. You should **never** expose the `apiToken` in the front-end of your application. <a href='/'> Learn more about a campaign's tokens </a>",
+        "tags": [
+          "Participant"
+        ],
+        "parameters": [
+          {
+            "name": "apiToken",
+            "in": "header",
+            "description": "Only use the `apiToken` in secure contexts. <a> Where to find it? </a>",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "publicToken": {
+                    "required": true,
+                    "description": "<a> Where to find it? </a>",
+                    "type": "string"
+                  },
+                  "captchaJWT": {
+                    "required": false,
+                    "description": "",
+                    "type": "string"
+                  },
+                  "user": {
+                    "required": true,
+                    "description": "",
+                    "type": "object",
+                    "properties": {
+                      "firstname": {
+                        "required": false,
+                        "description": "",
+                        "type": "string"
+                      },
+                      "lastname": {
+                        "required": false,
+                        "description": "",
+                        "type": "string"
+                      },
+                      "email": {
+                        "required": true,
+                        "description": "",
+                        "type": "string"
+                      },
+                      "consents": {
+                        "required": false,
+                        "description": "",
+                        "type": "object"
+                      },
+                      "extraData": {
+                        "required": false,
+                        "description": "",
+                        "type": "object"
+                      }
+                    }
+                  },
+                  "referrer": {
+                    "required": false,
+                    "description": "",
+                    "type": "object",
+                    "properties": {
+                      "referralCode": {
+                        "required": false,
+                        "description": "Required only for referred participations",
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "refSource": {
+                    "required": false,
+                    "description": "",
+                    "type": "string"
+                  },
+                  "acquiredFrom": {
+                    "required": false,
+                    "description": "",
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "referralCode": {
+                      "type": "string"
+                    },
+                    "isNew": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Programmer error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server side error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Edit Participant",
+        "description": "Use this Endpont to edit the First Name, Last Name and Referral Count of your Participants\n            \n> 📘 Info \n> You can change this attributes by using our new Campaign Dashboard as well!",
+        "tags": [
+          "Participant"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "apiToken": {
+                    "type": "string",
+                    "description": "API token is required."
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Email is optional."
+                  },
+                  "referralCode": {
+                    "type": "string",
+                    "description": "Referral code is optional."
+                  },
+                  "newAttributes": {
+                    "type": "object",
+                    "description": "Object containing new attributes; at least one of 'firstname', 'lastname', 'referralCount', or 'conversionCount' must be provided.",
+                    "properties": {
+                      "firstname": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": ""
+                      },
+                      "lastname": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": ""
+                      },
+                      "referralCount": {
+                        "type": "integer"
+                      },
+                      "conversionCount": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "firstname",
+                      "lastname",
+                      "referralCount",
+                      "conversionCount"
+                    ]
+                  },
+                  "sendEmails": {
+                    "type": "boolean",
+                    "description": "Optional flag to send emails."
+                  },
+                  "triggerIntegrations": {
+                    "type": "boolean",
+                    "description": "Optional flag to trigger integrations."
+                  }
+                },
+                "required": [
+                  "apiToken",
+                  "newAttributes"
+                ]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "apiToken",
+            "in": "header",
+            "description": "Only use the `apiToken` in secure contexts. <a> Where to find it? </a>",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "name": "success",
+                  "description": "",
+                  "schema": {
+                    "type": "boolean"
+                  },
+                  "required": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Programmer error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server side error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/campaign/participant/data": {
+      "get": {
+        "summary": "Participant Data",
+        "description": "Returns information about a single participant. Calls with the API Token retrieve full information. Calls with the public token return anonymized data.\n                \n\n> 🚧 Warning \n> For this request you can use the campaign's `publicToken` or the secret `apiToken`. You should **never** expose the `apiToken` in the front-end of your application. <a href='/'> Learn more about a campaign's tokens </a>",
+        "tags": [
+          "Participant"
+        ],
+        "parameters": [
+          {
+            "name": "publicToken",
+            "in": "query",
+            "description": "<a> Where to find it? </a>",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "apiToken",
+            "in": "header",
+            "description": "Only use the `apiToken` in secure contexts. <a> Where to find it? </a>",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "referralCode",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "email": {
+                      "type": "string"
+                    },
+                    "firstname": {
+                      "type": "string"
+                    },
+                    "lastname": {
+                      "type": "string"
+                    },
+                    "referralCode": {
+                      "type": "string"
+                    },
+                    "extraData": {
+                      "type": "object",
+                      "properties": {}
+                    },
+                    "rank": {
+                      "type": "number"
+                    },
+                    "referralCountTotal": {
+                      "type": "number"
+                    },
+                    "referredLeads": {
+                      "type": "number"
+                    },
+                    "xReferrals": {
+                      "type": "number"
+                    },
+                    "referrer": {
+                      "type": "object"
+                    },
+                    "redeemedRewards": {
+                      "type": "array",
+                      "items": "object"
+                    },
+                    "pendingRewards": {
+                      "type": "array",
+                      "items": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Programmer error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server side error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/campaign/participant/referrals": {
+      "get": {
+        "summary": "Participant Referrals",
+        "description": "Returns a paginated list of the participant's referrals. Calls with the API Token retrieve full information. Calls with the public token return anonymized data.\n                \n\n> 🚧 Warning \n> For this request you can use the campaign's `publicToken` or the secret `apiToken`. You should **never** expose the `apiToken` in the front-end of your application. <a href='/'> Learn more about a campaign's tokens </a>",
+        "tags": [
+          "Participant"
+        ],
+        "parameters": [
+          {
+            "name": "publicToken",
+            "in": "query",
+            "description": "<a> Where to find it? </a>",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "apiToken",
+            "in": "header",
+            "description": "Only use the `apiToken` in secure contexts. <a> Where to find it? </a>",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "referralCode",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "conversionStatus",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Programmer error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server side error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/campaign/participant/convert": {
+      "post": {
+        "summary": "Participant Conversion",
+        "description": "Tracks a conversion event for a registered participant\n                \n> 📘 Info \n> You can now convert a Participant from out new Dashboard!\n\n                \n[Learn More about conversion](https://intercom.help/viral-loops/en/articles/1080462-api-rewarding \"@embed\")\n\n                \n\n> 📘 Info \n> This feature is available for the following templates: \n - The Milestone Referral\n - The Altruistic Referral\n - Online to Offline\n - The Universal Referral",
+        "tags": [
+          "Participant"
+        ],
+        "parameters": [
+          {
+            "name": "apiToken",
+            "in": "header",
+            "description": "Only use the `apiToken` in secure contexts. <a> Where to find it? </a>",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "publicToken": {
+                    "required": false,
+                    "description": "<a> Where to find it? </a>",
+                    "type": "string"
+                  },
+                  "fromDashboard": {
+                    "required": false,
+                    "description": "",
+                    "type": "boolean"
+                  },
+                  "user": {
+                    "required": false,
+                    "description": "",
+                    "type": "object",
+                    "properties": {
+                      "email": {
+                        "required": false,
+                        "description": "",
+                        "type": "string"
+                      },
+                      "referralCode": {
+                        "required": false,
+                        "description": "",
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "options": {
+                    "required": false,
+                    "description": "Additional conversion-related data like value-tracking",
+                    "type": "object",
+                    "properties": {
+                      "value": {
+                        "required": false,
+                        "description": "Value assigned to the conversion event",
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "processing": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Programmer error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server side error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/campaign/participant/query": {
+      "post": {
+        "summary": "Participant Query",
+        "description": "Returns information about the participants of the campaign",
+        "tags": [
+          "Participant"
+        ],
+        "parameters": [
+          {
+            "name": "apiToken",
+            "in": "header",
+            "description": "Only use the `apiToken` in secure contexts. <a> Where to find it? </a>",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "referrers": {
+                    "required": false,
+                    "description": "",
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "email": {
+                          "required": false,
+                          "description": "",
+                          "type": "string"
+                        },
+                        "referralCode": {
+                          "required": false,
+                          "description": "",
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "participants": {
+                    "required": false,
+                    "description": "",
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "email": {
+                          "required": false,
+                          "description": "",
+                          "type": "string"
+                        },
+                        "referralCode": {
+                          "required": false,
+                          "description": "",
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "filter": {
+                    "required": false,
+                    "description": "",
+                    "type": "object",
+                    "properties": {
+                      "limit": {
+                        "required": false,
+                        "description": "",
+                        "type": "number"
+                      },
+                      "skip": {
+                        "required": false,
+                        "description": "",
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "results": {
+                      "type": "array",
+                      "items": {}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Programmer error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server side error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/campaign/participant/flag": {
+      "post": {
+        "summary": "Flag Participant",
+        "description": "Used to flag participants that have gotten early access or a reward and should be removed from the waiting list or leaderboard. The participants are not deleted from the campaign, they are simply excluded from the waitlist or leaderboard. This means they are also not displayed in the waitlist or leaderboard in the Viral Loops popup but you can still see them in your Campaign Dashboard and campaign exports.",
+        "tags": [
+          "Participant"
+        ],
+        "parameters": [
+          {
+            "name": "apiToken",
+            "in": "header",
+            "description": "Only use the `apiToken` in secure contexts. <a> Where to find it? </a>",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "participants": {
+                    "required": true,
+                    "description": "",
+                    "type": "array",
+                    "properties": {
+                      "email": {
+                        "required": false,
+                        "description": "",
+                        "type": "string"
+                      },
+                      "referralCode": {
+                        "required": false,
+                        "description": "",
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Programmer error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server side error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/campaign/participant/order": {
+      "get": {
+        "summary": "Participant Order",
+        "description": "Returns the order in which the participant joined the campaign. For example, the first participant who joins the campaign will have an order of 1, the second one will have an order of 2 etc.",
+        "tags": [
+          "Participant"
+        ],
+        "parameters": [
+          {
+            "name": "publicToken",
+            "in": "query",
+            "description": "<a> Where to find it? </a>",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "apiToken",
+            "in": "header",
+            "description": "Only use the `apiToken` in secure contexts. <a> Where to find it? </a>",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "referralCode",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "order": {
+                      "type": "integer",
+                      "description": "The order number incremented by 1."
+                    },
+                    "leadCount": {
+                      "type": "integer",
+                      "description": "The count of leads."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Programmer error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server side error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/campaign/participant/rank": {
+      "get": {
+        "summary": "Participant Rank",
+        "description": "Only participants that have not been flagged are returned (see Flag participants). Use this to programmatically check who is at the top of the waiting list or leaderboard.\n\n>",
+        "tags": [
+          "Participant"
+        ],
+        "parameters": [
+          {
+            "name": "publicToken",
+            "in": "query",
+            "description": "<a> Where to find it? </a>",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "apiToken",
+            "in": "header",
+            "description": "Only use the `apiToken` in secure contexts. <a> Where to find it? </a>",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "referralCode",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "rank": {
+                      "type": "integer"
+                    },
+                    "referralCountTotal": {
+                      "type": "integer"
+                    },
+                    "suggestion": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Programmer error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server side error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/campaign/participant/referrer": {
+      "get": {
+        "summary": "Get Participant's Referrer",
+        "description": "Use this Endpont to get the Participant's Referrer\n\n            \n> 📘 Info \n> You can also do this by using our new Campaign Dashboard as well!",
+        "tags": [
+          "Participant"
+        ],
+        "parameters": [
+          {
+            "name": "publicToken",
+            "in": "query",
+            "description": "<a> Where to find it? </a>",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "apiToken",
+            "in": "header",
+            "description": "Only use the `apiToken` in secure contexts. <a> Where to find it? </a>",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "referralCode",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "4XX": {
+            "description": "Programmer error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server side error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/campaign/participant/rewards/pending": {
+      "get": {
+        "summary": "Pending Rewards",
+        "description": "Retrieve the pending rewards of a campaign's participant\n\n                \n> 📘 Info \n> You can omit the `user` parameter to get a paginated list of the campaign participants and their pending rewards\n\n                \n[Learn More about rewarding](https://intercom.help/viral-loops/en/articles/1080462-api-rewarding \"@embed\")",
+        "tags": [
+          "Rewards"
+        ],
+        "parameters": [
+          {
+            "name": "apiToken",
+            "in": "header",
+            "description": "Only use the `apiToken` in secure contexts. <a> Where to find it? </a>",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "referralCode",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "limit": {
+                  "required": false,
+                  "description": "",
+                  "type": "number"
+                },
+                "skip": {
+                  "required": false,
+                  "description": "",
+                  "type": "number"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "4XX": {
+            "description": "Programmer error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server side error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/campaign/participant/rewards/redeem": {
+      "post": {
+        "summary": "Redeem a Reward",
+        "description": "Redeem a pending reward of a campaign's participant.\n                \n> 📘 Info \n> This will move the reward from the pending rewards to the given rewards.\n\n                \n[Learn More about rewarding](https://intercom.help/viral-loops/en/articles/1080462-api-rewarding \"@embed\")",
+        "tags": [
+          "Rewards"
+        ],
+        "parameters": [
+          {
+            "name": "apiToken",
+            "in": "header",
+            "description": "Only use the `apiToken` in secure contexts. <a> Where to find it? </a>",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "rewardId": {
+                    "required": true,
+                    "description": "",
+                    "type": "string"
+                  },
+                  "user": {
+                    "required": false,
+                    "description": "",
+                    "type": "object",
+                    "properties": {
+                      "email": {
+                        "required": false,
+                        "description": "",
+                        "type": "string"
+                      },
+                      "referralCode": {
+                        "required": false,
+                        "description": "",
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "name": "success",
+                  "description": "",
+                  "schema": {
+                    "type": "boolean"
+                  },
+                  "required": true
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Programmer error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server side error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/campaign/participant/rewards/given": {
+      "get": {
+        "summary": "Given Rewards",
+        "description": "Retrieve the given rewards of a campaign's participant\n                \n> 📘 Info \n> You can omit the `user` parameter to get a paginated list of the campaign participants and their given rewards\n\n                \n[Learn More about rewarding](https://intercom.help/viral-loops/en/articles/1080462-api-rewarding \"@embed\")",
+        "tags": [
+          "Rewards"
+        ],
+        "parameters": [
+          {
+            "name": "apiToken",
+            "in": "header",
+            "description": "Only use the `apiToken` in secure contexts. <a> Where to find it? </a>",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "referralCode",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "limit": {
+                  "required": false,
+                  "description": "",
+                  "type": "number"
+                },
+                "skip": {
+                  "required": false,
+                  "description": "",
+                  "type": "number"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "4XX": {
+            "description": "Programmer error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Server side error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "number"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

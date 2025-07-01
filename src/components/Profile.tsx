@@ -4,8 +4,9 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { useCredits } from '../hooks/useCredits';
-import { FileText, Calendar, PenLine, X, CreditCard, Plus } from 'lucide-react';
+import { FileText, Calendar, PenLine, X, CreditCard, Plus, Users } from 'lucide-react';
 import Link from 'next/link';
+import { ReferralModal } from './ReferralModal';
 
 interface UserProfile {
   first_name: string;
@@ -138,6 +139,7 @@ export function Profile() {
   const [error, setError] = useState<string | null>(null);
   const [selectedEssay, setSelectedEssay] = useState<Essay | null>(null);
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
+  const [showReferralModal, setShowReferralModal] = useState(false);
 
   useEffect(() => {
     // Check for payment success parameter
@@ -302,13 +304,22 @@ export function Profile() {
                 </p>
               </div>
             </div>
-            <button
-              onClick={handlePurchaseCredits}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Buy More Credits
-            </button>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowReferralModal(true)}
+                className="inline-flex items-center px-4 py-2 border border-primary-600 text-sm font-medium rounded-md text-primary-600 bg-white hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Refer a Friend
+              </button>
+              <button
+                onClick={handlePurchaseCredits}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Buy More Credits
+              </button>
+            </div>
           </div>
           <p className="text-xs text-gray-500 mt-2">
             Each essay feedback costs 1 credit. Purchase more credits to continue getting feedback.
@@ -385,6 +396,12 @@ export function Profile() {
           onClose={() => setSelectedEssay(null)}
         />
       )}
+
+      {/* Referral Modal */}
+      <ReferralModal
+        isOpen={showReferralModal}
+        onClose={() => setShowReferralModal(false)}
+      />
     </div>
   );
 }
