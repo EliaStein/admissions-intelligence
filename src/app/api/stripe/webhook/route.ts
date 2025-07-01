@@ -3,8 +3,6 @@ import Stripe from 'stripe';
 import { CONFIG_KEYS, ConfigService } from '../../../../services/configService';
 import { CreditService } from '../../../../services/creditService';
 import { ReferralService } from '../../../../services/referralService';
-import { ViralLoopsService } from '../../../../services/viralLoopsService';
-import { getAdminClient } from '../../../../lib/supabase-admin-client';
 
 export async function POST(request: NextRequest) {
   try {
@@ -61,44 +59,7 @@ export async function POST(request: NextRequest) {
       +credits,
     );
 
-    // Handle referral tracking for first payment
-    try {
-      // Check if this is the user's first payment by marking referral payment
-      const referralMarked = await ReferralService.markReferralPayment(userId);
-
-      if (referralMarked) {
-        console.log(`Marked referral payment for user ${userId}`);
-
-        // Find the referral to process reward
-        const dbClient = await getAdminClient();
-        const { data: referrals, error } = await dbClient
-          .from('referrals')
-          .select('id, referrer_id')
-          .eq('referee_id', userId)
-          .eq('payment_completed', true)
-          .eq('reward_given', false);
-
-        if (!error && referrals && referrals.length > 0) {
-          const referral = referrals[0];
-          // Process referral reward (give 1 credit to referrer)
-          await ReferralService.processReferralReward(referral.id, 1);
-          console.log(`Processed referral reward for referrer ${referral.referrer_id}`);
-
-          // Track conversion with Viral Loops if participant ID exists
-          if (referral.viral_loops_participant_id) {
-            try {
-              await ViralLoopsService.trackConversion(referral.viral_loops_participant_id, 'payment');
-              console.log(`Tracked payment conversion with Viral Loops for participant ${referral.viral_loops_participant_id}`);
-            } catch (viralLoopsError) {
-              console.error('Error tracking Viral Loops conversion:', viralLoopsError);
-            }
-          }
-        }
-      }
-    } catch (referralError) {
-      console.error('Error processing referral tracking:', referralError);
-      // Don't fail the webhook if referral tracking fails
-    }
+    await ReferralService.rewardReferrer(userId);
 
     return NextResponse.json({ received: true });
 

@@ -93,53 +93,6 @@ export interface Database {
           updated_at?: string
         }
       }
-      referrals: {
-        Row: {
-          id: string
-          referrer_id: string
-          referee_id: string | null
-          referee_email: string
-          referral_code: string
-          viral_loops_participant_id: string | null
-          signup_completed: boolean
-          payment_completed: boolean
-          reward_given: boolean
-          created_at: string
-          signup_at: string | null
-          payment_at: string | null
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          referrer_id: string
-          referee_id?: string | null
-          referee_email: string
-          referral_code: string
-          viral_loops_participant_id?: string | null
-          signup_completed?: boolean
-          payment_completed?: boolean
-          reward_given?: boolean
-          created_at?: string
-          signup_at?: string | null
-          payment_at?: string | null
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          referrer_id?: string
-          referee_id?: string | null
-          referee_email?: string
-          referral_code?: string
-          viral_loops_participant_id?: string | null
-          signup_completed?: boolean
-          payment_completed?: boolean
-          reward_given?: boolean
-          created_at?: string
-          signup_at?: string | null
-          payment_at?: string | null
-          updated_at?: string
-        }
-      }
       admins: {
         Row: {
           id: string

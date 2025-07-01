@@ -1,21 +1,38 @@
 import { getAdminClient } from '../lib/supabase-admin-client';
-import type { Database } from '../types/supabase';
+import viralLoopsDocs from '@api/viral-loops-docs';
+interface Reward {
+  id: string;
+  name: string;
+  value: number;
+  isMonetary: boolean;
+  metadata: {
+    rewardName: string;
+    announced: boolean;
+    type: string;
+  };
+}
 
-type Referral = Database['public']['Tables']['referrals']['Row'];
-type ReferralUpdate = Database['public']['Tables']['referrals']['Update'];
-
+interface PendingReward {
+  user: {
+    firstname: string;
+    lastname: string;
+    email: string;
+    referralCode: string;
+    risk: number;
+    referralCountTotal: number;
+  };
+  rewards: Reward[];
+}
 export class ReferralService {
-  /**
-   * Find referral by referral code
-   */
-  static async findReferralByCode(referralCode: string): Promise<Referral | null> {
+
+  static async findRefereeByCode(refereeId: string) {
     try {
       const supabaseAdmin = await getAdminClient();
 
       const { data, error } = await supabaseAdmin
-        .from('referrals')
+        .from('users')
         .select('*')
-        .eq('referral_code', referralCode)
+        .eq('id', refereeId)
         .single();
 
       if (error) {
@@ -34,29 +51,47 @@ export class ReferralService {
     }
   }
 
-  /**
-   * Mark referral as payment completed
-   */
-  static async markReferralPayment(refereeId: string): Promise<boolean> {
+  static async rewardReferrer(refereeId: string): Promise<boolean> {
     try {
+      const referee = await this.findRefereeByCode(refereeId);
+      if (!referee) return false;
+
       const supabaseAdmin = await getAdminClient();
+      const pendings: PendingReward[] = await viralLoopsDocs.getCampaignParticipantRewardsPending({
+        referralCode: referee.referral_code_used,
+        apiToken: process.env.VIRAL_LOOPS_API_TOKEN
+      }) as any;
+      const rewordId = pendings[0]?.rewards[0]?.id;
+      if (!rewordId) return false;
 
-      const updateData: ReferralUpdate = {
-        payment_completed: true,
-        payment_at: new Date().toISOString(),
-      };
+      const referrerEmail = pendings[0]?.user.email;
+      const { data: referrer } = await supabaseAdmin
+        .from('users')
+        .select('*')
+        .eq('email', referrerEmail)
+        .single();
 
-      const { error } = await supabaseAdmin
-        .from('referrals')
-        .update(updateData)
-        .eq('referee_id', refereeId)
-        .eq('signup_completed', true)
-        .eq('payment_completed', false);
+      await viralLoopsDocs.postCampaignParticipantRewardsRedeem({
+        user: {
+          referralCode: referee.referral_code_used
+        },
+        rewardId: rewordId
+      }, {
+        apiToken: process.env.VIRAL_LOOPS_API_TOKEN as string
+      });
 
-      if (error) {
-        console.error('Error marking referral payment:', error);
-        return false;
-      }
+      await supabaseAdmin.from('users')
+        .update({
+          credits: referrer.credits + 1
+        })
+        .eq('id', referrer.id);
+
+      await supabaseAdmin.from('users')
+        .update({
+          referral_code_used: null
+        })
+        .eq('id', refereeId);
+
 
       return true;
     } catch (error) {
@@ -64,69 +99,4 @@ export class ReferralService {
       return false;
     }
   }
-
-  /**
-   * Process referral rewards (give credits to referrer)
-   */
-  static async processReferralReward(referralId: string, rewardCredits: number = 1): Promise<boolean> {
-    try {
-      const supabaseAdmin = await getAdminClient();
-
-      // Get the referral
-      const { data: referral, error: referralError } = await supabaseAdmin
-        .from('referrals')
-        .select('referrer_id, reward_given')
-        .eq('id', referralId)
-        .single();
-
-      if (referralError || !referral || referral.reward_given) {
-        console.error('Referral not found or reward already given:', referralError);
-        return false;
-      }
-
-      // Add credits to referrer
-      const { data: userData, error: fetchError } = await supabaseAdmin
-        .from('users')
-        .select('credits')
-        .eq('id', referral.referrer_id)
-        .single();
-
-      if (fetchError) {
-        console.error('Error fetching referrer credits:', fetchError);
-        return false;
-      }
-
-      const currentCredits = userData?.credits || 0;
-      const newCredits = currentCredits + rewardCredits;
-
-      // Update referrer credits
-      const { error: updateCreditsError } = await supabaseAdmin
-        .from('users')
-        .update({ credits: newCredits })
-        .eq('id', referral.referrer_id);
-
-      if (updateCreditsError) {
-        console.error('Error updating referrer credits:', updateCreditsError);
-        return false;
-      }
-
-      // Mark reward as given
-      const { error: updateReferralError } = await supabaseAdmin
-        .from('referrals')
-        .update({ reward_given: true })
-        .eq('id', referralId);
-
-      if (updateReferralError) {
-        console.error('Error marking reward as given:', updateReferralError);
-        return false;
-      }
-
-      console.log(`Successfully gave ${rewardCredits} credits to referrer ${referral.referrer_id}`);
-      return true;
-    } catch (error) {
-      console.error('Error in processReferralReward:', error);
-      return false;
-    }
-  }
-
 }

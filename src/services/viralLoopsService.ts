@@ -22,8 +22,11 @@ export class ViralLoopsService {
         referrer: participant.referralCode ? { referralCode: participant.referralCode } : undefined,
         publicToken: process.env.VIRAL_LOOPS_CAMPAIGN_ID || '',
       }, {
-        apiToken: process.env.VIRAL_LOOPS_API_TOKEN || ''
+        apiToken: process.env.VIRAL_LOOPS_API_TOKEN
       });
+      await viralLoopsDocs.postCampaignParticipantConvert({ user: { email: participant.email } }, {
+        apiToken: process.env.VIRAL_LOOPS_API_TOKEN
+      })
 
       return data;
     } catch (error) {
