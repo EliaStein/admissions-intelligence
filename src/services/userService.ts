@@ -1,6 +1,5 @@
 import { getAdminClient } from '../lib/supabase-admin-client';
 import { ViralLoopsService } from './viralLoopsService';
-import { ReferralService } from './referralService';
 
 export interface CreateUserRequest {
   email: string;
