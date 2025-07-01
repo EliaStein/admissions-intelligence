@@ -35,9 +35,8 @@ export function ReferralModal({ isOpen, onClose }: ReferralModalProps) {
       setIsLoading(true);
       setError(null);
 
-      // Wait for Viral Loops to be available
       let attempts = 0;
-      const maxAttempts = 50; // 5 seconds max wait
+      const maxAttempts = 10;
       
       while (!window.ViralLoops && attempts < maxAttempts) {
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -50,7 +49,7 @@ export function ReferralModal({ isOpen, onClose }: ReferralModalProps) {
 
       // Initialize with user email
       const campaign = await window.ViralLoops.getCampaign();
-      await campaign.identify({ email: user!.email });
+      campaign.identify({ email: user!.email as string});
       
       setIsLoading(false);
     } catch (err) {
