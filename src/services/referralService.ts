@@ -1,72 +1,10 @@
-import { supabase } from '../lib/supabase';
 import { getAdminClient } from '../lib/supabase-admin-client';
 import type { Database } from '../types/supabase';
 
 type Referral = Database['public']['Tables']['referrals']['Row'];
-type ReferralInsert = Database['public']['Tables']['referrals']['Insert'];
 type ReferralUpdate = Database['public']['Tables']['referrals']['Update'];
 
 export class ReferralService {
-  /**
-   * Create a new referral record
-   */
-  static async createReferral(
-    referrerId: string,
-    refereeEmail: string,
-    referralCode: string,
-    viralLoopsParticipantId?: string
-  ): Promise<Referral | null> {
-    try {
-      const supabaseAdmin = await getAdminClient();
-
-      const referralData: ReferralInsert = {
-        referrer_id: referrerId,
-        referee_email: refereeEmail.toLowerCase(),
-        referral_code: referralCode,
-        viral_loops_participant_id: viralLoopsParticipantId,
-      };
-
-      const { data, error } = await supabaseAdmin
-        .from('referrals')
-        .insert(referralData)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error creating referral:', error);
-        return null;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Error in createReferral:', error);
-      return null;
-    }
-  }
-
-  /**
-   * Get referrals for a specific user (as referrer)
-   */
-  static async getUserReferrals(userId: string): Promise<Referral[]> {
-    try {
-      const { data, error } = await supabase
-        .from('referrals')
-        .select('*')
-        .eq('referrer_id', userId)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching user referrals:', error);
-        return [];
-      }
-
-      return data || [];
-    } catch (error) {
-      console.error('Error in getUserReferrals:', error);
-      return [];
-    }
-  }
-
   /**
    * Find referral by referral code
    */
@@ -191,44 +129,4 @@ export class ReferralService {
     }
   }
 
-  /**
-   * Get referral statistics for a user
-   */
-  static async getReferralStats(userId: string): Promise<{
-    totalReferrals: number;
-    signedUpReferrals: number;
-    paidReferrals: number;
-    rewardsEarned: number;
-  }> {
-    try {
-      const referrals = await this.getUserReferrals(userId);
-
-      return {
-        totalReferrals: referrals.length,
-        signedUpReferrals: referrals.filter(r => r.signup_completed).length,
-        paidReferrals: referrals.filter(r => r.payment_completed).length,
-        rewardsEarned: referrals.filter(r => r.reward_given).length,
-      };
-    } catch (error) {
-      console.error('Error in getReferralStats:', error);
-      return {
-        totalReferrals: 0,
-        signedUpReferrals: 0,
-        paidReferrals: 0,
-        rewardsEarned: 0,
-      };
-    }
-  }
-
-  /**
-   * Generate a unique referral code
-   */
-  static generateReferralCode(): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = '';
-    for (let i = 0; i < 8; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-  }
 }
