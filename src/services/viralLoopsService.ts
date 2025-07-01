@@ -27,8 +27,7 @@ export class ViralLoopsService {
 
       return data;
     } catch (error) {
-      console.error('Error registering participant with Viral Loops:', error);
-      return null;
+      throw new Error('Error registering participant with Viral Loops:' + error.message);
     }
   }
 
