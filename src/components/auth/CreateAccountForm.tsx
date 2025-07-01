@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
 import { Mail, Lock, User, Loader2, AlertCircle } from 'lucide-react';
+import { authService } from '../../services/authService';
 
 interface CreateAccountFormProps {
   onSuccess?: () => void;
@@ -49,79 +49,27 @@ export function CreateAccountForm({ onSuccess }: CreateAccountFormProps) {
     setLoading(true);
 
     try {
-      // Validate password requirements
       if (!validatePassword(password)) {
         setError('Password does not meet requirements');
         setLoading(false);
         return;
       }
 
-      // Sign up the user with Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
+      await authService.signUp({
+        email: email.toLowerCase(),
         password,
+        firstName,
+        lastName,
+        referralCode: referralCode || undefined,
       });
-      if (authError) throw authError;
 
-      if (authData.user) {
-        // Insert user data into your custom users table
-        const { error: userError } = await supabase
-          .from('users')
-          .insert({
-            id: authData.user.id,
-            email: email.toLowerCase(),
-            first_name: firstName,
-            last_name: lastName,
-            role: 'student',
-            is_active: true,
-            referral_code_used: referralCode
-          });
-
-        if (userError) {
-          // If user table insert fails, delete the auth user
-          await supabase.auth.admin.deleteUser(authData.user.id);
-          throw new Error('Failed to create user profile');
-        }
-
-        // Handle referral tracking and Viral Loops integration
-        try {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session) {
-            const response = await fetch('/api/referrals/signup', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${session.access_token}`,
-              },
-              body: JSON.stringify({
-                userId: authData.user.id,
-                email: email.toLowerCase(),
-                firstName,
-                lastName,
-                referralCode,
-              }),
-            });
-
-            if (response.ok) {
-              console.log('Referral tracking completed successfully');
-            } else {
-              console.error('Referral tracking failed:', await response.text());
-            }
-          }
-
-          // Clear the referral code from localStorage
-          if (referralCode) {
-            localStorage.removeItem('referralCode');
-          }
-        } catch (referralError) {
-          console.error('Error with referral tracking:', referralError);
-          // Don't fail the signup if referral tracking fails
-        }
+      if (referralCode) {
+        localStorage.removeItem('referralCode');
       }
 
       onSuccess?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Authentication failed');
+      setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {
       setLoading(false);
     }
