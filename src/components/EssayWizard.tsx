@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import { Loader2, Send } from 'lucide-react';
 import { PromptSelection } from './PromptSelection';
 import { StudentInfoForm } from './StudentInfoForm';
 import { SuccessMessage } from './SuccessMessage';
@@ -30,6 +31,7 @@ export function EssayWizard() {
   const [error, setError] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
   const [userProfileLoaded, setUserProfileLoaded] = useState(false);
+  const [loadingStep, setLoadingStep] = useState<string>('');
   const formRef = useRef<HTMLDivElement>(null);
 
   // Load user profile data when component mounts
@@ -157,6 +159,7 @@ export function EssayWizard() {
 
       try {
         setIsSubmitting(true);
+        setLoadingStep('Validating essay...');
 
         const essayData = {
           student_first_name: studentFirstName.trim(),
@@ -173,8 +176,10 @@ export function EssayWizard() {
           email: user.email
         };
 
+        setLoadingStep('Generating feedback...');
         await essayService.saveEssay(essayData, selectedPrompt.word_count, userInfo);
 
+        setLoadingStep('Finalizing submission...');
         setIsSuccess(true);
       } catch (err) {
         // Check if this is a credit-related error
@@ -187,6 +192,7 @@ export function EssayWizard() {
         console.error('Submit error:', err);
       } finally {
         setIsSubmitting(false);
+        setLoadingStep('');
       }
       return;
     }
@@ -225,6 +231,7 @@ export function EssayWizard() {
 
     try {
       setIsSubmitting(true);
+      setLoadingStep('Validating essay...');
 
       const essayData = {
         student_first_name: studentFirstName.trim(),
@@ -236,8 +243,10 @@ export function EssayWizard() {
         essay_content: essay.trim()
       };
 
+      setLoadingStep('Generating feedback...');
       await essayService.saveEssay(essayData, selectedPrompt.word_count, {email: studentEmail});
 
+      setLoadingStep('Finalizing submission...');
       setIsSuccess(true);
     } catch (err) {
       // Check if this is a credit-related error
@@ -250,6 +259,7 @@ export function EssayWizard() {
       console.error('Submit error:', err);
     } finally {
       setIsSubmitting(false);
+      setLoadingStep('');
     }
   };
 
@@ -424,10 +434,15 @@ export function EssayWizard() {
               </div>
               
               <textarea
-                className="w-full h-64 p-4 border rounded-lg focus:ring-2 border-gray-200 focus:ring-primary-500 resize-none"
+                className={`w-full h-64 p-4 border rounded-lg focus:ring-2 resize-none transition-colors ${
+                  isSubmitting
+                    ? 'border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed'
+                    : 'border-gray-200 focus:ring-primary-500 bg-white'
+                }`}
                 value={essay}
                 onChange={(e) => setEssay(e.target.value)}
                 placeholder="Start writing your essay here..."
+                disabled={isSubmitting}
               />
             </div>
 
@@ -464,7 +479,12 @@ export function EssayWizard() {
                     setCurrentStep(essayType === 'personal' ? 'prompt' : 'prompt');
                     setSelectedPrompt(null);
                   }}
-                  className="text-sm text-primary-600 hover:text-primary-800"
+                  disabled={isSubmitting}
+                  className={`text-sm transition-colors ${
+                    isSubmitting
+                      ? 'text-gray-400 cursor-not-allowed'
+                      : 'text-primary-600 hover:text-primary-800'
+                  }`}
                 >
                   Choose Different Prompt
                 </button>
@@ -474,9 +494,9 @@ export function EssayWizard() {
                       setError('Please write your essay before proceeding');
                       return;
                     }
-                    
+
                     setError('');
-                    
+
                     if (user && userProfileLoaded) {
                       // For authenticated users, submit directly
                       handleSubmit();
@@ -485,9 +505,24 @@ export function EssayWizard() {
                       setCurrentStep('info');
                     }
                   }}
-                  className="px-4 py-2 rounded-lg text-white bg-primary-600 hover:bg-primary-700 transition-colors"
+                  disabled={isSubmitting}
+                  className={`px-4 py-2 rounded-lg text-white transition-colors inline-flex items-center gap-2 ${
+                    isSubmitting
+                      ? 'bg-primary-400 cursor-not-allowed'
+                      : 'bg-primary-600 hover:bg-primary-700'
+                  }`}
                 >
-                  {isSubmitting ? 'Submitting...' : 'Request Feedback'}
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Processing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-5 h-5" />
+                      <span>Request Feedback</span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>
@@ -518,8 +553,25 @@ export function EssayWizard() {
     }
   };
 
+  const LoadingOverlay = () => (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4 text-center">
+        <div className="mb-6">
+          <Loader2 className="w-12 h-12 animate-spin text-primary-600 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Processing Your Essay</h3>
+          <p className="text-gray-600">{loadingStep}</p>
+        </div>
+        <p className="text-sm text-gray-500">
+          This may take a few moments while we generate your personalized feedback...
+        </p>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-4xl mx-auto p-6 relative">
+      {isSubmitting && <LoadingOverlay />}
+
       <div className="bg-white p-8 rounded-lg shadow-lg">
         {renderStepIndicator()}
         {renderContent()}

@@ -518,7 +518,7 @@ function EssayViewModal({ essay, onClose }: EssayViewModalProps) {
 
   const tabs = [
     { id: 'content' as const, label: 'Essay Content' },
-    { id: 'feedback' as const, label: 'AI Feedback' },
+    { id: 'feedback' as const, label: 'Feedback' },
     { id: 'prompt' as const, label: 'Prompt' },
   ];
 
@@ -612,7 +612,7 @@ function EssayViewModal({ essay, onClose }: EssayViewModalProps) {
 
             {activeTab === 'feedback' && (
               <div>
-                <h4 className="font-medium text-gray-700 mb-2">AI Feedback:</h4>
+                <h4 className="font-medium text-gray-700 mb-2">Feedback:</h4>
                 {essay.essay_feedback ? (
                   <div className="text-gray-900 bg-blue-50 p-4 rounded-md whitespace-pre-wrap">
                     {essay.essay_feedback}

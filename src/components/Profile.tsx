@@ -259,7 +259,7 @@ function EssayModal({ essay, onClose }: EssayModalProps) {
 }
 
 export function Profile() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { credits, loading: creditsLoading } = useCredits();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [essays, setEssays] = useState<Essay[]>([]);
@@ -282,8 +282,16 @@ export function Profile() {
 
   useEffect(() => {
     async function loadProfile() {
+      setError(null);
+
+      if (authLoading) return;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        if (!user) return;
+        setLoading(true);
 
         // Fetch user profile
         const { data: profileData, error: profileError } = await supabase
@@ -315,7 +323,7 @@ export function Profile() {
     }
 
     loadProfile();
-  }, [user]);
+  }, [user, authLoading]);
 
   const handleSaveName = async (firstName: string, lastName: string) => {
     if (!user) throw new Error('User not authenticated');
@@ -363,7 +371,7 @@ export function Profile() {
     window.location.href = '/purchase-credits';
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
@@ -381,7 +389,7 @@ export function Profile() {
     );
   }
 
-  if (!profile) {
+  if (!profile && !loading && error) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="bg-white rounded-lg shadow-md p-6">
@@ -396,6 +404,14 @@ export function Profile() {
             Return to Home
           </Link>
         </div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
       </div>
     );
   }
