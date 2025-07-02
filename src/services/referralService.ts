@@ -54,6 +54,8 @@ export class ReferralService {
   static async rewardReferrer(refereeId: string): Promise<boolean> {
     try {
       const referee = await this.findRefereeByCode(refereeId);
+      console.log('referee:');
+      console.log(JSON.stringify(referee));
       if (!referee) return false;
 
       const supabaseAdmin = await getAdminClient();
@@ -61,7 +63,10 @@ export class ReferralService {
         referralCode: referee.referral_code_used,
         apiToken: process.env.VIRAL_LOOPS_API_TOKEN
       }) as any;
+      console.log('Pending rewards:', pendings.length);
+      console.log(JSON.stringify(pendings));
       const rewordId = pendings[0]?.rewards[0]?.id;
+      console.log({ rewordId })
       if (!rewordId) return false;
 
       const referrerEmail = pendings[0]?.user.email;
@@ -70,6 +75,8 @@ export class ReferralService {
         .select('*')
         .eq('email', referrerEmail)
         .single();
+      console.log('referrer:');
+      console.log(JSON.stringify(referrer));
 
       await viralLoopsDocs.postCampaignParticipantRewardsRedeem({
         user: {
@@ -95,7 +102,7 @@ export class ReferralService {
 
       return true;
     } catch (error) {
-      console.error('Error in markReferralPayment:', error);
+      console.error('Error in markReferralPayment:', JSON.stringify(error));
       return false;
     }
   }
