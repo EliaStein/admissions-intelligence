@@ -124,11 +124,12 @@ export class ReferralService {
   static async rewardReferrer(refereeId: string): Promise<boolean> {
     try {
       const referee = await this.findRefereeByCode(refereeId);
+      console.log('referee', referee);
       if (!referee) return false;
 
       const supabaseAdmin = await getAdminClient();
       const pendings: PendingReward[] = await this.getCampaignParticipantRewardsPending(referee.referral_code_used);
-
+      console.log('pendings', pendings);
       const rewordId = pendings[0]?.rewards[0]?.id;
       console.log({ rewordId })
       if (!rewordId) return false;
@@ -139,7 +140,7 @@ export class ReferralService {
         .select('*')
         .eq('email', referrerEmail)
         .single();
-
+      console.log('referrer', referrer);
       await this.postCampaignParticipantRewardsRedeem(referee.referral_code_used, rewordId);
 
       await supabaseAdmin.from('users')
