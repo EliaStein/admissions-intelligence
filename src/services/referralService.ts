@@ -1,5 +1,5 @@
+import 'server-only';
 import { getAdminClient } from '../lib/supabase-admin-client';
-import viralLoopsDocs from '@api/viral-loops-docs';
 interface Reward {
   id: string;
   name: string;
@@ -24,6 +24,76 @@ interface PendingReward {
   rewards: Reward[];
 }
 export class ReferralService {
+
+  /**
+   * Custom implementation of getCampaignParticipantRewardsPending
+   * Replaces the buggy viralLoopsDocs.getCampaignParticipantRewardsPending
+   */
+  static async getCampaignParticipantRewardsPending(referralCode: string): Promise<PendingReward[]> {
+    try {
+      const apiToken = process.env.VIRAL_LOOPS_API_TOKEN;
+      if (!apiToken) {
+        throw new Error('VIRAL_LOOPS_API_TOKEN is not configured');
+      }
+
+      const url = `https://app.viral-loops.com/api/v3/campaign/participant/rewards/pending?referralCode=${encodeURIComponent(referralCode)}&filter=`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'accept': 'application/json',
+          'apiToken': apiToken
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Viral Loops API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data as PendingReward[];
+    } catch (error) {
+      console.error('Error fetching pending rewards:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Custom implementation of postCampaignParticipantRewardsRedeem
+   * Replaces the buggy viralLoopsDocs.postCampaignParticipantRewardsRedeem
+   */
+  static async postCampaignParticipantRewardsRedeem(referralCode: string, rewardId: string): Promise<void> {
+    try {
+      const apiToken = process.env.VIRAL_LOOPS_API_TOKEN;
+      if (!apiToken) {
+        throw new Error('VIRAL_LOOPS_API_TOKEN is not configured');
+      }
+
+      const url = 'https://app.viral-loops.com/api/v3/campaign/participant/rewards/redeem';
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'content-type': 'application/json',
+          'apiToken': apiToken
+        },
+        body: JSON.stringify({
+          user: {
+            referralCode: referralCode
+          },
+          rewardId: rewardId
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Viral Loops API error: ${response.status} ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Error redeeming reward:', error);
+      throw error;
+    }
+  }
 
   static async findRefereeByCode(refereeId: string) {
     try {
@@ -54,17 +124,11 @@ export class ReferralService {
   static async rewardReferrer(refereeId: string): Promise<boolean> {
     try {
       const referee = await this.findRefereeByCode(refereeId);
-      console.log('referee:');
-      console.log(JSON.stringify(referee));
       if (!referee) return false;
 
       const supabaseAdmin = await getAdminClient();
-      const pendings: PendingReward[] = await viralLoopsDocs.getCampaignParticipantRewardsPending({
-        referralCode: referee.referral_code_used,
-        apiToken: process.env.VIRAL_LOOPS_API_TOKEN
-      }) as any;
-      console.log('Pending rewards:', pendings.length);
-      console.log(JSON.stringify(pendings));
+      const pendings: PendingReward[] = await this.getCampaignParticipantRewardsPending(referee.referral_code_used);
+
       const rewordId = pendings[0]?.rewards[0]?.id;
       console.log({ rewordId })
       if (!rewordId) return false;
@@ -75,17 +139,8 @@ export class ReferralService {
         .select('*')
         .eq('email', referrerEmail)
         .single();
-      console.log('referrer:');
-      console.log(JSON.stringify(referrer));
 
-      await viralLoopsDocs.postCampaignParticipantRewardsRedeem({
-        user: {
-          referralCode: referee.referral_code_used
-        },
-        rewardId: rewordId
-      }, {
-        apiToken: process.env.VIRAL_LOOPS_API_TOKEN as string
-      });
+      await this.postCampaignParticipantRewardsRedeem(referee.referral_code_used, rewordId);
 
       await supabaseAdmin.from('users')
         .update({
