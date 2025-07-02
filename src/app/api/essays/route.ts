@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
           }
         })
       } catch (aiError) {
-        console.error('Error generating AI feedback:', aiError);
+        console.error('Error generating feedback:', aiError);
         return NextResponse.json(
           { error: 'Failed to save essay', details: aiError },
           { status: 500 }

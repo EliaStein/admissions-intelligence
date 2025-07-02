@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { Loader2, Send } from 'lucide-react';
 
 interface StudentInfoFormProps {
   studentFirstName: string;
@@ -165,13 +166,23 @@ export function StudentInfoForm({
         <button
           onClick={onSubmit}
           disabled={isSubmitting || !!firstNameError || !!lastNameError || !!emailError}
-          className={`px-6 py-2 rounded-lg text-white transition-colors ${
+          className={`px-6 py-3 rounded-lg text-white font-medium transition-all duration-200 flex items-center gap-2 ${
             isSubmitting || firstNameError || lastNameError || emailError
-              ? 'bg-gray-400 cursor-not-allowed' 
-              : 'bg-primary-600 hover:bg-primary-700'
+              ? 'bg-gray-400 cursor-not-allowed'
+              : 'bg-primary-600 hover:bg-primary-700 hover:shadow-lg transform hover:-translate-y-0.5'
           }`}
         >
-          {isSubmitting ? 'Submitting...' : 'Submit Essay'}
+          {isSubmitting ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span>Processing...</span>
+            </>
+          ) : (
+            <>
+              <Send className="w-5 h-5" />
+              <span>Submit Essay</span>
+            </>
+          )}
         </button>
       </div>
     </div>
