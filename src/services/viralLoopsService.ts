@@ -57,6 +57,7 @@ export class ViralLoopsService {
           email: participant.email
         },
         referrer: { referralCode: participant.referralCode },
+        apiToken: process.env.VIRAL_LOOPS_API_TOKEN
       }, {
         apiToken: process.env.VIRAL_LOOPS_API_TOKEN
       });
