@@ -553,7 +553,6 @@ export function EssayWizard() {
     }
   };
 
-  // Loading Overlay Component
   const LoadingOverlay = () => (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4 text-center">
