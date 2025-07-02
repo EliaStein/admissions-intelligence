@@ -10,6 +10,7 @@ interface ViralLoopsParticipant {
 
 export class ViralLoopsService {
   static async registerParticipant(participant: ViralLoopsParticipant) {
+    console.log('registerParticipant', participant);
     if (!participant.referralCode) return null;
 
     try {
