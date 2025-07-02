@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { useCredits } from '../hooks/useCredits';
-import { FileText, Calendar, PenLine, X, CreditCard, Plus, Users } from 'lucide-react';
+import { FileText, Calendar, PenLine, X, CreditCard, Plus, Users, Edit2 } from 'lucide-react';
 import Link from 'next/link';
 import { ReferralModal } from './ReferralModal';
 
@@ -26,9 +26,137 @@ interface Essay {
   essay_feedback: string | null;
 }
 
+interface EditNameModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  currentFirstName: string;
+  currentLastName: string;
+  onSave: (firstName: string, lastName: string) => Promise<void>;
+}
+
 interface EssayModalProps {
   essay: Essay;
   onClose: () => void;
+}
+
+function EditNameModal({ isOpen, onClose, currentFirstName, currentLastName, onSave }: EditNameModalProps) {
+  const [firstName, setFirstName] = useState(currentFirstName);
+  const [lastName, setLastName] = useState(currentLastName);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Reset form when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setFirstName(currentFirstName);
+      setLastName(currentLastName);
+      setError(null);
+    }
+  }, [isOpen, currentFirstName, currentLastName]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    try {
+      await onSave(firstName.trim(), lastName.trim());
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update name');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+      onClick={handleBackdropClick}
+    >
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex justify-between items-center">
+            <h3 className="text-xl font-semibold text-gray-900">Edit Name</h3>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-500 transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6">
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
+                First Name
+              </label>
+              <input
+                type="text"
+                id="firstName"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                required
+                maxLength={50}
+                disabled={loading}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
+                Last Name
+              </label>
+              <input
+                type="text"
+                id="lastName"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                required
+                maxLength={50}
+                disabled={loading}
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-3 mt-6">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+              disabled={loading}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-md transition-colors disabled:opacity-50"
+              disabled={loading}
+            >
+              {loading ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 }
 
 function EssayModal({ essay, onClose }: EssayModalProps) {
@@ -140,6 +268,7 @@ export function Profile() {
   const [selectedEssay, setSelectedEssay] = useState<Essay | null>(null);
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
   const [showReferralModal, setShowReferralModal] = useState(false);
+  const [showEditNameModal, setShowEditNameModal] = useState(false);
 
   useEffect(() => {
     // Check for payment success parameter
@@ -187,6 +316,47 @@ export function Profile() {
 
     loadProfile();
   }, [user]);
+
+  const handleSaveName = async (firstName: string, lastName: string) => {
+    if (!user) throw new Error('User not authenticated');
+
+    try {
+      const session = await supabase.auth.getSession();
+      if (!session.data.session) {
+        throw new Error('No active session');
+      }
+
+      const response = await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.data.session.access_token}`,
+        },
+        body: JSON.stringify({
+          first_name: firstName,
+          last_name: lastName,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update name');
+      }
+
+      const result = await response.json();
+
+      // Update the local profile state
+      setProfile(prev => prev ? {
+        ...prev,
+        first_name: result.user.first_name,
+        last_name: result.user.last_name,
+      } : null);
+
+    } catch (error) {
+      console.error('Error updating name:', error);
+      throw error;
+    }
+  };
 
   const handlePurchaseCredits = () => {
     // Navigate to credit purchase page
@@ -268,7 +438,16 @@ export function Profile() {
 
       {/* Profile Information */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Profile Information</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-bold text-gray-900">Profile Information</h2>
+          <button
+            onClick={() => setShowEditNameModal(true)}
+            className="text-primary-600 hover:text-primary-700 transition-colors p-2 rounded-md hover:bg-primary-50"
+            title="Edit name"
+          >
+            <Edit2 className="w-5 h-5" />
+          </button>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <p className="text-sm text-gray-500">Name</p>
@@ -396,6 +575,15 @@ export function Profile() {
           onClose={() => setSelectedEssay(null)}
         />
       )}
+
+      {/* Edit Name Modal */}
+      <EditNameModal
+        isOpen={showEditNameModal}
+        onClose={() => setShowEditNameModal(false)}
+        currentFirstName={profile?.first_name || ''}
+        currentLastName={profile?.last_name || ''}
+        onSave={handleSaveName}
+      />
 
       {/* Referral Modal */}
       <ReferralModal
