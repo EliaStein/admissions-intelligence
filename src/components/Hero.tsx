@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { ShieldCheck, GraduationCap } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
+import Image from 'next/image';
 import { EssayWizard } from './EssayWizard';
 import { useAuth } from '../hooks/useAuth';
 import { AuthForm } from './AuthForm';
@@ -37,15 +38,27 @@ export function Hero() {
           <div className="mt-16">
             <p className="text-sm text-gray-500 mb-8">Trained by Former Admissions Officers From</p>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-8 items-center justify-items-center">
-              {['Harvard University', 'Stanford University', 'Yale University', 'MIT', 'Duke University'].map((school) => (
-                <div 
-                  key={school}
+              {[
+                { name: 'Harvard University', logo: '/image/universities/Harvard.png' },
+                { name: 'Stanford University', logo: '/image/universities/Stanford.webp' },
+                { name: 'Yale University', logo: '/image/universities/Yale.jpg' },
+                { name: 'MIT', logo: '/image/universities/MIT.png' },
+                { name: 'Duke University', logo: '/image/universities/Duke.png' }
+              ].map((school) => (
+                <div
+                  key={school.name}
                   className="flex flex-col items-center space-y-2"
                 >
-                  <div className="w-16 h-16 bg-primary-50 rounded-full flex items-center justify-center">
-                    <GraduationCap className="w-8 h-8 text-primary-600" />
+                  <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm border border-gray-100">
+                    <Image
+                      src={school.logo}
+                      alt={`${school.name} logo`}
+                      width={48}
+                      height={48}
+                      className="object-contain"
+                    />
                   </div>
-                  <span className="text-sm font-medium text-gray-800 text-center">{school}</span>
+                  <span className="text-sm font-medium text-gray-800 text-center">{school.name}</span>
                 </div>
               ))}
             </div>
