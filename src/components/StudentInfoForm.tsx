@@ -166,10 +166,10 @@ export function StudentInfoForm({
         <button
           onClick={onSubmit}
           disabled={isSubmitting || !!firstNameError || !!lastNameError || !!emailError}
-          className={`px-6 py-3 rounded-lg text-white font-medium transition-all duration-200 flex items-center gap-2 ${
+          className={`px-6 py-2 rounded-lg text-white transition-colors inline-flex items-center gap-2 ${
             isSubmitting || firstNameError || lastNameError || emailError
               ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-primary-600 hover:bg-primary-700 hover:shadow-lg transform hover:-translate-y-0.5'
+              : 'bg-primary-600 hover:bg-primary-700'
           }`}
         >
           {isSubmitting ? (
