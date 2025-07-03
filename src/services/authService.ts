@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { getGoogleAuthCallbackUrl } from '../utils/url';
 
 export const authService = {
   async signIn(email: string, password: string) {
@@ -60,10 +61,11 @@ export const authService = {
 
   async signInWithGoogle(redirectTo?: string) {
     console.log('Initiating Google OAuth sign-in...');
+    const callbackUrl = getGoogleAuthCallbackUrl();
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: redirectTo || `${window.location.origin}/auth/callback`,
+        redirectTo: redirectTo || callbackUrl,
         queryParams: {
           access_type: 'offline',
           prompt: 'consent',
