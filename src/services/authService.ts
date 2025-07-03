@@ -56,5 +56,30 @@ export const authService = {
       .single();
 
     return !error && data !== null;
+  },
+
+  async signInWithGoogle(redirectTo?: string) {
+    console.log('Initiating Google OAuth sign-in...');
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: redirectTo || `${window.location.origin}/auth/callback`,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        },
+      },
+    });
+
+    console.log('Google OAuth response:', { data, error });
+    if (error) {
+      console.error('Google OAuth error:', error);
+      throw error;
+    }
+    return data;
+  },
+
+  async signUpWithGoogle(redirectTo?: string) {
+    return this.signInWithGoogle(redirectTo);
   }
 };

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, Lock, User, Loader2, AlertCircle } from 'lucide-react';
 import { authService } from '../../services/authService';
+import { GoogleAuthButton } from './GoogleAuthButton';
 
 interface CreateAccountFormProps {
   onSuccess?: () => void;
@@ -76,10 +77,26 @@ export function CreateAccountForm({ onSuccess }: CreateAccountFormProps) {
   };
 
   return (
-    <>
+    <div className="mt-8 space-y-6">
+      {/* Google Sign Up Button */}
+      <GoogleAuthButton
+        mode="signup"
+        onError={setError}
+      />
 
-      <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-        <div className="rounded-md shadow-sm space-y-2">
+      {/* Divider */}
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-gray-300" />
+        </div>
+        <div className="relative flex justify-center text-sm">
+          <span className="px-2 bg-white text-gray-500">Or continue with email</span>
+        </div>
+      </div>
+
+      {/* Email/Password Form */}
+      <form className="space-y-4" onSubmit={handleSubmit}>
+        <div className="space-y-2">
           <div>
             <label htmlFor="firstName" className="sr-only">
               First Name
@@ -203,6 +220,6 @@ export function CreateAccountForm({ onSuccess }: CreateAccountFormProps) {
           )}
         </button>
       </form>
-    </>
+    </div>
   );
 }

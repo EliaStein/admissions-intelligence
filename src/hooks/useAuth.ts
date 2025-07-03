@@ -39,6 +39,25 @@ export function useAuth() {
     }
   };
 
+  const loginWithGoogle = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
+      return !error;
+    } catch (error) {
+      console.error('Google login error:', error);
+      return false;
+    }
+  };
+
   const logout = signOut; // Alias for consistency
 
   return {
@@ -46,6 +65,7 @@ export function useAuth() {
     loading,
     signOut,
     login,
+    loginWithGoogle,
     logout,
     isAuthenticated: !!user
   };
