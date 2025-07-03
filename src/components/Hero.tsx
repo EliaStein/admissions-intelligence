@@ -50,7 +50,7 @@ export function Hero() {
                   className="flex flex-col items-center space-y-2"
                 >
                   <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm border border-gray-100">
-                    <Image
+                    <img
                       src={school.logo}
                       alt={`${school.name} logo`}
                       width={48}
