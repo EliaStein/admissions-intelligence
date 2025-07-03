@@ -62,6 +62,7 @@ export const authService = {
   async signInWithGoogle(redirectTo?: string) {
     console.log('Initiating Google OAuth sign-in...');
     const callbackUrl = getGoogleAuthCallbackUrl();
+    console.log('callbackUrl', callbackUrl);
     console.log('Using callback URL:', callbackUrl);
     console.log('Current window origin:', typeof window !== 'undefined' ? window.location.origin : 'server-side');
     console.log('Environment variables:', {
