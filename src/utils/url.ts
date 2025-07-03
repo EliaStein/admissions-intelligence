@@ -1,30 +1,20 @@
 export function getBaseUrl(): string {
-  // Client-side
-  if (typeof window !== 'undefined') {
-    return window.location.origin;
-  }
-
-  // Server-side - check environment variables
+  console.log('ENV', process.env.NODE_ENV)
+  console.log('NEXT_PUBLIC_SITE_URL', process.env.NEXT_PUBLIC_SITE_URL)
   if (process.env.NEXT_PUBLIC_SITE_URL) {
     return process.env.NEXT_PUBLIC_SITE_URL;
   }
 
-  if (process.env.DEPLOY_URL) {
-    return process.env.DEPLOY_URL;
+  // Client-side fallback
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
   }
 
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
-  }
-
+  // Server-side fallback
   return 'http://localhost:3000';
 }
 
 export function getGoogleAuthCallbackUrl(): string {
-  if (process.env.NEXT_PUBLIC_GOOGLE_AUTH_CALLBACK_URL) {
-    return process.env.NEXT_PUBLIC_GOOGLE_AUTH_CALLBACK_URL;
-  }
-
   return `${getBaseUrl()}/auth/callback`;
 }
 
