@@ -33,6 +33,15 @@ export function useAuth() {
         email,
         password,
       });
+
+      if (!error) {
+        const referralCode = localStorage.getItem('referralCode');
+        if (referralCode) {
+          localStorage.removeItem('referralCode');
+          console.log('Referral code cleared from localStorage after login');
+        }
+      }
+
       return !error;
     } catch (error) {
       console.error('Login error:', error);

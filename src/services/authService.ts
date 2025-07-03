@@ -9,6 +9,15 @@ export const authService = {
     });
 
     if (error) throw error;
+
+    if (typeof window !== 'undefined') {
+      const referralCode = localStorage.getItem('referralCode');
+      if (referralCode) {
+        localStorage.removeItem('referralCode');
+        console.log('Referral code cleared from localStorage after login');
+      }
+    }
+
     return data;
   },
 

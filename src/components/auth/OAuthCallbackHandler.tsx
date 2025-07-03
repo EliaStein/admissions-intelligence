@@ -51,8 +51,7 @@ export function OAuthCallbackHandler() {
                 const result = await response.json();
                 console.log('User profile creation result:', result);
 
-                // Clear referral code from localStorage after successful registration
-                if (referralCode) {
+                if (referralCode && (result.success || result.shouldClearReferralCode)) {
                   localStorage.removeItem('referralCode');
                   console.log('Referral code cleared from localStorage');
                 }

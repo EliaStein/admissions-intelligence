@@ -52,7 +52,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         message: 'User already exists',
-        user: existingUser
+        user: existingUser,
+        shouldClearReferralCode: true // Signal frontend to clear referralCode
       });
     }
 

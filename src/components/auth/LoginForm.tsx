@@ -45,6 +45,12 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         }
       }
 
+      // Clear referral code from localStorage after successful login
+      const referralCode = localStorage.getItem('referralCode');
+      if (referralCode) {
+        localStorage.removeItem('referralCode');
+      }
+
       onSuccess?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Authentication failed');

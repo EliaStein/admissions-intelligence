@@ -33,6 +33,8 @@ export async function GET(request: Request) {
     if (data.session) {
       // For Google OAuth users, ensure they have a profile in our users table
       try {
+        // Note: We can't access localStorage in server-side route,
+        // so referralCode handling is done in the client-side OAuthCallbackHandler
         const response = await fetch(`${baseUrl}/api/auth/google-callback`, {
           method: 'POST',
           headers: {
