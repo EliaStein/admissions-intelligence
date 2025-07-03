@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { AlertCircle, Home, RefreshCw } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { OAuthCallbackHandler } from '@/components/auth/OAuthCallbackHandler';
 
-export default function AuthCodeErrorPage() {
+function AuthCodeErrorContent() {
   const searchParams = useSearchParams();
   const [errorDetails, setErrorDetails] = useState<{
     error?: string;
@@ -85,5 +85,30 @@ export default function AuthCodeErrorPage() {
       {/* Include OAuth callback handler to process any tokens in URL fragments */}
       <OAuthCallbackHandler />
     </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div className="text-center">
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+            <AlertCircle className="h-6 w-6 text-red-600" />
+          </div>
+          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+            Loading...
+          </h2>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function AuthCodeErrorPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <AuthCodeErrorContent />
+    </Suspense>
   );
 }
