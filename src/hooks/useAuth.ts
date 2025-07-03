@@ -43,6 +43,13 @@ export function useAuth() {
   const loginWithGoogle = async () => {
     try {
       const callbackUrl = getGoogleAuthCallbackUrl();
+      console.log('Using callback URL:', callbackUrl);
+      console.log('Current window origin:', typeof window !== 'undefined' ? window.location.origin : 'server-side');
+      console.log('Environment variables:', {
+        NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+        NODE_ENV: process.env.NODE_ENV
+      });
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
