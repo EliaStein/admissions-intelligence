@@ -1,5 +1,4 @@
 import { supabase } from '../lib/supabase';
-import { getGoogleAuthCallbackUrl } from '../utils/url';
 
 export const authService = {
   async signIn(email: string, password: string) {
@@ -70,9 +69,6 @@ export const authService = {
 
   async signInWithGoogle(redirectTo?: string) {
     console.log('Initiating Google OAuth sign-in...');
-    const callbackUrl = getGoogleAuthCallbackUrl();
-    console.log('callbackUrl', callbackUrl);
-    console.log('Using callback URL:', callbackUrl);
     console.log('Current window origin:', typeof window !== 'undefined' ? window.location.origin : 'server-side');
     console.log('Environment variables:', {
       NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
@@ -81,13 +77,6 @@ export const authService = {
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: {
-        redirectTo: redirectTo || callbackUrl,
-        queryParams: {
-          access_type: 'offline',
-          prompt: 'consent',
-        },
-      },
     });
 
     console.log('Google OAuth response:', { data, error });

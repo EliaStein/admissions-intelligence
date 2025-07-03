@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { getGoogleAuthCallbackUrl } from '../utils/url';
 import type { User } from '@supabase/supabase-js';
 
 export function useAuth() {
@@ -51,8 +50,7 @@ export function useAuth() {
 
   const loginWithGoogle = async () => {
     try {
-      const callbackUrl = getGoogleAuthCallbackUrl();
-      console.log('callbackUrl', callbackUrl);
+
       console.log('Current window origin:', typeof window !== 'undefined' ? window.location.origin : 'server-side');
       console.log('Environment variables:', {
         NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
@@ -61,13 +59,6 @@ export function useAuth() {
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: {
-          redirectTo: callbackUrl,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
-        },
       });
       return !error;
     } catch (error) {
