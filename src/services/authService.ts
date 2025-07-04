@@ -13,7 +13,6 @@ export const authService = {
       const referralCode = localStorage.getItem('referralCode');
       if (referralCode) {
         localStorage.removeItem('referralCode');
-        console.log('Referral code cleared from localStorage after login');
       }
     }
 
@@ -68,28 +67,16 @@ export const authService = {
   },
 
   async signInWithGoogle(redirectTo?: string) {
-    console.log('🚀 Initiating Google OAuth sign-in...');
-    console.log('🌐 Current window origin:', typeof window !== 'undefined' ? window.location.origin : 'server-side');
-    console.log('🔧 Environment variables:', {
-      NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
-      NODE_ENV: process.env.NODE_ENV
-    });
-
-    console.log('🔧 Supabase client config check - client exists:', !!supabase);
-
-    console.log('📞 Calling supabase.auth.signInWithOAuth...', `${window.location.origin}/api/auth/callback`);
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/api/auth/callback`,
+        // Keep existing query params for offline access
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent'
+        }
       },
-    });
-
-    console.log('📡 Google OAuth response:', {
-      hasData: !!data,
-      hasError: !!error,
-      data: data,
-      error: error
     });
 
     if (error) {
@@ -97,7 +84,6 @@ export const authService = {
       throw error;
     }
 
-    console.log('✅ Google OAuth initiated successfully');
     return data;
   },
 

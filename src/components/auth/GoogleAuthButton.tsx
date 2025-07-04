@@ -14,12 +14,9 @@ export function GoogleAuthButton({ mode, onError, className = '' }: GoogleAuthBu
   const [loading, setLoading] = useState(false);
 
   const handleGoogleAuth = async () => {
-    console.log('🔘 Google auth button clicked');
     setLoading(true);
     try {
-      console.log('🚀 Calling authService.signUpWithGoogle()...');
-      const result = await authService.signUpWithGoogle();
-      console.log('✅ Google auth service result:', result);
+      await authService.signUpWithGoogle();
     } catch (error) {
       console.error('❌ Google auth error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Google authentication failed';
