@@ -1,10 +1,5 @@
 import { supabase } from '../lib/supabase';
 import { parseSchoolsCSV } from '../utils/csvParser';
-import type { Database } from '../types/supabase';
-
-type School = Database['public']['Tables']['schools']['Row'];
-type SchoolInsert = Database['public']['Tables']['schools']['Insert'];
-type EssayPromptInsert = Database['public']['Tables']['essay_prompts']['Insert'];
 
 interface UploadResult {
   success: boolean;
@@ -39,8 +34,8 @@ export const uploadService = {
 
       // Insert schools and collect their IDs
       const schoolMap = new Map<string, string>();
-      
-      for (const [schoolName, schoolData] of parsed.schools) {
+
+      for (const [schoolName] of parsed.schools) {
         const { data: school, error } = await supabase
           .from('schools')
           .upsert({ name: schoolName })

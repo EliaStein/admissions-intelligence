@@ -17,6 +17,7 @@
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.50.0",
     "@types/marked": "^5.0.2",
+    "ky": "^1.8.1",
     "lucide-react": "^0.522.0",
     "mammoth": "^1.9.1",
     "marked": "^16.0.0",

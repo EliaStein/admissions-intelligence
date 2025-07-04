@@ -7,6 +7,7 @@ type EssayPrompt = Database['public']['Tables']['essay_prompts']['Row'];
 const SCHOOLS_PER_PAGE = 20;
 
 export const schoolService = {
+  // TODO: move to backend
   async getSchools(page: number = 0) {
     const start = page * SCHOOLS_PER_PAGE;
     const end = start + SCHOOLS_PER_PAGE - 1;

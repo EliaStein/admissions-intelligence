@@ -7,8 +7,8 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
 import { CreditCard, Check, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
 import { CreditPackage, creditPackages } from '../../config/products';
+import { UserFetch } from '@/app/utils/user-fetch';
 
 export default function PurchaseCreditsPage() {
   const { user, loading: authLoading } = useAuth();
@@ -21,23 +21,7 @@ export default function PurchaseCreditsPage() {
       if (!authLoading && user) {
         try {
           setCreditsLoading(true);
-          // Get the user's session token
-          const { data: { session } } = await supabase.auth.getSession();
-          if (!session) {
-            throw new Error('No active session');
-          }
-
-          const response = await fetch('/api/credits/balance', {
-            headers: {
-              'Authorization': `Bearer ${session.access_token}`,
-            },
-          });
-
-          if (!response.ok) {
-            throw new Error('Failed to fetch credit balance');
-          }
-
-          const data = await response.json();
+          const data = await UserFetch.get<{ credits: number }>('/api/credits/balance');
           setCurrentCredits(data.credits);
         } catch (error) {
           console.error('Error loading credits:', error);
@@ -57,37 +41,17 @@ export default function PurchaseCreditsPage() {
     if (!user) return;
 
     setPurchasing(pkg.id);
-    
-    try {
-      // Get the user's session token
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('No active session');
-      }
 
-      const response = await fetch('/api/stripe/checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          priceId: pkg.priceId,
-          credits: pkg.credits,
-          successUrl: `${window.location.origin}/profile?payment=success`,
-          cancelUrl: `${window.location.origin}/purchase-credits?payment=cancelled`,
-        }),
+    try {
+      const data = await UserFetch.post<{ url: string }>('/api/stripe/checkout', {
+        priceId: pkg.priceId,
+        credits: pkg.credits,
+        successUrl: `${window.location.origin}/profile?payment=success`,
+        cancelUrl: `${window.location.origin}/purchase-credits?payment=cancelled`,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create checkout session');
-      }
-
-      const { url } = await response.json();
-      
-      if (url) {
-        window.location.href = url;
+      if (data.url) {
+        window.location.href = data.url;
       } else {
         throw new Error('No checkout URL received');
       }

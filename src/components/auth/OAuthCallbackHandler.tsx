@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { UserFetch } from '@/app/utils/user-fetch';
 
 export function OAuthCallbackHandler() {
   const router = useRouter();
@@ -31,26 +32,12 @@ export function OAuthCallbackHandler() {
               // Get referral code from localStorage
               const referralCode = localStorage.getItem('referralCode');
 
-              const requestBody = { referralCode: referralCode };
-
-              const response = await fetch('/api/auth/google-callback', {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${data.session.access_token}`,
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(requestBody)
+              const result = await UserFetch.post<{ success?: boolean; shouldClearReferralCode?: boolean }>('/api/auth/google-callback', {
+                referralCode: referralCode
               });
 
-              if (!response.ok) {
-                const errorText = await response.text();
-                console.error('❌ Failed to create user profile:', response.status, errorText);
-              } else {
-                const result = await response.json();
-
-                if (referralCode && (result.success || result.shouldClearReferralCode)) {
-                  localStorage.removeItem('referralCode');
-                }
+              if (referralCode && (result.success || result.shouldClearReferralCode)) {
+                localStorage.removeItem('referralCode');
               }
             } catch (profileError) {
               console.error('💥 Error creating user profile:', profileError);
@@ -89,29 +76,19 @@ export function OAuthCallbackHandler() {
             }
 
             if (session) {
-              // Get referral code from localStorage
-              const referralCode = localStorage.getItem('referralCode');
+              try {
+                // Get referral code from localStorage
+                const referralCode = localStorage.getItem('referralCode');
 
-              const requestBody = { referralCode: referralCode };
-
-              const response = await fetch('/api/auth/google-callback', {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${session.access_token}`,
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(requestBody)
-              });
-
-              if (!response.ok) {
-                const errorText = await response.text();
-                console.error('❌ Failed to create user profile (OAuth flow):', response.status, errorText);
-              } else {
-                const result = await response.json();
+                const result = await UserFetch.post<{ success?: boolean; shouldClearReferralCode?: boolean }>('/api/auth/google-callback', {
+                  referralCode: referralCode
+                });
 
                 if (referralCode && (result.success || result.shouldClearReferralCode)) {
                   localStorage.removeItem('referralCode');
                 }
+              } catch (profileError) {
+                console.error('💥 Error creating user profile (OAuth flow):', profileError);
               }
 
               // Clean up URL and redirect
@@ -144,26 +121,12 @@ export function OAuthCallbackHandler() {
               // Get referral code from localStorage
               const referralCode = localStorage.getItem('referralCode');
 
-              const requestBody = { referralCode: referralCode };
-
-              const response = await fetch('/api/auth/google-callback', {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${data.session.access_token}`,
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(requestBody)
+              const result = await UserFetch.post<{ success?: boolean; shouldClearReferralCode?: boolean }>('/api/auth/google-callback', {
+                referralCode: referralCode
               });
 
-              if (!response.ok) {
-                const errorText = await response.text();
-                console.error('❌ Failed to create user profile (PKCE flow):', response.status, errorText);
-              } else {
-                const result = await response.json();
-
-                if (referralCode && (result.success || result.shouldClearReferralCode)) {
-                  localStorage.removeItem('referralCode');
-                }
+              if (referralCode && (result.success || result.shouldClearReferralCode)) {
+                localStorage.removeItem('referralCode');
               }
             } catch (profileError) {
               console.error('💥 Error creating user profile (PKCE flow):', profileError);

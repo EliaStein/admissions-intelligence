@@ -53,6 +53,7 @@ export const authService = {
     return session;
   },
 
+  // TODO: move to backend
   async isAdmin() {
     const session = await this.getCurrentSession();
     if (!session) return false;
@@ -66,12 +67,11 @@ export const authService = {
     return !error && data !== null;
   },
 
-  async signInWithGoogle(redirectTo?: string) {
+  async signInWithGoogle() {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/api/auth/callback`,
-        // Keep existing query params for offline access
         queryParams: {
           access_type: 'offline',
           prompt: 'consent'
@@ -87,7 +87,7 @@ export const authService = {
     return data;
   },
 
-  async signUpWithGoogle(redirectTo?: string) {
-    return this.signInWithGoogle(redirectTo);
+  async signUpWithGoogle() {
+    return this.signInWithGoogle();
   }
 };

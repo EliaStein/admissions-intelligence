@@ -7,6 +7,7 @@ import { useCredits } from '../hooks/useCredits';
 import { FileText, Calendar, PenLine, X, CreditCard, Plus, Users, Edit2 } from 'lucide-react';
 import Link from 'next/link';
 import { ReferralModal } from './ReferralModal';
+import { UserFetch } from '../app/utils/user-fetch';
 
 interface UserProfile {
   first_name: string;
@@ -329,29 +330,10 @@ export function Profile() {
     if (!user) throw new Error('User not authenticated');
 
     try {
-      const session = await supabase.auth.getSession();
-      if (!session.data.session) {
-        throw new Error('No active session');
-      }
-
-      const response = await fetch('/api/user/profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.data.session.access_token}`,
-        },
-        body: JSON.stringify({
-          first_name: firstName,
-          last_name: lastName,
-        }),
+      const result = await UserFetch.put<{ user: { first_name: string; last_name: string } }>('/api/user/profile', {
+        first_name: firstName,
+        last_name: lastName,
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update name');
-      }
-
-      const result = await response.json();
 
       // Update the local profile state
       setProfile(prev => prev ? {
