@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '../../../../lib/supabase';
 import { z } from 'zod';
+import { getAdminClient } from '../../../../lib/supabase-admin-client';
 
 // Zod schema for profile update validation
 const profileUpdateSchema = z.object({
@@ -61,9 +62,10 @@ export async function PUT(request: NextRequest) {
     }
 
     const updateData = validationResult.data;
+    const supaAdmin = await getAdminClient();
 
     // Update the user's profile
-    const { data: updatedUser, error: updateError } = await supabase
+    const { data: updatedUser, error: updateError } = await supaAdmin
       .from('users')
       .update(updateData)
       .eq('id', user.id)
