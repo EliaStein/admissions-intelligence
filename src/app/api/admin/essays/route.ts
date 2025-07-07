@@ -1,42 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminClient } from '../../../../lib/supabase-admin-client';
+import { AdminGuard } from '../../../../lib/admin-guard';
 
 export async function GET(request: NextRequest) {
   try {
-    // Get the authorization header
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) {
-      return NextResponse.json(
-        { error: 'Authorization header required' },
-        { status: 401 }
-      );
+    const guardResult = await AdminGuard.validate(request);
+    if (!guardResult.success) {
+      return guardResult.response;
     }
 
-    const token = authHeader.replace('Bearer ', '');
-    const supabase = await getAdminClient();
-
-    // Verify the token and check if user is admin
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Invalid authentication token' },
-        { status: 401 }
-      );
-    }
-
-    // Check if user is admin
-    const { data: adminData, error: adminError } = await supabase
-      .from('admins')
-      .select('id')
-      .eq('user_id', user.id)
-      .single();
-
-    if (adminError || !adminData) {
-      return NextResponse.json(
-        { error: 'Admin access required' },
-        { status: 403 }
-      );
-    }
+    const { supaAdmin } = guardResult;
 
     // Get query parameters for filtering and pagination
     const { searchParams } = new URL(request.url);
@@ -48,7 +20,7 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit;
 
     // Build query
-    let query = supabase
+    let query = supaAdmin
       .from('essays')
       .select(`
         id,
@@ -91,7 +63,7 @@ export async function GET(request: NextRequest) {
     const essaysWithUserInfo = await Promise.all(
       (essays || []).map(async (essay) => {
         // Try to get user info from users table
-        const { data: userData } = await supabase
+        const { data: userData } = await supaAdmin
           .from('users')
           .select('id, credits, role, is_active')
           .eq('email', essay.student_email)
@@ -125,40 +97,12 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    // Get the authorization header
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) {
-      return NextResponse.json(
-        { error: 'Authorization header required' },
-        { status: 401 }
-      );
+    const guardResult = await AdminGuard.validate(request);
+    if (!guardResult.success) {
+      return guardResult.response;
     }
 
-    const token = authHeader.replace('Bearer ', '');
-    const supabase = await getAdminClient();
-
-    // Verify the token and check if user is admin
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Invalid authentication token' },
-        { status: 401 }
-      );
-    }
-
-    // Check if user is admin
-    const { data: adminData, error: adminError } = await supabase
-      .from('admins')
-      .select('id')
-      .eq('user_id', user.id)
-      .single();
-
-    if (adminError || !adminData) {
-      return NextResponse.json(
-        { error: 'Admin access required' },
-        { status: 403 }
-      );
-    }
+    const { supaAdmin } = guardResult;
 
     const body = await request.json();
     const { id, ...updateData } = body;
@@ -171,7 +115,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update the essay
-    const { data: updatedEssay, error: updateError } = await supabase
+    const { data: updatedEssay, error: updateError } = await supaAdmin
       .from('essays')
       .update(updateData)
       .eq('id', id)
@@ -202,40 +146,12 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    // Get the authorization header
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) {
-      return NextResponse.json(
-        { error: 'Authorization header required' },
-        { status: 401 }
-      );
+    const guardResult = await AdminGuard.validate(request);
+    if (!guardResult.success) {
+      return guardResult.response;
     }
 
-    const token = authHeader.replace('Bearer ', '');
-    const supabase = await getAdminClient();
-
-    // Verify the token and check if user is admin
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Invalid authentication token' },
-        { status: 401 }
-      );
-    }
-
-    // Check if user is admin
-    const { data: adminData, error: adminError } = await supabase
-      .from('admins')
-      .select('id')
-      .eq('user_id', user.id)
-      .single();
-
-    if (adminError || !adminData) {
-      return NextResponse.json(
-        { error: 'Admin access required' },
-        { status: 403 }
-      );
-    }
+    const { supaAdmin } = guardResult;
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -248,7 +164,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Delete the essay
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await supaAdmin
       .from('essays')
       .delete()
       .eq('id', id);

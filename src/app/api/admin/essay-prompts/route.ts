@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminClient } from '../../../../lib/supabase-admin-client';
 import { AdminGuard } from '../../../../lib/admin-guard';
 
 export async function GET(request: NextRequest) {
   try {
-    // Validate admin authentication and authorization
     const guardResult = await AdminGuard.validate(request);
     if (!guardResult.success) {
       return guardResult.response;
@@ -49,7 +47,6 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    // Validate admin authentication and authorization
     const guardResult = await AdminGuard.validate(request);
     if (!guardResult.success) {
       return guardResult.response;
@@ -111,7 +108,6 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    // Validate admin authentication and authorization
     const guardResult = await AdminGuard.validate(request);
     if (!guardResult.success) {
       return guardResult.response;
@@ -183,7 +179,6 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    // Validate admin authentication and authorization
     const guardResult = await AdminGuard.validate(request);
     if (!guardResult.success) {
       return guardResult.response;

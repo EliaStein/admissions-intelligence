@@ -1,19 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminClient } from '../../../../lib/supabase-admin-client';
 import { AdminGuard } from '../../../../lib/admin-guard';
 
 export async function GET(request: NextRequest) {
   try {
-    // Validate admin authentication and authorization
     const guardResult = await AdminGuard.validate(request);
     if (!guardResult.success) {
       return guardResult.response;
     }
 
-    const supabase = await getAdminClient();
+    const { supaAdmin } = guardResult;
 
     // Get all users with their information
-    const { data: users, error: usersError } = await supabase
+    const { data: users, error: usersError } = await supaAdmin
       .from('users')
       .select(`
         id,
