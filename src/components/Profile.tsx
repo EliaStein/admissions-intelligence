@@ -261,6 +261,7 @@ function EssayModal({ essay, onClose }: EssayModalProps) {
 
 export function Profile() {
   const { user, loading: authLoading } = useAuth();
+  console.log('User:', user);
   const { credits, loading: creditsLoading } = useCredits();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [essays, setEssays] = useState<Essay[]>([]);

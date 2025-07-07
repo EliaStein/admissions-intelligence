@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { UserFetch } from '../app/utils/user-fetch';
 
 export const authService = {
   async signIn(email: string, password: string) {
@@ -53,18 +54,17 @@ export const authService = {
     return session;
   },
 
-  // TODO: move to backend
   async isAdmin() {
     const session = await this.getCurrentSession();
     if (!session) return false;
 
-    const { data, error } = await supabase
-      .from('admins')
-      .select('id')
-      .eq('user_id', session.user.id)
-      .single();
-
-    return !error && data !== null;
+    try {
+      const data = await UserFetch.get<{ isAdmin: boolean }>('/api/auth/is-admin');
+      return data.isAdmin;
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+      return false;
+    }
   },
 
   async signInWithGoogle() {
