@@ -1,51 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminClient } from '../../../../../lib/supabase-admin-client';
+import { AdminGuard } from '../../../../../lib/admin-guard';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Get the authorization header
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) {
-      return NextResponse.json(
-        { error: 'Authorization header required' },
-        { status: 401 }
-      );
+    const guardResult = await AdminGuard.validate(request);
+    if (!guardResult.success) {
+      return guardResult.response;
     }
 
-    const token = authHeader.replace('Bearer ', '');
-    const supabase = await getAdminClient();
-
-    // Verify the token and check if user is admin
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Invalid authentication token' },
-        { status: 401 }
-      );
-    }
-
-    // Check if user is admin
-    const { data: adminData, error: adminError } = await supabase
-      .from('admins')
-      .select('id')
-      .eq('user_id', user.id)
-      .single();
-
-    if (adminError || !adminData) {
-      return NextResponse.json(
-        { error: 'Admin access required' },
-        { status: 403 }
-      );
-    }
+    const { supaAdmin } = guardResult;
 
     // Await params before accessing properties
     const { id: userId } = await params;
 
     // Get user information
-    const { data: userData, error: userError } = await supabase
+    const { data: userData, error: userError } = await supaAdmin
       .from('users')
       .select(`
         id,
@@ -69,7 +41,7 @@ export async function GET(
     }
 
     // Get user's essays
-    const { data: essaysData, error: essaysError } = await supabase
+    const { data: essaysData, error: essaysError } = await supaAdmin
       .from('essays')
       .select(`
         id,
@@ -107,40 +79,12 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Get the authorization header
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) {
-      return NextResponse.json(
-        { error: 'Authorization header required' },
-        { status: 401 }
-      );
+    const guardResult = await AdminGuard.validate(request);
+    if (!guardResult.success) {
+      return guardResult.response;
     }
 
-    const token = authHeader.replace('Bearer ', '');
-    const supabase = await getAdminClient();
-
-    // Verify the token and check if user is admin
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Invalid authentication token' },
-        { status: 401 }
-      );
-    }
-
-    // Check if user is admin
-    const { data: adminData, error: adminError } = await supabase
-      .from('admins')
-      .select('id')
-      .eq('user_id', user.id)
-      .single();
-
-    if (adminError || !adminData) {
-      return NextResponse.json(
-        { error: 'Admin access required' },
-        { status: 403 }
-      );
-    }
+    const { supaAdmin } = guardResult;
 
     // Await params before accessing properties
     const { id: userId } = await params;
@@ -164,7 +108,7 @@ export async function PUT(
     }
 
     // Update the user
-    const { data: updatedUser, error: updateError } = await supabase
+    const { data: updatedUser, error: updateError } = await supaAdmin
       .from('users')
       .update(filteredData)
       .eq('id', userId)
@@ -198,40 +142,12 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Get the authorization header
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) {
-      return NextResponse.json(
-        { error: 'Authorization header required' },
-        { status: 401 }
-      );
+    const guardResult = await AdminGuard.validate(request);
+    if (!guardResult.success) {
+      return guardResult.response;
     }
 
-    const token = authHeader.replace('Bearer ', '');
-    const supabase = await getAdminClient();
-
-    // Verify the token and check if user is admin
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Invalid authentication token' },
-        { status: 401 }
-      );
-    }
-
-    // Check if user is admin
-    const { data: adminData, error: adminError } = await supabase
-      .from('admins')
-      .select('id')
-      .eq('user_id', user.id)
-      .single();
-
-    if (adminError || !adminData) {
-      return NextResponse.json(
-        { error: 'Admin access required' },
-        { status: 403 }
-      );
-    }
+    const { supaAdmin, user } = guardResult;
 
     // Await params before accessing properties
     const { id: userId } = await params;
@@ -245,7 +161,7 @@ export async function DELETE(
     }
 
     // Delete the user (this will cascade to related records due to foreign key constraints)
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await supaAdmin
       .from('users')
       .delete()
       .eq('id', userId);

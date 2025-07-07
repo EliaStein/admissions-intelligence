@@ -1,45 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminClient } from '../../../../lib/supabase-admin-client';
+import { AdminGuard } from '../../../../lib/admin-guard';
 
 export async function GET(request: NextRequest) {
   try {
-    // Get the authorization header
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) {
-      return NextResponse.json(
-        { error: 'Authorization header required' },
-        { status: 401 }
-      );
+    const guardResult = await AdminGuard.validate(request);
+    if (!guardResult.success) {
+      return guardResult.response;
     }
 
-    const token = authHeader.replace('Bearer ', '');
-    const supabase = await getAdminClient();
-
-    // Verify the token and check if user is admin
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Invalid authentication token' },
-        { status: 401 }
-      );
-    }
-
-    // Check if user is admin
-    const { data: adminData, error: adminError } = await supabase
-      .from('admins')
-      .select('id')
-      .eq('user_id', user.id)
-      .single();
-
-    if (adminError || !adminData) {
-      return NextResponse.json(
-        { error: 'Admin access required' },
-        { status: 403 }
-      );
-    }
+    const { supaAdmin } = guardResult;
 
     // Get all users with their information
-    const { data: users, error: usersError } = await supabase
+    const { data: users, error: usersError } = await supaAdmin
       .from('users')
       .select(`
         id,

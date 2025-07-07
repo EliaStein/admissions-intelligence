@@ -1,20 +1,13 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useCredits } from '../hooks/useCredits';
+import { useUserProfile } from '../hooks/useUserProfile';
 import { FileText, Calendar, PenLine, X, CreditCard, Plus, Users, Edit2 } from 'lucide-react';
 import Link from 'next/link';
 import { ReferralModal } from './ReferralModal';
-
-interface UserProfile {
-  first_name: string;
-  last_name: string;
-  email: string;
-  role: string;
-  created_at: string;
-}
+import { UserFetch } from '../app/utils/user-fetch';
 
 interface Essay {
   id: string;
@@ -159,7 +152,7 @@ function EditNameModal({ isOpen, onClose, currentFirstName, currentLastName, onS
   );
 }
 
-function EssayModal({ essay, onClose }: EssayModalProps) {
+function EssayModalComponent({ essay, onClose }: EssayModalProps) {
   const [activeTab, setActiveTab] = useState<'feedback' | 'essay' | 'prompt'>(
     essay.essay_feedback ? 'feedback' : 'essay'
   );
@@ -258,13 +251,14 @@ function EssayModal({ essay, onClose }: EssayModalProps) {
   );
 }
 
-export function Profile() {
+// Memoized EssayModal to prevent unnecessary re-renders
+const EssayModal = React.memo(EssayModalComponent);
+
+function ProfileComponent() {
   const { user, loading: authLoading } = useAuth();
+  console.log('User:', user);
   const { credits, loading: creditsLoading } = useCredits();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [essays, setEssays] = useState<Essay[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { profile, essays, loading, error, updateProfile } = useUserProfile();
   const [selectedEssay, setSelectedEssay] = useState<Essay | null>(null);
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
   const [showReferralModal, setShowReferralModal] = useState(false);
@@ -280,98 +274,43 @@ export function Profile() {
     }
   }, []);
 
-  useEffect(() => {
-    async function loadProfile() {
-      setError(null);
 
-      if (authLoading) return;
-      if (!user) {
-        setLoading(false);
-        return;
-      }
 
-      try {
-        setLoading(true);
-
-        // Fetch user profile
-        const { data: profileData, error: profileError } = await supabase
-          .from('users')
-          .select('first_name, last_name, email, role, created_at')
-          .eq('id', user.id)
-          .single();
-
-        if (profileError) throw profileError;
-        if (!profileData) throw new Error('Profile not found');
-
-        setProfile(profileData);
-
-        // Fetch user's essays
-        const { data: essaysData, error: essaysError } = await supabase
-          .from('essays')
-          .select('*')
-          .eq('student_email', user.email)
-          .order('created_at', { ascending: false });
-
-        if (essaysError) throw essaysError;
-        setEssays(essaysData || []);
-      } catch (err) {
-        console.error('Profile loading error:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load profile');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadProfile();
-  }, [user, authLoading]);
-
-  const handleSaveName = async (firstName: string, lastName: string) => {
+  // Memoize the save name function to prevent unnecessary re-renders
+  const handleSaveName = useCallback(async (firstName: string, lastName: string) => {
     if (!user) throw new Error('User not authenticated');
 
     try {
-      const session = await supabase.auth.getSession();
-      if (!session.data.session) {
-        throw new Error('No active session');
-      }
-
-      const response = await fetch('/api/user/profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.data.session.access_token}`,
-        },
-        body: JSON.stringify({
-          first_name: firstName,
-          last_name: lastName,
-        }),
+      const result = await UserFetch.put<{ user: { first_name: string; last_name: string } }>('/api/user/profile', {
+        first_name: firstName,
+        last_name: lastName,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update name');
-      }
-
-      const result = await response.json();
-
-      // Update the local profile state
-      setProfile(prev => prev ? {
-        ...prev,
+      // Update the local profile state using the hook's update function
+      updateProfile({
         first_name: result.user.first_name,
         last_name: result.user.last_name,
-      } : null);
+      });
 
     } catch (error) {
       console.error('Error updating name:', error);
       throw error;
     }
-  };
+  }, [user, updateProfile]);
 
-  const handlePurchaseCredits = () => {
+  // Memoize the purchase credits handler
+  const handlePurchaseCredits = useCallback(() => {
     // Navigate to credit purchase page
     window.location.href = '/purchase-credits';
-  };
+  }, []);
 
-  if (authLoading || loading) {
+  // Memoize computed values to prevent unnecessary re-renders
+  const isLoading = useMemo(() => authLoading || loading, [authLoading, loading]);
+  const hasProfile = useMemo(() => !!profile, [profile]);
+  const hasEssays = useMemo(() => essays.length > 0, [essays.length]);
+  const displayCredits = useMemo(() => creditsLoading ? '-' : credits, [creditsLoading, credits]);
+
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
@@ -389,13 +328,13 @@ export function Profile() {
     );
   }
 
-  if (!profile && !loading && error) {
+  if (!hasProfile && !loading && error) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-xl font-medium text-gray-900 mb-4">Profile Not Found</h2>
           <p className="text-gray-600 mb-6">
-            We couldn't find your profile information. This might be because your account was recently created.
+            We couldn&apos;t find your profile information. This might be because your account was recently created.
           </p>
           <Link
             href="/"
@@ -408,7 +347,7 @@ export function Profile() {
     );
   }
 
-  if (!profile) {
+  if (!hasProfile) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
@@ -468,21 +407,21 @@ export function Profile() {
           <div>
             <p className="text-sm text-gray-500">Name</p>
             <p className="text-lg font-medium text-gray-900">
-              {profile.first_name} {profile.last_name}
+              {profile?.first_name} {profile?.last_name}
             </p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Email</p>
-            <p className="text-lg font-medium text-gray-900">{profile.email}</p>
+            <p className="text-lg font-medium text-gray-900">{profile?.email}</p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Account Type</p>
-            <p className="text-lg font-medium text-gray-900 capitalize">{profile.role}</p>
+            <p className="text-lg font-medium text-gray-900 capitalize">{profile?.role}</p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Member Since</p>
             <p className="text-lg font-medium text-gray-900">
-              {new Date(profile.created_at).toLocaleDateString()}
+              {profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : ''}
             </p>
           </div>
         </div>
@@ -495,7 +434,7 @@ export function Profile() {
                 <p className="text-sm text-gray-500">Available Credits</p>
                 <p className=" font-bold text-primary-600">
                   <CreditCard className="h-6 w-6 mb-2 mr-2 text-primary-600 inline-block"/>
-                  <span className='text-2xl'>{creditsLoading ? '-' : credits}</span>
+                  <span className='text-2xl'>{displayCredits}</span>
                 </p>
               </div>
             </div>
@@ -526,7 +465,7 @@ export function Profile() {
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold text-gray-900">Your Essays</h2>
-          {essays.length > 0 && (
+          {hasEssays && (
             <Link
               href="/essay-wizard"
               className="flex items-center text-primary-600 border-gray-200 hover:text-primary-700 transition-colors"
@@ -537,7 +476,7 @@ export function Profile() {
           )}
         </div>
 
-        {essays.length === 0 ? (
+        {!hasEssays ? (
           <div className="text-center py-12">
             <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-medium text-gray-900 mb-2">
@@ -609,3 +548,6 @@ export function Profile() {
     </div>
   );
 }
+
+// Export memoized component to prevent unnecessary re-renders
+export const Profile = React.memo(ProfileComponent);

@@ -24,6 +24,7 @@ export interface CreateUserResponse {
 
 export class UserService {
 
+  // TODO: move to backend
   static async createUser(userData: CreateUserRequest): Promise<CreateUserResponse> {
     const { email, password, firstName, lastName, referralCode } = userData;
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminClient } from '@/lib/supabase-admin-client';
+import { AdminGuard } from '@/lib/admin-guard';
 import Papa from 'papaparse';
 
 interface CSVRow {
@@ -26,38 +26,12 @@ interface ImportResult {
 
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Authorization header required' },
-        { status: 401 }
-      );
+    const guardResult = await AdminGuard.validate(request);
+    if (!guardResult.success) {
+      return guardResult.response;
     }
 
-    const token = authHeader.split(' ')[1];
-    const supabase = await getAdminClient();
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Invalid authentication token' },
-        { status: 401 }
-      );
-    }
-
-    const { data: adminData, error: adminError } = await supabase
-      .from('admins')
-      .select('id')
-      .eq('user_id', user.id)
-      .single();
-
-    if (adminError || !adminData) {
-      return NextResponse.json(
-        { error: 'Admin access required' },
-        { status: 403 }
-      );
-    }
+    const { supaAdmin } = guardResult;
 
     const formData = await request.formData();
     const file = formData.get('file') as File;
@@ -103,7 +77,7 @@ export async function POST(request: NextRequest) {
     let promptsProcessed = 0;
 
     // Fetch all existing schools and essay prompts upfront
-    const { data: existingSchools, error: schoolsError } = await supabase
+    const { data: existingSchools, error: schoolsError } = await supaAdmin
       .from('schools')
       .select('id, name');
 
@@ -114,7 +88,7 @@ export async function POST(request: NextRequest) {
       } as ImportResult, { status: 500 });
     }
 
-    const { data: existingPrompts, error: promptsError } = await supabase
+    const { data: existingPrompts, error: promptsError } = await supaAdmin
       .from('essay_prompts')
       .select('id, school_id, prompt, word_count');
 
@@ -204,7 +178,7 @@ export async function POST(request: NextRequest) {
 
     // Bulk create schools first
     if (schoolsToCreate.length > 0) {
-      const { data: newSchools, error: schoolCreateError } = await supabase
+      const { data: newSchools, error: schoolCreateError } = await supaAdmin
         .from('schools')
         .insert(schoolsToCreate)
         .select('id, name');
@@ -240,7 +214,7 @@ export async function POST(request: NextRequest) {
 
     // Bulk update prompts using upsert
     if (promptsToUpdate.length > 0) {
-      const { data: updatedPrompts, error: updateError } = await supabase
+      const { data: updatedPrompts, error: updateError } = await supaAdmin
         .from('essay_prompts')
         .upsert(promptsToUpdate, {
           onConflict: 'id',
@@ -257,7 +231,7 @@ export async function POST(request: NextRequest) {
 
     // Bulk create prompts
     if (promptsToCreate.length > 0) {
-      const { data: newPrompts, error: promptCreateError } = await supabase
+      const { data: newPrompts, error: promptCreateError } = await supaAdmin
         .from('essay_prompts')
         .insert(promptsToCreate)
         .select('id');

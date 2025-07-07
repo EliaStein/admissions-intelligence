@@ -3,6 +3,7 @@ import { Essay } from '../types/essay';
 import { School, SchoolPrompt } from '../types/prompt';
 
 export const essayService = {
+  // TODO: move to backend
   async getSchools(): Promise<(School & { prompt_count: number })[]> {
     const { data, error } = await supabase
       .from('schools')
@@ -25,6 +26,7 @@ export const essayService = {
     })) || [];
   },
 
+  // TODO: move to backend
   async getPromptsBySchool(schoolId: string): Promise<SchoolPrompt[]> {
     const { data, error } = await supabase
       .from('essay_prompts')

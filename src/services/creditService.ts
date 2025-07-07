@@ -14,6 +14,7 @@ export interface CreditTransaction {
 }
 
 export class CreditService {
+  // TODO: move to backend
   static async getCreditBalance(userId: string): Promise<number> {
     try {
       const { data, error } = await supabase
@@ -44,6 +45,7 @@ export class CreditService {
     }
   }
 
+  // TODO: move to backend
   static async consumeCredits(userId: string, amount: number = 1, description: string = 'Essay feedback'): Promise<boolean> {
     try {
       const supabaseAdmin = await getAdminClient();
@@ -85,6 +87,7 @@ export class CreditService {
     }
   }
 
+  // TODO: move to backend
   static async addCredits(userId: string, amount: number): Promise<boolean> {
     try {
       const supabaseAdmin = await getAdminClient();
@@ -121,6 +124,7 @@ export class CreditService {
     }
   }
 
+  // TODO: move to backend
   static async getCurrentUserCredits(): Promise<number> {
     try {
       const { data: { session } } = await supabase.auth.getSession();

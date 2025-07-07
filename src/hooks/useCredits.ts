@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from './useAuth';
-import { supabase } from '../lib/supabase';
+import { UserFetch } from '../app/utils/user-fetch';
 
 export function useCredits() {
   const { user } = useAuth();
@@ -8,7 +8,7 @@ export function useCredits() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchCredits = async () => {
+  const fetchCredits = useCallback(async () => {
     if (!user) {
       setCredits(0);
       setLoading(false);
@@ -19,22 +19,7 @@ export function useCredits() {
       setLoading(true);
       setError(null);
 
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('No active session');
-      }
-
-      const response = await fetch('/api/credits/balance', {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch credit balance');
-      }
-
-      const data = await response.json();
+      const data = await UserFetch.get<{ credits: number }>('/api/credits/balance');
       setCredits(data.credits);
     } catch (err) {
       console.error('Error fetching credits:', err);
@@ -43,11 +28,11 @@ export function useCredits() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchCredits();
-  }, [user]);
+  }, [fetchCredits]);
 
   return {
     credits,

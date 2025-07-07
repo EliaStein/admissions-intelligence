@@ -1,14 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ArrowLeft, User, Mail, Calendar, CreditCard, FileText, Clock, School, Edit } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { UserEditModal } from '@/components/admin/UserEditModal';
+import { UserFetch } from '@/app/utils/user-fetch';
 
 interface UserData {
   id: string;
@@ -53,33 +53,12 @@ export default function UserDetailPage() {
   const [selectedEssay, setSelectedEssay] = useState<EssayData | null>(null);
   const [editingUser, setEditingUser] = useState<UserData | null>(null);
 
-  useEffect(() => {
-    if (userId) {
-      fetchUserDetails();
-    }
-  }, [userId]);
-
-  const fetchUserDetails = async () => {
+  const fetchUserDetails = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('No active session');
-      }
-
-      const response = await fetch(`/api/admin/users/${userId}`, {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch user details');
-      }
-
-      const data = await response.json();
+      const data = await UserFetch.get<{ user: UserData; essays: EssayData[] }>(`/api/admin/users/${userId}`);
       setUser(data.user);
       setEssays(data.essays);
     } catch (err) {
@@ -88,7 +67,13 @@ export default function UserDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    if (userId) {
+      fetchUserDetails();
+    }
+  }, [userId, fetchUserDetails]);
 
   const handleEditUser = () => {
     if (user) {
