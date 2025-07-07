@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Loader2, Send } from 'lucide-react';
 import { PromptSelection } from './PromptSelection';
-import { StudentInfoForm } from './StudentInfoForm';
 import { SuccessMessage } from './SuccessMessage';
+import { AuthModal } from './AuthModal';
 import { EssayPrompt } from '../types/prompt';
 import { essayService } from '../services/essayService';
 import { useAuth } from '../hooks/useAuth';
@@ -32,7 +32,7 @@ export function EssayWizard() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [userProfileLoaded, setUserProfileLoaded] = useState(false);
   const [loadingStep, setLoadingStep] = useState<string>('');
-  const formRef = useRef<HTMLDivElement>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   // Load user profile data when component mounts
   useEffect(() => {
@@ -44,9 +44,9 @@ export function EssayWizard() {
             .select('first_name, last_name, email')
             .eq('id', user.id)
             .single();
-          
+
           if (error) throw error;
-          
+
           if (data) {
             setStudentFirstName(data.first_name);
             setStudentLastName(data.last_name);
@@ -58,59 +58,41 @@ export function EssayWizard() {
         }
       }
     };
-    
+
     loadUserProfile();
   }, [user]);
 
-  // Map steps to numbers based on essay type and auth status
+  // Auto-submit after successful authentication if user was on essay step
+  useEffect(() => {
+    if (user && userProfileLoaded && currentStep === 'essay' && essay.trim() && selectedPrompt && !showAuthModal) {
+      // User just authenticated and we have all the data needed, submit automatically
+      handleSubmit();
+    }
+  }, [user, userProfileLoaded, currentStep, essay, selectedPrompt, showAuthModal]);
+
+  // Map steps to numbers based on essay type
   const getStepNumber = () => {
-    if (!user) {
-      // For unauthenticated users
-      if (essayType === 'personal') {
-        switch (currentStep) {
-          case 'type': return 1;
-          case 'prompt': return 2;
-          case 'essay': return 3;
-          case 'info': return 4;
-          default: return 1;
-        }
-      } else { // supplemental
-        switch (currentStep) {
-          case 'type': return 1;
-          case 'school': return 2;
-          case 'prompt': return 3;
-          case 'essay': return 4;
-          case 'info': return 5;
-          default: return 1;
-        }
+    // Both authenticated and unauthenticated users follow the same steps now
+    if (essayType === 'personal') {
+      switch (currentStep) {
+        case 'type': return 1;
+        case 'prompt': return 2;
+        case 'essay': return 3;
+        default: return 1;
       }
-    } else {
-      // For authenticated users
-      if (essayType === 'personal') {
-        switch (currentStep) {
-          case 'type': return 1;
-          case 'prompt': return 2;
-          case 'essay': return 3;
-          default: return 1;
-        }
-      } else { // supplemental
-        switch (currentStep) {
-          case 'type': return 1;
-          case 'school': return 2;
-          case 'prompt': return 3;
-          case 'essay': return 4;
-          default: return 1;
-        }
+    } else { // supplemental
+      switch (currentStep) {
+        case 'type': return 1;
+        case 'school': return 2;
+        case 'prompt': return 3;
+        case 'essay': return 4;
+        default: return 1;
       }
     }
   };
 
   const getTotalSteps = () => {
-    if (!user) {
-      return essayType === 'personal' ? 4 : 5;
-    } else {
-      return essayType === 'personal' ? 3 : 4;
-    }
+    return essayType === 'personal' ? 3 : 4;
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -132,87 +114,10 @@ export function EssayWizard() {
     }
   };
 
-  const validateEmail = (email: string) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  };
-
   const handleSubmit = async () => {
     setError('');
 
-    // For authenticated users, validate only the essay content
-    if (user) {
-      if (!essay.trim()) {
-        setError('Essay content is required');
-        return;
-      }
-
-      if (!selectedPrompt) {
-        setError('Please select a prompt');
-        return;
-      }
-
-      const wordCount = essay.trim().split(/\s+/).filter(Boolean).length;
-      if (wordCount > selectedPrompt.word_count * 2) {
-        setError(`Essay exceeds the ${selectedPrompt.word_count} word limit`);
-        return;
-      }
-
-      try {
-        setIsSubmitting(true);
-        setLoadingStep('Validating essay...');
-
-        const essayData = {
-          student_first_name: studentFirstName.trim(),
-          student_last_name: studentLastName.trim(),
-          student_email: studentEmail.trim(),
-          student_college: 'school_id' in selectedPrompt ? selectedPrompt.school_name || null : null,
-          selected_prompt: selectedPrompt.prompt,
-          personal_statement: essayType === 'personal',
-          essay_content: essay.trim()
-        };
-
-        const userInfo = {
-          user_id: user.id,
-          email: user.email
-        };
-
-        setLoadingStep('Generating feedback...');
-        await essayService.saveEssay(essayData, selectedPrompt.word_count, userInfo);
-
-        setLoadingStep('Finalizing submission...');
-        setIsSuccess(true);
-      } catch (err) {
-        // Check if this is a credit-related error
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        if (errorMessage.includes('You need at least 1 credit to get AI feedback')) {
-          setError('INSUFFICIENT_CREDITS');
-        } else {
-          setError('Failed to submit essay for feedback. Please try again.');
-        }
-        console.error('Submit error:', err);
-      } finally {
-        setIsSubmitting(false);
-        setLoadingStep('');
-      }
-      return;
-    }
-
-    // For non-authenticated users, validate all fields
-    if (!studentFirstName.trim()) {
-      setError('First name is required');
-      return;
-    }
-
-    if (!studentLastName.trim()) {
-      setError('Last name is required');
-      return;
-    }
-
-    if (!validateEmail(studentEmail)) {
-      setError('Please enter a valid email address');
-      return;
-    }
-
+    // Validate essay content
     if (!essay.trim()) {
       setError('Essay content is required');
       return;
@@ -226,6 +131,12 @@ export function EssayWizard() {
     const wordCount = essay.trim().split(/\s+/).filter(Boolean).length;
     if (wordCount > selectedPrompt.word_count * 2) {
       setError(`Essay exceeds the ${selectedPrompt.word_count} word limit`);
+      return;
+    }
+
+    // Ensure user is authenticated (should always be true when this function is called)
+    if (!user) {
+      setError('Please sign in to submit your essay');
       return;
     }
 
@@ -243,8 +154,13 @@ export function EssayWizard() {
         essay_content: essay.trim()
       };
 
+      const userInfo = {
+        user_id: user.id,
+        email: user.email
+      };
+
       setLoadingStep('Generating feedback...');
-      await essayService.saveEssay(essayData, selectedPrompt.word_count, {email: studentEmail});
+      await essayService.saveEssay(essayData, selectedPrompt.word_count, userInfo);
 
       setLoadingStep('Finalizing submission...');
       setIsSuccess(true);
@@ -276,11 +192,7 @@ export function EssayWizard() {
     setError('');
   };
 
-  useEffect(() => {
-    if (formRef.current && currentStep === 'info') {
-      formRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }, [currentStep]);
+
 
   const renderStepIndicator = () => (
     <div className="mb-12">
@@ -501,8 +413,8 @@ export function EssayWizard() {
                       // For authenticated users, submit directly
                       handleSubmit();
                     } else {
-                      // For unauthenticated users, go to the info step
-                      setCurrentStep('info');
+                      // For unauthenticated users, show auth modal
+                      setShowAuthModal(true);
                     }
                   }}
                   disabled={isSubmitting}
@@ -529,25 +441,6 @@ export function EssayWizard() {
           </div>
         );
 
-      case 'info':
-        // Only needed for non-authenticated users, authenticated users should never reach this case
-        return (
-          <div ref={formRef}>
-            <StudentInfoForm
-              studentFirstName={studentFirstName}
-              studentLastName={studentLastName}
-              studentEmail={studentEmail}
-              onFirstNameChange={setStudentFirstName}
-              onLastNameChange={setStudentLastName}
-              onEmailChange={setStudentEmail}
-              onSubmit={handleSubmit}
-              onBack={() => setCurrentStep('essay')}
-              isSubmitting={isSubmitting}
-              error={error}
-            />
-          </div>
-        );
-
       default:
         return null;
     }
@@ -568,6 +461,13 @@ export function EssayWizard() {
     </div>
   );
 
+  const handleAuthSuccess = () => {
+    // After successful authentication, the user will be available
+    // and we can proceed with the submission
+    setShowAuthModal(false);
+    // The useEffect will handle loading user profile data
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-6 relative">
       {isSubmitting && <LoadingOverlay />}
@@ -576,6 +476,13 @@ export function EssayWizard() {
         {renderStepIndicator()}
         {renderContent()}
       </div>
+
+      {/* Authentication Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={handleAuthSuccess}
+      />
     </div>
   );
 }

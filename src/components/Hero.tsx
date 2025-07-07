@@ -4,11 +4,8 @@ import React from 'react';
 import { ShieldCheck } from 'lucide-react';
 import Image from 'next/image';
 import { EssayWizard } from './EssayWizard';
-import { useAuth } from '../hooks/useAuth';
-import { AuthForm } from './AuthForm';
 
 export function Hero() {
-  const { user } = useAuth();
 
   return (
     <section className="relative bg-linear-to-b from-white via-primary-50/30 to-white">
@@ -32,7 +29,7 @@ export function Hero() {
           </div>
 
           <div className="essay-form-section mb-16">
-            {user ? <EssayWizard /> : <AuthForm />}
+            <EssayWizard />
           </div>
 
           <div className="mt-16">
