@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from './useAuth';
 import { UserFetch } from '../app/utils/user-fetch';
 
 export function useCredits() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [credits, setCredits] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,13 +31,15 @@ export function useCredits() {
   }, [user]);
 
   useEffect(() => {
-    fetchCredits();
-  }, [fetchCredits]);
+    if (!authLoading) {
+      fetchCredits();
+    }
+  }, [authLoading, fetchCredits]);
 
-  return {
+  return useMemo(() => ({
     credits,
     loading,
     error,
     refetch: fetchCredits
-  };
+  }), [credits, loading, error, fetchCredits]);
 }

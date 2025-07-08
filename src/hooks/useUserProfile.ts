@@ -36,7 +36,6 @@ export function useUserProfile(): UseUserProfileReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Memoize the fetch function to prevent unnecessary re-renders
   const fetchUserData = useCallback(async () => {
     setError(null);
 
@@ -49,7 +48,6 @@ export function useUserProfile(): UseUserProfileReturn {
     try {
       setLoading(true);
 
-      // Fetch user profile and essays in parallel for better performance
       const [profileResponse, essaysResponse] = await Promise.all([
         supabase
           .from('users')
@@ -78,12 +76,10 @@ export function useUserProfile(): UseUserProfileReturn {
     }
   }, [user, authLoading]);
 
-  // Memoize the update function
   const updateProfile = useCallback((updates: Partial<UserProfile>) => {
     setProfile(prev => prev ? { ...prev, ...updates } : null);
   }, []);
 
-  // Memoize the refetch function
   const refetchProfile = useCallback(async () => {
     await fetchUserData();
   }, [fetchUserData]);
@@ -92,7 +88,6 @@ export function useUserProfile(): UseUserProfileReturn {
     fetchUserData();
   }, [fetchUserData]);
 
-  // Memoize the return object to prevent unnecessary re-renders
   return useMemo(() => ({
     profile,
     essays,
