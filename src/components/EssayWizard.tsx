@@ -1,24 +1,29 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
+import React, { useState, useEffect, useCallback, memo } from 'react';
+import { useRouter } from 'next/navigation';
 import { Loader2, Send } from 'lucide-react';
 import { PromptSelection } from './PromptSelection';
 import { SuccessMessage } from './SuccessMessage';
-import { AuthModal } from './AuthModal';
+import AuthModal from './AuthModal';
 import { EssayPrompt } from '../types/prompt';
 import { essayService } from '../services/essayService';
+import { essayStorageService } from '../services/essayStorageService';
+import { ActionPersistenceService } from '../services/actionPersistenceService';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import { fileProcessingService } from '../services/fileProcessingService';
 import { PERSONAL_STATEMENT_PROMPTS } from '../prompts/personalStatement.prompt';
+import { useCredits } from '../hooks/useCredits';
 
 type EssayType = 'personal' | 'supplemental' | null;
 type Step = 'type' | 'school' | 'prompt' | 'essay' | 'info' | 'confirm';
 
 
-export function EssayWizard() {
+function EssayWizard() {
   const { user } = useAuth();
+  const router = useRouter();
+  const { credits, loading: creditsLoading } = useCredits();
   const [essayType, setEssayType] = useState<EssayType>(null);
   const [currentStep, setCurrentStep] = useState<Step>('type');
   const [selectedSchool, setSelectedSchool] = useState<string>('');
@@ -33,6 +38,91 @@ export function EssayWizard() {
   const [userProfileLoaded, setUserProfileLoaded] = useState(false);
   const [loadingStep, setLoadingStep] = useState<string>('');
   const [showAuthModal, setShowAuthModal] = useState(false);
+
+  // Save essay progress to localStorage using the service
+  const saveEssayToLocalStorage = useCallback(() => {
+    essayStorageService.saveProgress({
+      essayType,
+      currentStep,
+      selectedSchool,
+      selectedPrompt,
+      essay
+    });
+  }, [currentStep, essay, essayType, selectedPrompt, selectedSchool]);
+
+  const handleSubmit = useCallback(async () => {
+    // Clear essay progress and action from localStorage after successful submission
+    essayStorageService.clearProgress();
+    ActionPersistenceService.clearAction();
+    setError('');
+
+    if (!essay.trim()) {
+      setError('Essay content is required');
+      return;
+    }
+
+    if (!selectedPrompt) {
+      setError('Please select a prompt');
+      return;
+    }
+
+    const wordCount = essay.trim().split(/\s+/).filter(Boolean).length;
+    if (wordCount > selectedPrompt.word_count * 2) {
+      setError(`Essay exceeds the ${selectedPrompt.word_count} word limit`);
+      return;
+    }
+
+    if (!user) {
+      setError('Please sign in to submit your essay');
+      return;
+    }
+
+    if (!credits) {
+      saveEssayToLocalStorage();
+      ActionPersistenceService.saveAction('request_feedback');
+      router.push('/purchase-credits');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setLoadingStep('Validating essay...');
+
+      const essayData = {
+        student_first_name: studentFirstName.trim(),
+        student_last_name: studentLastName.trim(),
+        student_email: studentEmail.trim(),
+        student_college: 'school_id' in selectedPrompt ? selectedPrompt.school_name || null : null,
+        selected_prompt: selectedPrompt.prompt,
+        personal_statement: essayType === 'personal',
+        essay_content: essay.trim()
+      };
+
+      const userInfo = {
+        user_id: user.id,
+        email: user.email
+      };
+
+      setLoadingStep('Generating feedback...');
+      await essayService.saveEssay(essayData, selectedPrompt.word_count, userInfo);
+
+      setLoadingStep('Finalizing submission...');
+      setIsSuccess(true);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      if (errorMessage.includes('You need at least 1 credit to get AI feedback')) {
+        ActionPersistenceService.saveAction('request_feedback');
+        router.push('/purchase-credits');
+        return;
+      } else {
+        setError('Failed to submit essay for feedback. Please try again.');
+      }
+      console.error('Submit error:', err);
+    } finally {
+      setIsSubmitting(false);
+      setLoadingStep('');
+    }
+  }, [credits, essay, essayType, router, saveEssayToLocalStorage, selectedPrompt, studentEmail, studentFirstName, studentLastName, user]);
 
   // Load user profile data when component mounts
   useEffect(() => {
@@ -62,13 +152,27 @@ export function EssayWizard() {
     loadUserProfile();
   }, [user]);
 
-  // Auto-submit after successful authentication if user was on essay step
-  useEffect(() => {
-    if (user && userProfileLoaded && currentStep === 'essay' && essay.trim() && selectedPrompt && !showAuthModal) {
-      // User just authenticated and we have all the data needed, submit automatically
+
+  const continueRequestFeedback = useCallback(() => {
+    const savedProgress = essayStorageService.restoreProgress();
+    if (savedProgress) {
+      // Restore all the essay wizard state
+      if (savedProgress.essayType) setEssayType(savedProgress.essayType);
+      if (savedProgress.currentStep) setCurrentStep(savedProgress.currentStep);
+      if (savedProgress.selectedSchool) setSelectedSchool(savedProgress.selectedSchool);
+      if (savedProgress.selectedPrompt) setSelectedPrompt(savedProgress.selectedPrompt);
+      if (savedProgress.essay) setEssay(savedProgress.essay);
       handleSubmit();
     }
-  }, [user, userProfileLoaded, currentStep, essay, selectedPrompt, showAuthModal]);
+  }, [handleSubmit]);
+
+  useEffect(() => {
+    const action = ActionPersistenceService.getAction();
+    console.log(`action: ${action}`, JSON.stringify({ user }));
+    if (user && action === 'request_feedback') {
+      continueRequestFeedback();
+    }
+  }, [user, continueRequestFeedback]);
 
   // Map steps to numbers based on essay type
   const getStepNumber = () => {
@@ -114,70 +218,7 @@ export function EssayWizard() {
     }
   };
 
-  const handleSubmit = async () => {
-    setError('');
 
-    // Validate essay content
-    if (!essay.trim()) {
-      setError('Essay content is required');
-      return;
-    }
-
-    if (!selectedPrompt) {
-      setError('Please select a prompt');
-      return;
-    }
-
-    const wordCount = essay.trim().split(/\s+/).filter(Boolean).length;
-    if (wordCount > selectedPrompt.word_count * 2) {
-      setError(`Essay exceeds the ${selectedPrompt.word_count} word limit`);
-      return;
-    }
-
-    // Ensure user is authenticated (should always be true when this function is called)
-    if (!user) {
-      setError('Please sign in to submit your essay');
-      return;
-    }
-
-    try {
-      setIsSubmitting(true);
-      setLoadingStep('Validating essay...');
-
-      const essayData = {
-        student_first_name: studentFirstName.trim(),
-        student_last_name: studentLastName.trim(),
-        student_email: studentEmail.trim(),
-        student_college: 'school_id' in selectedPrompt ? selectedPrompt.school_name || null : null,
-        selected_prompt: selectedPrompt.prompt,
-        personal_statement: essayType === 'personal',
-        essay_content: essay.trim()
-      };
-
-      const userInfo = {
-        user_id: user.id,
-        email: user.email
-      };
-
-      setLoadingStep('Generating feedback...');
-      await essayService.saveEssay(essayData, selectedPrompt.word_count, userInfo);
-
-      setLoadingStep('Finalizing submission...');
-      setIsSuccess(true);
-    } catch (err) {
-      // Check if this is a credit-related error
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      if (errorMessage.includes('You need at least 1 credit to get AI feedback')) {
-        setError('INSUFFICIENT_CREDITS');
-      } else {
-        setError('Failed to submit essay for feedback. Please try again.');
-      }
-      console.error('Submit error:', err);
-    } finally {
-      setIsSubmitting(false);
-      setLoadingStep('');
-    }
-  };
 
   const resetForm = () => {
     setStudentFirstName(user ? studentFirstName : '');
@@ -192,19 +233,17 @@ export function EssayWizard() {
     setError('');
   };
 
-
-
   const renderStepIndicator = () => (
     <div className="mb-12">
       <div className="flex justify-center items-center">
         {Array.from({ length: getTotalSteps() }).map((_, i) => (
           <React.Fragment key={i}>
-            <div 
+            <div
               className={`
                 relative flex items-center justify-center
                 w-8 h-8 sm:w-12 sm:h-12 rounded-full transition-all duration-200
-                ${i + 1 === getStepNumber() 
-                  ? 'bg-primary-600 text-white ring-4 ring-primary-100' 
+                ${i + 1 === getStepNumber()
+                  ? 'bg-primary-600 text-white ring-4 ring-primary-100'
                   : i + 1 < getStepNumber()
                     ? 'bg-primary-100 text-primary-600'
                     : 'bg-gray-100 text-gray-400'
@@ -215,11 +254,11 @@ export function EssayWizard() {
               <span className="relative z-10 sm:hidden w-2 h-2 rounded-full bg-current"></span>
             </div>
             {i < getTotalSteps() - 1 && (
-              <div 
+              <div
                 className={`
                   h-1 mx-2 sm:mx-4 transition-all duration-200 w-12 sm:w-24
-                  ${i + 1 < getStepNumber() 
-                    ? 'bg-primary-100' 
+                  ${i + 1 < getStepNumber()
+                    ? 'bg-primary-100'
                     : 'bg-gray-100'
                   }
                 `}
@@ -271,7 +310,7 @@ export function EssayWizard() {
 
       case 'school':
         return (
-          <PromptSelection 
+          <PromptSelection
             onPromptSelected={(prompt) => {
               setSelectedPrompt(prompt);
               setCurrentStep('essay');
@@ -294,7 +333,7 @@ export function EssayWizard() {
 
       case 'prompt':
         return (
-          <PromptSelection 
+          <PromptSelection
             onPromptSelected={(prompt) => {
               setSelectedPrompt(prompt);
               setCurrentStep('essay');
@@ -344,13 +383,12 @@ export function EssayWizard() {
                   Supported formats: .txt, .docx, .pdf, .doc
                 </p>
               </div>
-              
+
               <textarea
-                className={`w-full h-64 p-4 border rounded-lg focus:ring-2 resize-none transition-colors ${
-                  isSubmitting
-                    ? 'border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed'
-                    : 'border-gray-200 focus:ring-primary-500 bg-white'
-                }`}
+                className={`w-full h-64 p-4 border rounded-lg focus:ring-2 resize-none transition-colors ${isSubmitting
+                  ? 'border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed'
+                  : 'border-gray-200 focus:ring-primary-500 bg-white'
+                  }`}
                 value={essay}
                 onChange={(e) => setEssay(e.target.value)}
                 placeholder="Start writing your essay here..."
@@ -360,29 +398,15 @@ export function EssayWizard() {
 
             {error && (
               <div className="text-red-600 text-sm">
-                {error === 'INSUFFICIENT_CREDITS' ? (
-                  <div className="flex items-center gap-2">
-                    <span>
-                      You need at least 1 credit to get feedback.
-                    </span>
-                    <Link href="/purchase-credits">
-                      <button className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1">
-                        Purchase Credits
-                      </button>
-                    </Link>
-                  </div>
-                ) : (
-                  error
-                )}
+                {error}
               </div>
             )}
 
             <div className="flex justify-between items-center">
-              <span className={`text-sm ${
-                essay.trim().split(/\s+/).filter(Boolean).length > (selectedPrompt?.word_count || 0)
-                  ? 'text-red-600'
-                  : 'text-gray-500'
-              }`}>
+              <span className={`text-sm ${essay.trim().split(/\s+/).filter(Boolean).length > (selectedPrompt?.word_count || 0)
+                ? 'text-red-600'
+                : 'text-gray-500'
+                }`}>
                 Words: {essay.trim().split(/\s+/).filter(Boolean).length} / {selectedPrompt?.word_count}
               </span>
               <div className="space-x-4">
@@ -392,11 +416,10 @@ export function EssayWizard() {
                     setSelectedPrompt(null);
                   }}
                   disabled={isSubmitting}
-                  className={`text-sm transition-colors ${
-                    isSubmitting
-                      ? 'text-gray-400 cursor-not-allowed'
-                      : 'text-primary-600 hover:text-primary-800'
-                  }`}
+                  className={`text-sm transition-colors ${isSubmitting
+                    ? 'text-gray-400 cursor-not-allowed'
+                    : 'text-primary-600 hover:text-primary-800'
+                    }`}
                 >
                   Choose Different Prompt
                 </button>
@@ -413,16 +436,19 @@ export function EssayWizard() {
                       // For authenticated users, submit directly
                       handleSubmit();
                     } else {
-                      // For unauthenticated users, show auth modal
+                      // For unauthenticated users, save progress to localStorage and show auth modal
+                      saveEssayToLocalStorage();
+                      ActionPersistenceService.saveAction('request_feedback');
+                      const action = ActionPersistenceService.getAction();
+                      console.log(`action: ${action}`,);
                       setShowAuthModal(true);
                     }
                   }}
-                  disabled={isSubmitting}
-                  className={`px-4 py-2 rounded-lg text-white transition-colors inline-flex items-center gap-2 ${
-                    isSubmitting
-                      ? 'bg-primary-400 cursor-not-allowed'
-                      : 'bg-primary-600 hover:bg-primary-700'
-                  }`}
+                  disabled={isSubmitting || creditsLoading}
+                  className={`px-4 py-2 rounded-lg text-white transition-colors inline-flex items-center gap-2 ${isSubmitting
+                    ? 'bg-primary-400 cursor-not-allowed'
+                    : 'bg-primary-600 hover:bg-primary-700'
+                    }`}
                 >
                   {isSubmitting ? (
                     <>
@@ -461,12 +487,12 @@ export function EssayWizard() {
     </div>
   );
 
-  const handleAuthSuccess = () => {
-    // After successful authentication, the user will be available
-    // and we can proceed with the submission
+  const handleAuthSuccess = useCallback(() => {
     setShowAuthModal(false);
-    // The useEffect will handle loading user profile data
-  };
+  }, []);
+  const handleAuthClose = useCallback(() => {
+    setShowAuthModal(false);
+  }, []);
 
   return (
     <div className="max-w-4xl mx-auto p-6 relative">
@@ -480,9 +506,10 @@ export function EssayWizard() {
       {/* Authentication Modal */}
       <AuthModal
         isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
+        onClose={handleAuthClose}
         onSuccess={handleAuthSuccess}
       />
     </div>
   );
 }
+export default memo(EssayWizard);

@@ -17,7 +17,8 @@ export class CreditService {
   // TODO: move to backend
   static async getCreditBalance(userId: string): Promise<number> {
     try {
-      const { data, error } = await supabase
+      const supaAdmin = await getAdminClient();
+      const { data, error } = await supaAdmin
         .from('users')
         .select('credits')
         .eq('id', userId)
@@ -48,10 +49,10 @@ export class CreditService {
   // TODO: move to backend
   static async consumeCredits(userId: string, amount: number = 1, description: string = 'Essay feedback'): Promise<boolean> {
     try {
-      const supabaseAdmin = await getAdminClient();
+      const supaAdmin = await getAdminClient();
 
       // First check if user has sufficient credits
-      const { data: userData, error: fetchError } = await supabaseAdmin
+      const { data: userData, error: fetchError } = await supaAdmin
         .from('users')
         .select('credits')
         .eq('id', userId)
@@ -69,7 +70,7 @@ export class CreditService {
       }
 
       // Consume credits
-      const { error: updateError } = await supabaseAdmin
+      const { error: updateError } = await supaAdmin
         .from('users')
         .update({ credits: currentCredits - amount })
         .eq('id', userId);

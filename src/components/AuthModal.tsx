@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { X } from 'lucide-react';
 import { LoginForm } from './auth/LoginForm';
 import { CreateAccountForm } from './auth/CreateAccountForm';
@@ -11,7 +11,7 @@ interface AuthModalProps {
   onSuccess?: () => void;
 }
 
-export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
+function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
   const [isLogin, setIsLogin] = useState(true);
 
   if (!isOpen) return null;
@@ -67,3 +67,5 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     </div>
   );
 }
+
+export default memo(AuthModal);

@@ -1,9 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { memo } from 'react';
 import { ShieldCheck } from 'lucide-react';
 import Image from 'next/image';
-import { EssayWizard } from './EssayWizard';
+import EssayWizard from './EssayWizard';
 
 export function Hero() {
 
@@ -16,7 +16,7 @@ export function Hero() {
             <br />
             <span className="text-primary-600">with Expert-Trained Feedback</span>
           </h1>
-          
+
           <p className="text-xl text-gray-600 mb-6 max-w-2xl mx-auto">
             Get personalized feedback powered by AI trained on insights from former admissions officers within 24 hours.
           </p>
@@ -65,3 +65,5 @@ export function Hero() {
     </section>
   );
 }
+
+export default memo(Hero);

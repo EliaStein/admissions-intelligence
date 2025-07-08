@@ -1,6 +1,6 @@
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
-import { EssayWizard } from '@/components/EssayWizard';
+import EssayWizard from '@/components/EssayWizard';
 
 export default function EssayWizardPage() {
   return (

@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, Suspense } from 'react';
+import React, { useEffect, Suspense, memo } from 'react';
 import { Header } from '@/components/Header';
-import { Hero } from '@/components/Hero';
+import Hero from '@/components/Hero';
 import { Features } from '@/components/Features';
 import { HowItWorks } from '@/components/HowItWorks';
 import { Testimonials } from '@/components/Testimonials';
@@ -11,18 +11,19 @@ import { useSearchParams } from 'next/navigation';
 
 function ReferralCodeHandler() {
   const searchParams = useSearchParams();
+  const referralCode = searchParams.get('referralCode');
 
   useEffect(() => {
-    const code = searchParams.get('referralCode');
-    if (code) {
-      localStorage.setItem('referralCode', code);
+    if (referralCode) {
+      localStorage.setItem('referralCode', referralCode);
     }
-  }, [searchParams]);
+  }, [referralCode]);
 
   return null;
 }
 
-export default function HomePage() {
+function HomePage() {
+  console.log('HomePage rendered');
   return (
     <div className="min-h-screen bg-linear-to-b from-white via-primary-50 to-white">
       <Suspense fallback={null}>
@@ -39,3 +40,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+export default memo(HomePage);

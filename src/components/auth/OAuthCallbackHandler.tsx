@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { UserFetch } from '@/app/utils/user-fetch';
+import { ActionPersistenceService } from '@/services/actionPersistenceService';
 
 export function OAuthCallbackHandler() {
   const router = useRouter();
@@ -43,8 +44,16 @@ export function OAuthCallbackHandler() {
               console.error('💥 Error creating user profile:', profileError);
             }
 
+            // Check for action in localStorage
+            const { shouldRedirect, action } = ActionPersistenceService.shouldRedirectForAction();
+            // Clean up URL
             window.history.replaceState({}, document.title, window.location.pathname);
-            router.push('/');
+
+            if (shouldRedirect && action === 'request_feedback') {
+              window.location.href = '/essay-wizard';
+            } else {
+              router.push('/');
+            }
             return;
           } else {
             console.error('No session created from tokens');
@@ -91,9 +100,20 @@ export function OAuthCallbackHandler() {
                 console.error('💥 Error creating user profile (OAuth flow):', profileError);
               }
 
-              // Clean up URL and redirect
+              // Check for action in localStorage
+              const { shouldRedirect, action } = ActionPersistenceService.shouldRedirectForAction();
+
+
+
+              // Clean up URL
               window.history.replaceState({}, document.title, window.location.pathname);
-              router.push('/');
+
+              if (shouldRedirect && action === 'request_feedback') {
+                ActionPersistenceService.clearAction();
+                window.location.href = '/essay-wizard';
+              } else {
+                router.push('/');
+              }
               return;
             } else {
               console.error('❌ No session found despite session=created parameter');
@@ -132,7 +152,15 @@ export function OAuthCallbackHandler() {
               console.error('💥 Error creating user profile (PKCE flow):', profileError);
             }
 
-            router.push('/');
+            // Check for action in localStorage
+            const { shouldRedirect, action } = ActionPersistenceService.shouldRedirectForAction();
+
+            if (shouldRedirect && action === 'request_feedback') {
+              ActionPersistenceService.clearAction();
+              window.location.href = '/essay-wizard';
+            } else {
+              router.push('/');
+            }
             return;
           }
         }
@@ -147,9 +175,11 @@ export function OAuthCallbackHandler() {
 
     // Check if we're being called from OAuth callback or have OAuth parameters
     const hasOAuthParams = window.location.hash.includes('access_token=') ||
-                          window.location.search.includes('code=') ||
-                          window.location.search.includes('session=created') ||
-                          window.location.pathname === '/auth/callback-handler';
+      window.location.search.includes('code=') ||
+      window.location.search.includes('session=created') ||
+      window.location.pathname === '/auth/callback-handler';
+
+
 
     if (hasOAuthParams) {
       handleOAuthCallback();
