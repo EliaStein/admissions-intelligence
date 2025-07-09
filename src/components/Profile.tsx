@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '../hooks/useAuth';
 import { useCredits } from '../hooks/useCredits';
 import { useUserProfile } from '../hooks/useUserProfile';
-import { FileText, Calendar, PenLine, X, CreditCard, Plus, Users, Edit2 } from 'lucide-react';
+import { FileText, Calendar, PenLine, X, CreditCard, Plus, Users, Edit2, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { ReferralModal } from './ReferralModal';
 import { UserFetch } from '../app/utils/user-fetch';
@@ -471,6 +471,28 @@ function ProfileComponent() {
           <p className="text-xs text-gray-500 mt-2">
             Each essay feedback costs 1 credit. Purchase more credits to continue getting feedback.
           </p>
+        </div>
+      </div>
+
+      {/* Calendly Section */}
+      <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Feeling stuck?</h2>
+          <p className="text-gray-600 mb-2">
+            Need more guidance on your essay or next steps?
+          </p>
+          <p className="text-gray-600 mb-4">
+            You can now <strong>schedule a 1:1 call with our team</strong> directly from your dashboard. We're here to help!
+          </p>
+          <a
+            href="http://calendly.com/Zach-endeavorcollegecounseling"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"
+          >
+            👉 Book a time
+            <ExternalLink className="w-4 h-4 ml-2" />
+          </a>
         </div>
       </div>
 
