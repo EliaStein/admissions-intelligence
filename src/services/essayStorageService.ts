@@ -40,7 +40,6 @@ export const essayStorageService = {
       return parsedData;
     } catch (error) {
       console.error('Error restoring essay progress from localStorage:', error);
-      // Clear corrupted data
       this.clearProgress();
       return null;
     }
@@ -87,9 +86,6 @@ export const essayStorageService = {
     }
   },
 
-  /**
-   * Get a summary of saved progress for display purposes
-   */
   getProgressSummary(): { hasProgress: boolean; lastSaved?: string; essayType?: string; stepCount?: number } {
     try {
       const progress = this.restoreProgress();

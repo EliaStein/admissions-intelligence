@@ -268,21 +268,16 @@ function ProfileComponent() {
   const [showEditNameModal, setShowEditNameModal] = useState(false);
 
   useEffect(() => {
-    // Check for payment success parameter
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('payment') === 'success') {
-      // Get action from localStorage
       const action = ActionPersistenceService.getAction();
 
       setShowPaymentSuccess(true);
-      // Remove the parameters from URL
       window.history.replaceState({}, document.title, window.location.pathname);
 
-      // If action is request_feedback, redirect to essay wizard after showing success briefly
       if (action === 'request_feedback') {
         setIsRedirectingForFeedback(true);
         setTimeout(() => {
-          // Save action back to localStorage before redirecting
           ActionPersistenceService.saveAction('request_feedback');
           router.push('/essay-wizard');
         }, 2000);
@@ -292,7 +287,6 @@ function ProfileComponent() {
 
 
 
-  // Memoize the save name function to prevent unnecessary re-renders
   const handleSaveName = useCallback(async (firstName: string, lastName: string) => {
     if (!user) throw new Error('User not authenticated');
 
@@ -302,7 +296,6 @@ function ProfileComponent() {
         last_name: lastName,
       });
 
-      // Update the local profile state using the hook's update function
       updateProfile({
         first_name: result.user.first_name,
         last_name: result.user.last_name,
@@ -314,13 +307,10 @@ function ProfileComponent() {
     }
   }, [user, updateProfile]);
 
-  // Memoize the purchase credits handler
   const handlePurchaseCredits = useCallback(() => {
-    // Navigate to credit purchase page
     window.location.href = '/purchase-credits';
   }, []);
 
-  // Memoize computed values to prevent unnecessary re-renders
   const isLoading = useMemo(() => authLoading || loading, [authLoading, loading]);
   const hasProfile = useMemo(() => !!profile, [profile]);
   const hasEssays = useMemo(() => essays.length > 0, [essays.length]);
@@ -572,5 +562,4 @@ function ProfileComponent() {
   );
 }
 
-// Export memoized component to prevent unnecessary re-renders
 export const Profile = React.memo(ProfileComponent);
