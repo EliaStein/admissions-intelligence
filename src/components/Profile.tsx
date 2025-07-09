@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '../hooks/useAuth';
 import { useCredits } from '../hooks/useCredits';
 import { useUserProfile } from '../hooks/useUserProfile';
@@ -8,6 +9,7 @@ import { FileText, Calendar, PenLine, X, CreditCard, Plus, Users, Edit2 } from '
 import Link from 'next/link';
 import { ReferralModal } from './ReferralModal';
 import { UserFetch } from '../app/utils/user-fetch';
+import { ActionPersistenceService } from '../services/actionPersistenceService';
 
 interface Essay {
   id: string;
@@ -159,14 +161,14 @@ function EssayModalComponent({ essay, onClose }: EssayModalProps) {
 
   const tabs = essay.essay_feedback
     ? [
-        { id: 'feedback' as const, label: 'Feedback' },
-        { id: 'essay' as const, label: 'Your Essay' },
-        { id: 'prompt' as const, label: 'Prompt' },
-      ]
+      { id: 'feedback' as const, label: 'Feedback' },
+      { id: 'essay' as const, label: 'Your Essay' },
+      { id: 'prompt' as const, label: 'Prompt' },
+    ]
     : [
-        { id: 'essay' as const, label: 'Your Essay' },
-        { id: 'prompt' as const, label: 'Prompt' },
-      ];
+      { id: 'essay' as const, label: 'Your Essay' },
+      { id: 'prompt' as const, label: 'Prompt' },
+    ];
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -256,11 +258,12 @@ const EssayModal = React.memo(EssayModalComponent);
 
 function ProfileComponent() {
   const { user, loading: authLoading } = useAuth();
-  console.log('User:', user);
+  const router = useRouter();
   const { credits, loading: creditsLoading } = useCredits();
   const { profile, essays, loading, error, updateProfile } = useUserProfile();
   const [selectedEssay, setSelectedEssay] = useState<Essay | null>(null);
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
+  const [isRedirectingForFeedback, setIsRedirectingForFeedback] = useState(false);
   const [showReferralModal, setShowReferralModal] = useState(false);
   const [showEditNameModal, setShowEditNameModal] = useState(false);
 
@@ -268,11 +271,24 @@ function ProfileComponent() {
     // Check for payment success parameter
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('payment') === 'success') {
+      // Get action from localStorage
+      const action = ActionPersistenceService.getAction();
+
       setShowPaymentSuccess(true);
-      // Remove the parameter from URL
+      // Remove the parameters from URL
       window.history.replaceState({}, document.title, window.location.pathname);
+
+      // If action is request_feedback, redirect to essay wizard after showing success briefly
+      if (action === 'request_feedback') {
+        setIsRedirectingForFeedback(true);
+        setTimeout(() => {
+          // Save action back to localStorage before redirecting
+          ActionPersistenceService.saveAction('request_feedback');
+          router.push('/essay-wizard');
+        }, 2000);
+      }
     }
-  }, []);
+  }, [router]);
 
 
 
@@ -369,22 +385,29 @@ function ProfileComponent() {
                   </svg>
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Payment Successful!</h3>
-                <p className="text-gray-600 mb-6">Your credits have been added to your account.</p>
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Link
-                    href="/essay-wizard"
-                    className="inline-flex items-center justify-center bg-primary-600 text-white px-6 py-2 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors font-medium"
-                  >
-                    <PenLine className="w-4 h-4 mr-2" />
-                    Write Essay
-                  </Link>
-                  <button
-                    onClick={() => setShowPaymentSuccess(false)}
-                    className="bg-gray-100 text-gray-700 px-6 py-2 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors font-medium"
-                  >
-                    Continue
-                  </button>
-                </div>
+                <p className="text-gray-600 mb-6">
+                  {isRedirectingForFeedback
+                    ? "Your credits have been added! Redirecting you to continue your essay feedback request..."
+                    : "Your credits have been added to your account."
+                  }
+                </p>
+                {!isRedirectingForFeedback && (
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Link
+                      href="/essay-wizard"
+                      className="inline-flex items-center justify-center bg-primary-600 text-white px-6 py-2 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors font-medium"
+                    >
+                      <PenLine className="w-4 h-4 mr-2" />
+                      Write Essay
+                    </Link>
+                    <button
+                      onClick={() => setShowPaymentSuccess(false)}
+                      className="bg-gray-100 text-gray-700 px-6 py-2 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors font-medium"
+                    >
+                      Continue
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -433,7 +456,7 @@ function ProfileComponent() {
               <div>
                 <p className="text-sm text-gray-500">Available Credits</p>
                 <p className=" font-bold text-primary-600">
-                  <CreditCard className="h-6 w-6 mb-2 mr-2 text-primary-600 inline-block"/>
+                  <CreditCard className="h-6 w-6 mb-2 mr-2 text-primary-600 inline-block" />
                   <span className='text-2xl'>{displayCredits}</span>
                 </p>
               </div>

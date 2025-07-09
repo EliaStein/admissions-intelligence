@@ -1,16 +1,17 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from './useAuth';
 import { UserFetch } from '../app/utils/user-fetch';
+import { ActionPersistenceService } from '../services/actionPersistenceService';
 
 export function useCredits() {
-  const { user } = useAuth();
-  const [credits, setCredits] = useState<number>(0);
+  const { user, loading: authLoading } = useAuth();
+  const [credits, setCredits] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchCredits = useCallback(async () => {
     if (!user) {
-      setCredits(0);
+      setCredits(null);
       setLoading(false);
       return;
     }
@@ -21,6 +22,11 @@ export function useCredits() {
 
       const data = await UserFetch.get<{ credits: number }>('/api/credits/balance');
       setCredits(data.credits);
+
+      const pending = ActionPersistenceService.getPendingRequirement();
+      if (data.credits > 0 && pending === 'credit') {
+        ActionPersistenceService.clearPendingRequirement();
+      }
     } catch (err) {
       console.error('Error fetching credits:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch credits');
@@ -28,16 +34,18 @@ export function useCredits() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user?.id]);
 
   useEffect(() => {
-    fetchCredits();
-  }, [fetchCredits]);
+    if (!authLoading) {
+      fetchCredits();
+    }
+  }, [authLoading, fetchCredits]);
 
-  return {
+  return useMemo(() => ({
     credits,
     loading,
     error,
     refetch: fetchCredits
-  };
+  }), [credits, loading, error, fetchCredits]);
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from './useAuth';
 import { authService } from '../services/authService';
 
@@ -10,7 +10,7 @@ export function useAdmin() {
   useEffect(() => {
     const checkAdminStatus = async () => {
       if (authLoading) return;
-      
+
       if (!user) {
         setIsAdmin(false);
         setLoading(false);
@@ -31,8 +31,8 @@ export function useAdmin() {
     checkAdminStatus();
   }, [user, authLoading]);
 
-  return {
+  return useMemo(() => ({
     isAdmin,
     loading: authLoading || loading,
-  };
+  }), [isAdmin, authLoading, loading]);
 }
