@@ -35,7 +35,6 @@ function EssayWizard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
-  const [userProfileLoaded, setUserProfileLoaded] = useState(false);
   const [loadingStep, setLoadingStep] = useState<string>('');
   const [showAuthModal, setShowAuthModal] = useState(false);
   console.log({ creditsLoading, credits })
@@ -91,7 +90,7 @@ function EssayWizard() {
       };
 
       setLoadingStep('Generating feedback...');
-      await essayService.saveEssay(essayData as any, selectedPrompt?.word_count, userInfo);
+      await essayService.saveEssay(essayData as any, _selectedPrompt?.word_count, userInfo);
 
       essayStorageService.clearProgress();
       ActionPersistenceService.clearAction();
@@ -154,7 +153,6 @@ function EssayWizard() {
             setStudentFirstName(data.first_name);
             setStudentLastName(data.last_name);
             setStudentEmail(data.email);
-            setUserProfileLoaded(true);
           }
         } catch (err) {
           console.error('Error loading user profile:', err);
