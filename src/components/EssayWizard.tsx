@@ -23,7 +23,7 @@ type Step = 'type' | 'school' | 'prompt' | 'essay' | 'info' | 'confirm';
 function EssayWizard() {
   const { user } = useAuth();
   const router = useRouter();
-  const { credits, loading: creditsLoading } = useCredits();
+  const { credits, loading: creditsLoading, refetch: refetchCredits } = useCredits();
   const [essayType, setEssayType] = useState<EssayType>(null);
   const [currentStep, setCurrentStep] = useState<Step>('type');
   const [selectedSchool, setSelectedSchool] = useState<string>('');
@@ -38,9 +38,9 @@ function EssayWizard() {
   const [userProfileLoaded, setUserProfileLoaded] = useState(false);
   const [loadingStep, setLoadingStep] = useState<string>('');
   const [showAuthModal, setShowAuthModal] = useState(false);
-
+  console.log({ creditsLoading, credits })
   // Save essay progress to localStorage using the service
-  const saveEssayToLocalStorage = useCallback(() => {
+  const saveEssayToLocalStorage = () => {
     essayStorageService.saveProgress({
       essayType,
       currentStep,
@@ -48,64 +48,54 @@ function EssayWizard() {
       selectedPrompt,
       essay
     });
-  }, [currentStep, essay, essayType, selectedPrompt, selectedSchool]);
+  };
 
-  const handleSubmit = useCallback(async () => {
-    // Clear essay progress and action from localStorage after successful submission
-    essayStorageService.clearProgress();
-    ActionPersistenceService.clearAction();
-    setError('');
-
-    if (!essay.trim()) {
-      setError('Essay content is required');
-      return;
-    }
-
-    if (!selectedPrompt) {
-      setError('Please select a prompt');
-      return;
-    }
-
-    const wordCount = essay.trim().split(/\s+/).filter(Boolean).length;
-    if (wordCount > selectedPrompt.word_count * 2) {
-      setError(`Essay exceeds the ${selectedPrompt.word_count} word limit`);
-      return;
-    }
-
+  const requestFeedback = async (_selectedPrompt = selectedPrompt, essayContent = essay, _essayType = essayType) => {
+    if (creditsLoading) return;
+    console.log('requestFeedback credits', credits)
+    ActionPersistenceService.saveAction('request_feedback');
     if (!user) {
-      setError('Please sign in to submit your essay');
+      console.log('no user')
+      ActionPersistenceService.savePendingRequirement('login');
+      saveEssayToLocalStorage();
+      setShowAuthModal(true);
       return;
     }
-
+    if (credits === null) return; // await creditsLoading
     if (!credits) {
+      console.log('no credit')
+      ActionPersistenceService.savePendingRequirement('credit');
       saveEssayToLocalStorage();
-      ActionPersistenceService.saveAction('request_feedback');
       router.push('/purchase-credits');
       return;
     }
+    setIsSubmitting(true);
 
     try {
-      setIsSubmitting(true);
       setLoadingStep('Validating essay...');
+      const student_college = !!_selectedPrompt && 'school_id' in _selectedPrompt ? _selectedPrompt.school_name || null : null;
 
       const essayData = {
         student_first_name: studentFirstName.trim(),
         student_last_name: studentLastName.trim(),
         student_email: studentEmail.trim(),
-        student_college: 'school_id' in selectedPrompt ? selectedPrompt.school_name || null : null,
-        selected_prompt: selectedPrompt.prompt,
-        personal_statement: essayType === 'personal',
-        essay_content: essay.trim()
+        student_college,
+        selected_prompt: _selectedPrompt?.prompt,
+        personal_statement: _essayType === 'personal',
+        essay_content: essayContent.trim()
       };
 
       const userInfo = {
-        user_id: user.id,
-        email: user.email
+        user_id: user?.id,
+        email: user?.email
       };
 
       setLoadingStep('Generating feedback...');
-      await essayService.saveEssay(essayData, selectedPrompt.word_count, userInfo);
+      await essayService.saveEssay(essayData as any, selectedPrompt?.word_count, userInfo);
 
+      essayStorageService.clearProgress();
+      ActionPersistenceService.clearAction();
+      ActionPersistenceService.clearPendingRequirement();
       setLoadingStep('Finalizing submission...');
       setIsSuccess(true);
     } catch (err) {
@@ -122,7 +112,30 @@ function EssayWizard() {
       setIsSubmitting(false);
       setLoadingStep('');
     }
-  }, [credits, essay, essayType, router, saveEssayToLocalStorage, selectedPrompt, studentEmail, studentFirstName, studentLastName, user]);
+
+  }
+
+  const handleSubmit = async () => {
+    setError('');
+
+    if (!essay.trim()) {
+      setError('Please write your essay before proceeding');
+      return;
+    }
+
+    if (!selectedPrompt) {
+      setError('Please select a prompt');
+      return;
+    }
+
+    const wordCount = essay.trim().split(/\s+/).filter(Boolean).length;
+    if (wordCount > selectedPrompt.word_count * 2) {
+      setError(`Essay exceeds the ${selectedPrompt.word_count} word limit`);
+      return;
+    }
+
+    requestFeedback();
+  };
 
   // Load user profile data when component mounts
   useEffect(() => {
@@ -150,29 +163,34 @@ function EssayWizard() {
     };
 
     loadUserProfile();
-  }, [user]);
+  }, [user?.id]);
 
 
-  const continueRequestFeedback = useCallback(() => {
+  const continueRequestFeedback = () => {
     const savedProgress = essayStorageService.restoreProgress();
     if (savedProgress) {
-      // Restore all the essay wizard state
       if (savedProgress.essayType) setEssayType(savedProgress.essayType);
       if (savedProgress.currentStep) setCurrentStep(savedProgress.currentStep);
       if (savedProgress.selectedSchool) setSelectedSchool(savedProgress.selectedSchool);
       if (savedProgress.selectedPrompt) setSelectedPrompt(savedProgress.selectedPrompt);
       if (savedProgress.essay) setEssay(savedProgress.essay);
-      handleSubmit();
+      requestFeedback(
+        savedProgress.selectedPrompt,
+        savedProgress.essay,
+        savedProgress.essayType
+      );
     }
-  }, [handleSubmit]);
+  };
 
   useEffect(() => {
     const action = ActionPersistenceService.getAction();
-    console.log(`action: ${action}`, JSON.stringify({ user }));
-    if (user && action === 'request_feedback') {
+    const dependency = ActionPersistenceService.getPendingRequirement();
+    console.log(`userId: ${user?.id} / action: ${action} / dependency: ${dependency}`);
+    if (user && action === 'request_feedback' && !dependency && !creditsLoading) {
       continueRequestFeedback();
+      return;
     }
-  }, [user, continueRequestFeedback]);
+  }, [user?.id, creditsLoading]);
 
   // Map steps to numbers based on essay type
   const getStepNumber = () => {
@@ -217,8 +235,6 @@ function EssayWizard() {
       setError('Failed to process the file. Please try again or use a different file.');
     }
   };
-
-
 
   const resetForm = () => {
     setStudentFirstName(user ? studentFirstName : '');
@@ -424,26 +440,7 @@ function EssayWizard() {
                   Choose Different Prompt
                 </button>
                 <button
-                  onClick={() => {
-                    if (!essay.trim()) {
-                      setError('Please write your essay before proceeding');
-                      return;
-                    }
-
-                    setError('');
-
-                    if (user && userProfileLoaded) {
-                      // For authenticated users, submit directly
-                      handleSubmit();
-                    } else {
-                      // For unauthenticated users, save progress to localStorage and show auth modal
-                      saveEssayToLocalStorage();
-                      ActionPersistenceService.saveAction('request_feedback');
-                      const action = ActionPersistenceService.getAction();
-                      console.log(`action: ${action}`,);
-                      setShowAuthModal(true);
-                    }
-                  }}
+                  onClick={handleSubmit}
                   disabled={isSubmitting || creditsLoading}
                   className={`px-4 py-2 rounded-lg text-white transition-colors inline-flex items-center gap-2 ${isSubmitting
                     ? 'bg-primary-400 cursor-not-allowed'
@@ -487,9 +484,11 @@ function EssayWizard() {
     </div>
   );
 
-  const handleAuthSuccess = useCallback(() => {
+  const handleAuthSuccess = useCallback(async () => {
+    await refetchCredits();
+    ActionPersistenceService.clearPendingRequirement();
     setShowAuthModal(false);
-  }, []);
+  }, [refetchCredits]);
   const handleAuthClose = useCallback(() => {
     setShowAuthModal(false);
   }, []);

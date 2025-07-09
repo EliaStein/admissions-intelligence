@@ -3,49 +3,52 @@
  */
 export class ActionPersistenceService {
   private static readonly ACTION_STORAGE_KEY = 'action';
+  private static readonly PENDING_REQUIREMENT_STORAGE_KEY = 'pendingRequirement';
 
-  /**
-   * Save an action parameter to localStorage
-   */
-  static saveAction(action: string): void {
+  static setItem(key: string, value: string): void {
     if (typeof window !== 'undefined') {
-      localStorage.setItem(this.ACTION_STORAGE_KEY, action);
+      localStorage.setItem(key, value);
     }
   }
 
-  /**
-   * Get the saved action parameter from localStorage
-   */
-  static getAction(): string | null {
+  static getItem(key: string): string | null {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem(this.ACTION_STORAGE_KEY);
+      return localStorage.getItem(key);
     }
     return null;
   }
 
-  /**
-   * Clear the saved action parameter from localStorage
-   */
+  static removeItem(key: string): void {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(key);
+    }
+  }
+
+  static saveAction(action: string): void {
+    this.setItem(this.ACTION_STORAGE_KEY, action);
+  }
+
+  static savePendingRequirement(requirement: 'credit' | 'login'): void {
+    this.setItem(this.PENDING_REQUIREMENT_STORAGE_KEY, requirement);
+  }
+
+  static getAction(): string | null {
+    return this.getItem(this.ACTION_STORAGE_KEY);
+  }
+
+  static getPendingRequirement(): string | null {
+    return this.getItem(this.PENDING_REQUIREMENT_STORAGE_KEY);
+  }
+
   static clearAction(): void {
     console.log('clearing action');
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(this.ACTION_STORAGE_KEY);
-    }
+    this.removeItem(this.ACTION_STORAGE_KEY);
   }
 
-  /**
-   * Save action from URL search params to localStorage
-   */
-  static saveActionFromUrl(searchParams: URLSearchParams): void {
-    const action = searchParams.get('action');
-    if (action) {
-      this.saveAction(action);
-    }
+  static clearPendingRequirement(): void {
+    this.removeItem(this.PENDING_REQUIREMENT_STORAGE_KEY);
   }
 
-  /**
-   * Check if there's a pending action that should trigger a redirect
-   */
   static shouldRedirectForAction(): { shouldRedirect: boolean; action: string | null } {
     const action = this.getAction();
     return {

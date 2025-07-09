@@ -161,14 +161,14 @@ function EssayModalComponent({ essay, onClose }: EssayModalProps) {
 
   const tabs = essay.essay_feedback
     ? [
-        { id: 'feedback' as const, label: 'Feedback' },
-        { id: 'essay' as const, label: 'Your Essay' },
-        { id: 'prompt' as const, label: 'Prompt' },
-      ]
+      { id: 'feedback' as const, label: 'Feedback' },
+      { id: 'essay' as const, label: 'Your Essay' },
+      { id: 'prompt' as const, label: 'Prompt' },
+    ]
     : [
-        { id: 'essay' as const, label: 'Your Essay' },
-        { id: 'prompt' as const, label: 'Prompt' },
-      ];
+      { id: 'essay' as const, label: 'Your Essay' },
+      { id: 'prompt' as const, label: 'Prompt' },
+    ];
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -259,7 +259,6 @@ const EssayModal = React.memo(EssayModalComponent);
 function ProfileComponent() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
-  console.log('User:', user);
   const { credits, loading: creditsLoading } = useCredits();
   const { profile, essays, loading, error, updateProfile } = useUserProfile();
   const [selectedEssay, setSelectedEssay] = useState<Essay | null>(null);
@@ -457,7 +456,7 @@ function ProfileComponent() {
               <div>
                 <p className="text-sm text-gray-500">Available Credits</p>
                 <p className=" font-bold text-primary-600">
-                  <CreditCard className="h-6 w-6 mb-2 mr-2 text-primary-600 inline-block"/>
+                  <CreditCard className="h-6 w-6 mb-2 mr-2 text-primary-600 inline-block" />
                   <span className='text-2xl'>{displayCredits}</span>
                 </p>
               </div>

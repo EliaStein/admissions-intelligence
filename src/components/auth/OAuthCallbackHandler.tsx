@@ -10,6 +10,7 @@ export function OAuthCallbackHandler() {
   const router = useRouter();
 
   useEffect(() => {
+    ActionPersistenceService.clearPendingRequirement();
     const handleOAuthCallback = async () => {
       try {
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
@@ -48,7 +49,6 @@ export function OAuthCallbackHandler() {
             const { shouldRedirect, action } = ActionPersistenceService.shouldRedirectForAction();
             // Clean up URL
             window.history.replaceState({}, document.title, window.location.pathname);
-
             if (shouldRedirect && action === 'request_feedback') {
               window.location.href = '/essay-wizard';
             } else {
