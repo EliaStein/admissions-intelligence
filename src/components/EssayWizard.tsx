@@ -37,26 +37,22 @@ function EssayWizard() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [loadingStep, setLoadingStep] = useState<string>('');
   const [showAuthModal, setShowAuthModal] = useState(false);
-  console.log({ creditsLoading, credits })
   // Save essay progress to localStorage using the service
-  const saveEssayToLocalStorage = () => {
-    essayStorageService.saveProgress({
-      essayType,
-      currentStep,
-      selectedSchool,
-      selectedPrompt,
-      essay
-    });
-  };
 
   const requestFeedback = async (_selectedPrompt = selectedPrompt, essayContent = essay, _essayType = essayType) => {
     if (creditsLoading) return;
-    console.log('requestFeedback credits', credits)
     ActionPersistenceService.saveAction('request_feedback');
+    const essayToStore = {
+      essayType: _essayType,
+      selectedPrompt: _selectedPrompt,
+      essay: essayContent,
+      currentStep,
+      selectedSchool: !!_selectedPrompt && 'school_id' in _selectedPrompt ? _selectedPrompt.school_name || '' : ''
+    };
     if (!user) {
       console.log('no user')
       ActionPersistenceService.savePendingRequirement('login');
-      saveEssayToLocalStorage();
+      essayStorageService.saveProgress(essayToStore);
       setShowAuthModal(true);
       return;
     }
@@ -64,7 +60,7 @@ function EssayWizard() {
     if (!credits) {
       console.log('no credit')
       ActionPersistenceService.savePendingRequirement('credit');
-      saveEssayToLocalStorage();
+      essayStorageService.saveProgress(essayToStore);
       router.push('/purchase-credits');
       return;
     }
@@ -172,7 +168,6 @@ function EssayWizard() {
       if (savedProgress.selectedSchool) setSelectedSchool(savedProgress.selectedSchool);
       if (savedProgress.selectedPrompt) setSelectedPrompt(savedProgress.selectedPrompt);
       if (savedProgress.essay) setEssay(savedProgress.essay);
-      console.log('savedProgress.selectedPrompt', savedProgress.selectedPrompt)
       requestFeedback(
         savedProgress.selectedPrompt,
         savedProgress.essay,

@@ -109,7 +109,7 @@ export function OAuthCallbackHandler() {
               window.history.replaceState({}, document.title, window.location.pathname);
 
               if (shouldRedirect && action === 'request_feedback') {
-                ActionPersistenceService.clearAction();
+                // Don't clear action here - let the essay wizard handle it after successful processing
                 window.location.href = '/essay-wizard';
               } else {
                 router.push('/');
@@ -156,7 +156,7 @@ export function OAuthCallbackHandler() {
             const { shouldRedirect, action } = ActionPersistenceService.shouldRedirectForAction();
 
             if (shouldRedirect && action === 'request_feedback') {
-              ActionPersistenceService.clearAction();
+              // Don't clear action here - let the essay wizard handle it after successful processing
               window.location.href = '/essay-wizard';
             } else {
               router.push('/');

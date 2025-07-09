@@ -24,10 +24,7 @@ export async function POST(request: NextRequest) {
     const essay: Essay = 'essay' in body ? body.essay : body as Essay;
     const wordCount = body.word_count;
     const userInfo = body.user_info;
-    console.log('==========================================================');
-    console.log('wordCount', wordCount);
-    console.log('essay', essay);
-    console.log('userInfo', userInfo);
+
     // Get user ID from userInfo or try to extract from essay email
     const userId = userInfo?.user_id;
 
@@ -79,7 +76,6 @@ export async function POST(request: NextRequest) {
           },
           ...(userInfo && { user_info: userInfo })
         };
-        console.log('aiFeedbackRequest', JSON.stringify(aiFeedbackRequest, null, 2))
 
         await AIService.processAIFeedbackRequest(aiFeedbackRequest).then(async (feedback) => {
           const { error: updateError } = await supabaseAdmin
