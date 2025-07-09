@@ -11,9 +11,7 @@ export interface EssayWizardProgress {
 const STORAGE_KEY = 'essayWizardProgress';
 
 export const essayStorageService = {
-  /**
-   * Save essay wizard progress to localStorage
-   */
+
   saveProgress(progress: Omit<EssayWizardProgress, 'savedAt'>): boolean {
     try {
       const progressWithTimestamp: EssayWizardProgress = {
@@ -29,9 +27,6 @@ export const essayStorageService = {
     }
   },
 
-  /**
-   * Restore essay wizard progress from localStorage
-   */
   restoreProgress(): EssayWizardProgress | null {
     try {
       const savedData = localStorage.getItem(STORAGE_KEY);
@@ -51,9 +46,6 @@ export const essayStorageService = {
     }
   },
 
-  /**
-   * Clear essay wizard progress from localStorage
-   */
   clearProgress(): boolean {
     try {
       localStorage.removeItem(STORAGE_KEY);
@@ -65,9 +57,6 @@ export const essayStorageService = {
     }
   },
 
-  /**
-   * Check if there is saved progress in localStorage
-   */
   hasProgress(): boolean {
     try {
       const savedData = localStorage.getItem(STORAGE_KEY);
@@ -78,9 +67,6 @@ export const essayStorageService = {
     }
   },
 
-  /**
-   * Update specific fields in saved progress without overwriting everything
-   */
   updateProgress(updates: Partial<Omit<EssayWizardProgress, 'savedAt'>>): boolean {
     try {
       const currentProgress = this.restoreProgress();
