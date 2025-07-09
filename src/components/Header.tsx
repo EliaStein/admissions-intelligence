@@ -66,12 +66,20 @@ export function Header() {
                 </button>
               </>
             ) : (
-              <Link
-                href="/essay-wizard"
-                className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 transition-colors"
-              >
-                Get Started
-              </Link>
+              <>
+                <Link
+                  href="/essay-wizard"
+                  className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 transition-colors"
+                >
+                  Get Started
+                </Link>
+                <Link
+                  href="/auth/login"
+                  className="text-gray-600 hover:text-primary-600 px-3 py-2 rounded-md transition-colors"
+                >
+                  Sign In
+                </Link>
+              </>
             )}
           </div>
 
@@ -149,13 +157,22 @@ export function Header() {
                   </button>
                 </>
               ) : (
-                <Link
-                  href="/essay-wizard"
-                  className="block px-3 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Get Started
-                </Link>
+                <>
+                  <Link
+                    href="/auth/login"
+                    className="block px-3 py-2 text-gray-600 hover:text-primary-600"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/essay-wizard"
+                    className="block px-3 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Get Started
+                  </Link>
+                </>
               )}
             </div>
           </div>
