@@ -39,6 +39,7 @@ export class CreditService {
   static async hasSufficientCredits(userId: string, requiredCredits: number = 1): Promise<boolean> {
     try {
       const currentCredits = await this.getCreditBalance(userId);
+      console.log('hasSufficientCredits', { currentCredits });
       return currentCredits >= requiredCredits;
     } catch (error) {
       console.error('Error checking credit balance:', error);
@@ -68,6 +69,7 @@ export class CreditService {
         console.error('Insufficient credits:', { currentCredits, required: amount });
         return false;
       }
+      console.log({ currentCredits, userData })
 
       // Consume credits
       const { error: updateError } = await supaAdmin

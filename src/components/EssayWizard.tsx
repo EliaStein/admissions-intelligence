@@ -174,6 +174,7 @@ function EssayWizard() {
       if (savedProgress.selectedSchool) setSelectedSchool(savedProgress.selectedSchool);
       if (savedProgress.selectedPrompt) setSelectedPrompt(savedProgress.selectedPrompt);
       if (savedProgress.essay) setEssay(savedProgress.essay);
+      console.log('savedProgress.selectedPrompt', savedProgress.selectedPrompt)
       requestFeedback(
         savedProgress.selectedPrompt,
         savedProgress.essay,
