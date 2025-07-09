@@ -1,6 +1,4 @@
-/**
- * Service to handle persistence of action parameters through authentication and purchase flows
- */
+
 export class ActionPersistenceService {
   private static readonly ACTION_STORAGE_KEY = 'action';
   private static readonly PENDING_REQUIREMENT_STORAGE_KEY = 'pendingRequirement';
