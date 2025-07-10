@@ -6,6 +6,7 @@ import { Loader2, Send } from 'lucide-react';
 import { PromptSelection } from './PromptSelection';
 import { SuccessMessage } from './SuccessMessage';
 import AuthModal from './AuthModal';
+import { DuplicateSubmissionModal } from './DuplicateSubmissionModal';
 import { EssayPrompt } from '../types/prompt';
 import { essayService } from '../services/essayService';
 import { essayStorageService } from '../services/essayStorageService';
@@ -36,6 +37,8 @@ function EssayWizard() {
   const [studentEmail, setStudentEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [duplicateError, setDuplicateError] = useState<{ message: string; submissionCount: number } | null>(null);
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [loadingStep, setLoadingStep] = useState<string>('');
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -108,12 +111,29 @@ function EssayWizard() {
       setIsSuccess(true);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
+
+      // Check for duplicate submission error
+      if (err instanceof Error && (err as any).isDuplicate) {
+        setDuplicateError({
+          message: (err as any).duplicateMessage || err.message,
+          submissionCount: (err as any).submissionCount || 0
+        });
+        essayStorageService.clearProgress();
+        ActionPersistenceService.clearAction();
+        ActionPersistenceService.clearPendingRequirement();
+        setShowDuplicateModal(true);
+        setError('');
+        return;
+      }
+
       if (errorMessage.includes('You need at least 1 credit to get AI feedback')) {
         ActionPersistenceService.saveAction('request_feedback');
         router.push('/purchase-credits');
         return;
       } else {
         setError('Failed to submit essay for feedback. Please try again.');
+        setDuplicateError(null);
+        setShowDuplicateModal(false);
       }
       console.error('Submit error:', err);
     } finally {
@@ -125,6 +145,8 @@ function EssayWizard() {
 
   const handleSubmit = async () => {
     setError('');
+    setDuplicateError(null);
+    setShowDuplicateModal(false);
 
     if (!essay.trim()) {
       setError('Please write your essay before proceeding');
@@ -510,6 +532,11 @@ function EssayWizard() {
     setShowAuthModal(false);
   }, []);
 
+  const handleDuplicateModalClose = useCallback(() => {
+    setShowDuplicateModal(false);
+    setDuplicateError(null);
+  }, []);
+
   return (
     <div className="max-w-4xl mx-auto p-6 relative">
       {isSubmitting && <LoadingOverlay />}
@@ -525,6 +552,16 @@ function EssayWizard() {
         onClose={handleAuthClose}
         onSuccess={handleAuthSuccess}
       />
+
+      {/* Duplicate Submission Modal */}
+      {duplicateError && (
+        <DuplicateSubmissionModal
+          message={duplicateError.message}
+          submissionCount={duplicateError.submissionCount}
+          isOpen={showDuplicateModal}
+          onClose={handleDuplicateModalClose}
+        />
+      )}
     </div>
   );
 }
