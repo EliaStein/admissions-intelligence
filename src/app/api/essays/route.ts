@@ -5,6 +5,7 @@ import { EmailService } from '../../../services/emailService';
 import { AIService } from '../../../services/aiService';
 import { AiFeedbackRequest } from '../../../types/aiService';
 import { CreditService } from '../../../services/creditService';
+import { EssayDuplicateDetectionService } from '../../../services/essayDuplicateDetectionService';
 
 interface EssaySubmissionRequest {
   essay: Essay;
@@ -39,6 +40,26 @@ export async function POST(request: NextRequest) {
             requiresCredits: true
           },
           { status: 402 } // Payment Required
+        );
+      }
+    }
+
+    // Check for duplicate submissions (only for personal statements with AI feedback requested)
+    if (wordCount && essay.personal_statement) {
+      const duplicateCheck = await EssayDuplicateDetectionService.checkForDuplicate(
+        essay.student_email,
+        essay.personal_statement
+      );
+
+      if (duplicateCheck.isDuplicate) {
+        return NextResponse.json(
+          {
+            error: 'Duplicate submission detected',
+            message: duplicateCheck.message,
+            isDuplicate: true,
+            submissionCount: duplicateCheck.submissionCount
+          },
+          { status: 429 } // Too Many Requests
         );
       }
     }

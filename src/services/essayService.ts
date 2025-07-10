@@ -74,6 +74,16 @@ export const essayService = {
 
       if (!response.ok) {
         const errorData = await response.json();
+
+        // Handle duplicate submission error specially
+        if (errorData.isDuplicate) {
+          const duplicateError = new Error(errorData.message || 'Duplicate submission detected');
+          (duplicateError as any).isDuplicate = true;
+          (duplicateError as any).submissionCount = errorData.submissionCount;
+          (duplicateError as any).duplicateMessage = errorData.message;
+          throw duplicateError;
+        }
+
         throw new Error(errorData.message || errorData.error || 'Failed to save essay');
       }
 
