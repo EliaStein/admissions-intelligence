@@ -38,7 +38,6 @@ export class EmailService {
         throw new Error('SendGrid template ID not found in configuration');
       }
 
-      // Convert markdown feedback to HTML
       const feedbackHtml = await marked(feedback);
 
       const msg = {

@@ -8,6 +8,7 @@ import { useAnalytics } from '../hooks/useAnalytics';
 import { useUserProfile } from '../hooks/useUserProfile';
 import { FileText, Calendar, PenLine, X, CreditCard, Plus, Users, Edit2, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
+import { marked } from 'marked';
 import { ReferralModal } from './ReferralModal';
 import { UserFetch } from '../app/utils/user-fetch';
 import { ActionPersistenceService } from '../services/actionPersistenceService';
@@ -226,9 +227,12 @@ function EssayModalComponent({ essay, onClose }: EssayModalProps) {
           <div className="overflow-y-auto max-h-[calc(90vh-280px)]">
             {activeTab === 'feedback' && essay.essay_feedback && (
               <div>
-                <div className="text-gray-800 bg-blue-50 p-4 rounded-lg whitespace-pre-wrap">
-                  {essay.essay_feedback}
-                </div>
+                <div
+                  className="text-gray-800 bg-blue-50 p-4 rounded-lg prose prose-sm max-w-none"
+                  dangerouslySetInnerHTML={{
+                    __html: marked(essay.essay_feedback)
+                  }}
+                />
               </div>
             )}
 
