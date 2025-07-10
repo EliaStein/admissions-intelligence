@@ -32,9 +32,9 @@ export function HowItWorks() {
     heroSection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
-  const scrollToTestimonials = () => {
-    const testimonialsSection = document.getElementById('testimonials');
-    testimonialsSection?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToFeatures = () => {
+    const featuresSection = document.getElementById('features');
+    featuresSection?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
@@ -56,7 +56,7 @@ export function HowItWorks() {
               Improve Your Essay Now
             </button>
             <button
-              onClick={scrollToTestimonials}
+              onClick={scrollToFeatures}
               className="bg-white text-secondary-500 border-2 border-secondary-500 px-6 py-3 rounded-full hover:bg-secondary-50 transition-colors"
             >
               Learn More
