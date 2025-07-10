@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Mail, Lock, User, Loader2, AlertCircle } from 'lucide-react';
 import { authService } from '../../services/authService';
 import { GoogleAuthButton } from './GoogleAuthButton';
+import { useAnalytics } from '../../hooks/useAnalytics';
 
 interface CreateAccountFormProps {
   onSuccess?: () => void;
@@ -31,6 +32,7 @@ export function CreateAccountForm({ onSuccess }: CreateAccountFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
   const [referralCode, setReferralCode] = useState<string | null>(null);
+  const analytics = useAnalytics();
 
   useEffect(() => {
     // Check for referral code in localStorage
@@ -62,6 +64,11 @@ export function CreateAccountForm({ onSuccess }: CreateAccountFormProps) {
         firstName,
         lastName,
         referralCode: referralCode || undefined,
+      });
+
+      analytics.trackAccountCreated({
+        date: new Date().toISOString(),
+        user: email.toLowerCase(),
       });
 
       if (referralCode) {
@@ -187,9 +194,8 @@ export function CreateAccountForm({ onSuccess }: CreateAccountFormProps) {
               {PASSWORD_REQUIREMENTS.map((req, index) => (
                 <li
                   key={index}
-                  className={`flex items-center space-x-2 ${
-                    req.regex.test(password) ? 'text-green-600' : 'text-gray-500'
-                  }`}
+                  className={`flex items-center space-x-2 ${req.regex.test(password) ? 'text-green-600' : 'text-gray-500'
+                    }`}
                 >
                   <span className="w-4 h-4">
                     {req.regex.test(password) ? '✓' : '•'}

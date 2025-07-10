@@ -4,6 +4,7 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../hooks/useAuth';
 import { useCredits } from '../hooks/useCredits';
+import { useAnalytics } from '../hooks/useAnalytics';
 import { useUserProfile } from '../hooks/useUserProfile';
 import { FileText, Calendar, PenLine, X, CreditCard, Plus, Users, Edit2, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
@@ -261,6 +262,7 @@ function ProfileComponent() {
   const router = useRouter();
   const { credits, loading: creditsLoading } = useCredits();
   const { profile, essays, loading, error, updateProfile } = useUserProfile();
+  const analytics = useAnalytics();
   const [selectedEssay, setSelectedEssay] = useState<Essay | null>(null);
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
   const [isRedirectingForFeedback, setIsRedirectingForFeedback] = useState(false);
@@ -271,6 +273,23 @@ function ProfileComponent() {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('payment') === 'success') {
       const action = ActionPersistenceService.getAction();
+
+      // Track credit purchase
+      const pendingPurchase = localStorage.getItem('pendingPurchase');
+      if (pendingPurchase && user) {
+        try {
+          const purchaseData = JSON.parse(pendingPurchase);
+          analytics.trackCreditPurchase({
+            userId: user.id,
+            creditAmount: purchaseData.credits,
+            date: new Date().toISOString(),
+            price: purchaseData.price,
+          });
+          localStorage.removeItem('pendingPurchase');
+        } catch (error) {
+          console.error('Error tracking credit purchase:', error);
+        }
+      }
 
       setShowPaymentSuccess(true);
       window.history.replaceState({}, document.title, window.location.pathname);
@@ -283,7 +302,17 @@ function ProfileComponent() {
         }, 2000);
       }
     }
-  }, [router]);
+  }, [router, user, analytics]);
+
+  // Track My Essays page visit
+  useEffect(() => {
+    if (user) {
+      analytics.trackMyEssaysPageVisit({
+        userId: user.id,
+        date: new Date().toISOString(),
+      });
+    }
+  }, [user, analytics]);
 
 
 

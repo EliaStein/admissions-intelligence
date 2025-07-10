@@ -15,6 +15,7 @@ import { supabase } from '../lib/supabase';
 import { fileProcessingService } from '../services/fileProcessingService';
 import { PERSONAL_STATEMENT_PROMPTS } from '../prompts/personalStatement.prompt';
 import { useCredits } from '../hooks/useCredits';
+import { useAnalytics } from '../hooks/useAnalytics';
 
 type EssayType = 'personal' | 'supplemental' | null;
 type Step = 'type' | 'school' | 'prompt' | 'essay' | 'info' | 'confirm';
@@ -24,6 +25,7 @@ function EssayWizard() {
   const { user } = useAuth();
   const router = useRouter();
   const { credits, loading: creditsLoading, refetch: refetchCredits } = useCredits();
+  const analytics = useAnalytics();
   const [essayType, setEssayType] = useState<EssayType>(null);
   const [currentStep, setCurrentStep] = useState<Step>('type');
   const [selectedSchool, setSelectedSchool] = useState<string>('');
@@ -87,6 +89,17 @@ function EssayWizard() {
 
       setLoadingStep('Generating feedback...');
       await essayService.saveEssay(essayData as any, _selectedPrompt?.word_count, userInfo);
+
+      // Track essay submission
+      analytics.trackEssaySubmissionNew({
+        essayType: _essayType === 'personal' ? 'Personal Statement' : 'Supplemental Essay',
+        school: _essayType === 'supplemental' && _selectedPrompt && 'school_name' in _selectedPrompt ? _selectedPrompt.school_name : undefined,
+        promptType: _essayType === 'personal' ? 'Personal Statement' : 'Supplemental',
+        submissionMethod: 'text',
+        userId: user?.id,
+        date: new Date().toISOString(),
+        prompt: _selectedPrompt?.prompt,
+      });
 
       essayStorageService.clearProgress();
       ActionPersistenceService.clearAction();
@@ -298,6 +311,11 @@ function EssayWizard() {
                 onClick={() => {
                   setEssayType('personal');
                   setCurrentStep('prompt');
+                  analytics.trackEssayTypeSelected({
+                    userId: user?.id,
+                    date: new Date().toISOString(),
+                    essayType: 'personal',
+                  });
                 }}
                 className="w-full p-6 border-2 rounded-lg border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-colors group"
               >
@@ -308,6 +326,11 @@ function EssayWizard() {
                 onClick={() => {
                   setEssayType('supplemental');
                   setCurrentStep('school');
+                  analytics.trackEssayTypeSelected({
+                    userId: user?.id,
+                    date: new Date().toISOString(),
+                    essayType: 'supplemental',
+                  });
                 }}
                 className="w-full p-6 border-2 rounded-lg border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-colors group"
               >

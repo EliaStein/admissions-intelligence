@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { UserFetch } from '@/app/utils/user-fetch';
 import { ActionPersistenceService } from '@/services/actionPersistenceService';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 export function OAuthCallbackHandler() {
   const router = useRouter();
+  const analytics = useAnalytics();
 
   useEffect(() => {
     ActionPersistenceService.clearPendingRequirement();
@@ -34,9 +36,16 @@ export function OAuthCallbackHandler() {
               // Get referral code from localStorage
               const referralCode = localStorage.getItem('referralCode');
 
-              const result = await UserFetch.post<{ success?: boolean; shouldClearReferralCode?: boolean }>('/api/auth/google-callback', {
+              const result = await UserFetch.post<{ success?: boolean; shouldClearReferralCode?: boolean; newUser?: boolean; userEmail?: string }>('/api/auth/google-callback', {
                 referralCode: referralCode
               });
+
+              if (result.newUser && result.userEmail) {
+                analytics.trackAccountCreated({
+                  date: new Date().toISOString(),
+                  user: result.userEmail,
+                });
+              }
 
               if (referralCode && (result.success || result.shouldClearReferralCode)) {
                 localStorage.removeItem('referralCode');
@@ -87,9 +96,17 @@ export function OAuthCallbackHandler() {
                 // Get referral code from localStorage
                 const referralCode = localStorage.getItem('referralCode');
 
-                const result = await UserFetch.post<{ success?: boolean; shouldClearReferralCode?: boolean }>('/api/auth/google-callback', {
+                const result = await UserFetch.post<{ success?: boolean; shouldClearReferralCode?: boolean; newUser?: boolean; userEmail?: string }>('/api/auth/google-callback', {
                   referralCode: referralCode
                 });
+
+                // Track account creation for new users
+                if (result.newUser && result.userEmail) {
+                  analytics.trackAccountCreated({
+                    date: new Date().toISOString(),
+                    user: result.userEmail,
+                  });
+                }
 
                 if (referralCode && (result.success || result.shouldClearReferralCode)) {
                   localStorage.removeItem('referralCode');
@@ -134,9 +151,17 @@ export function OAuthCallbackHandler() {
               // Get referral code from localStorage
               const referralCode = localStorage.getItem('referralCode');
 
-              const result = await UserFetch.post<{ success?: boolean; shouldClearReferralCode?: boolean }>('/api/auth/google-callback', {
+              const result = await UserFetch.post<{ success?: boolean; shouldClearReferralCode?: boolean; newUser?: boolean; userEmail?: string }>('/api/auth/google-callback', {
                 referralCode: referralCode
               });
+
+              // Track account creation for new users
+              if (result.newUser && result.userEmail) {
+                analytics.trackAccountCreated({
+                  date: new Date().toISOString(),
+                  user: result.userEmail,
+                });
+              }
 
               if (referralCode && (result.success || result.shouldClearReferralCode)) {
                 localStorage.removeItem('referralCode');
