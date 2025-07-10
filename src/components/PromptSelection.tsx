@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { essayService } from '../services/essayService';
 import { School, BasePrompt, SchoolPrompt } from '../types/prompt';
+import { useAnalytics } from '../hooks/useAnalytics';
+import { useAuth } from '../hooks/useAuth';
 
 interface PromptSelectionProps {
   onPromptSelected: (prompt: BasePrompt) => void;
@@ -24,6 +26,8 @@ export function PromptSelection({
   const [schools, setSchools] = useState<(School & { prompt_count: number })[]>([]);
   const [prompts, setPrompts] = useState<SchoolPrompt[]>([]);
   const [loading, setLoading] = useState(false);
+  const analytics = useAnalytics();
+  const { user } = useAuth();
 
   useEffect(() => {
     const loadSchools = async () => {
@@ -88,7 +92,14 @@ export function PromptSelection({
           {personalStatementPrompts.map((prompt) => (
             <button
               key={prompt.id}
-              onClick={() => onPromptSelected(prompt)}
+              onClick={() => {
+                analytics.trackPersonalStatementPromptSelected({
+                  userId: user?.id,
+                  date: new Date().toISOString(),
+                  prompt: prompt.prompt,
+                });
+                onPromptSelected(prompt);
+              }}
               className="w-full text-left p-4 border rounded-lg border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-colors"
             >
               <p className="text-gray-900">{prompt.prompt}</p>
@@ -156,7 +167,7 @@ export function PromptSelection({
           Back
         </button>
       </div>
-      
+
       <div className="space-y-4 max-h-[calc(100vh-300px)] overflow-y-auto pr-4">
         {prompts.map((prompt) => (
           <button

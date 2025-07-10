@@ -9,12 +9,14 @@ import { CreditCard, Check, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { CreditPackage, creditPackages } from '../../config/products';
 import { UserFetch } from '@/app/utils/user-fetch';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 export default function PurchaseCreditsPage() {
   const { user, loading: authLoading } = useAuth();
   const [currentCredits, setCurrentCredits] = useState<number>(0);
   const [creditsLoading, setCreditsLoading] = useState(true);
   const [purchasing, setPurchasing] = useState<string | null>(null);
+  const analytics = useAnalytics();
 
   useEffect(() => {
     const loadCurrentCredits = async () => {
@@ -37,12 +39,37 @@ export default function PurchaseCreditsPage() {
     loadCurrentCredits();
   }, [user, authLoading]);
 
+  // Track page visit
+  useEffect(() => {
+    if (user) {
+      analytics.trackCreditsPageVisit({
+        userId: user.id,
+        date: new Date().toISOString(),
+      });
+    }
+  }, []);
+
   const handlePurchase = async (pkg: CreditPackage) => {
     if (!user) return;
+
+    // Track credit option click
+    analytics.trackCreditOptionClick({
+      userId: user.id,
+      date: new Date().toISOString(),
+      option: `${pkg.credits} Credits`,
+      credits: pkg.credits,
+      price: pkg.price,
+    });
 
     setPurchasing(pkg.id);
 
     try {
+      localStorage.setItem('pendingPurchase', JSON.stringify({
+        credits: pkg.credits,
+        price: pkg.price,
+        timestamp: new Date().toISOString(),
+      }));
+
       const data = await UserFetch.post<{ url: string }>('/api/stripe/checkout', {
         priceId: pkg.priceId,
         credits: pkg.credits,
@@ -142,11 +169,10 @@ export default function PurchaseCreditsPage() {
                   <button
                     onClick={() => handlePurchase(creditPackages[0])}
                     disabled={purchasing === creditPackages[0].id}
-                    className={`w-full py-3 px-6 rounded-full font-medium transition-all duration-200 bg-gray-900 hover:bg-gray-800 text-white hover:shadow-lg ${
-                      purchasing === creditPackages[0].id
-                        ? 'opacity-50 cursor-not-allowed'
-                        : ''
-                    }`}
+                    className={`w-full py-3 px-6 rounded-full font-medium transition-all duration-200 bg-gray-900 hover:bg-gray-800 text-white hover:shadow-lg ${purchasing === creditPackages[0].id
+                      ? 'opacity-50 cursor-not-allowed'
+                      : ''
+                      }`}
                   >
                     {purchasing === creditPackages[0].id ? (
                       <div className="flex items-center justify-center">
@@ -165,9 +191,8 @@ export default function PurchaseCreditsPage() {
               {creditPackages.slice(1).map((pkg) => (
                 <div
                   key={pkg.id}
-                  className={`relative bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden ${
-                    pkg.popular ? 'ring-2 ring-primary-500 transform scale-105' : 'hover:-translate-y-1'
-                  }`}
+                  className={`relative bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden ${pkg.popular ? 'ring-2 ring-primary-500 transform scale-105' : 'hover:-translate-y-1'
+                    }`}
                 >
                   {pkg.popular && (
                     <div className="absolute top-0 left-0 right-0 bg-primary-600 text-white text-center py-2 text-sm font-medium">
@@ -234,15 +259,13 @@ export default function PurchaseCreditsPage() {
                     <button
                       onClick={() => handlePurchase(pkg)}
                       disabled={purchasing === pkg.id}
-                      className={`w-full py-3 px-6 rounded-full font-medium transition-all duration-200 ${
-                        pkg.popular
-                          ? 'bg-primary-600 hover:bg-primary-700 text-white shadow-lg hover:shadow-xl'
-                          : 'bg-gray-900 hover:bg-gray-800 text-white hover:shadow-lg'
-                      } ${
-                        purchasing === pkg.id
+                      className={`w-full py-3 px-6 rounded-full font-medium transition-all duration-200 ${pkg.popular
+                        ? 'bg-primary-600 hover:bg-primary-700 text-white shadow-lg hover:shadow-xl'
+                        : 'bg-gray-900 hover:bg-gray-800 text-white hover:shadow-lg'
+                        } ${purchasing === pkg.id
                           ? 'opacity-50 cursor-not-allowed'
                           : ''
-                      }`}
+                        }`}
                     >
                       {purchasing === pkg.id ? (
                         <div className="flex items-center justify-center">

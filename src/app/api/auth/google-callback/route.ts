@@ -6,7 +6,7 @@ import { ViralLoopsService } from '@/services/viralLoopsService'
 
 export async function POST(request: NextRequest) {
   console.log('🔥 GOOGLE CALLBACK ENDPOINT HIT!');
-  
+
   try {
     // Get the authorization header
     const authHeader = request.headers.get('authorization');
@@ -44,10 +44,10 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id)
       .single();
 
-    console.log('🔍 Existing user check:', { 
-      exists: !!existingUser, 
+    console.log('🔍 Existing user check:', {
+      exists: !!existingUser,
       hasReferralCode: !!existingUser?.referral_code_used,
-      checkError: checkError?.code 
+      checkError: checkError?.code
     });
 
     if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is "not found"
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     // If user doesn't exist, create new user profile
     if (!existingUser) {
       console.log('👤 Creating new user profile...');
-      
+
       const userMetadata = user.user_metadata || {};
       const firstName = userMetadata.given_name || userMetadata.first_name || userMetadata.full_name?.split(' ')[0] || 'User';
       const lastName = userMetadata.family_name || userMetadata.last_name || userMetadata.full_name?.split(' ').slice(1).join(' ') || '';
@@ -100,11 +100,11 @@ export async function POST(request: NextRequest) {
           lastname: lastName,
           ...(referralCode && { referralCode })
         };
-        
+
         console.log('🔗 Registering with Viral Loops:', { email, firstName, lastName, hasReferralCode: !!referralCode });
         await ViralLoopsService.registerParticipant(viralLoopsData);
         console.log('✅ Viral Loops registration successful');
-        
+
         if (referralCode) {
           shouldClearReferralCode = true;
         }
@@ -117,11 +117,11 @@ export async function POST(request: NextRequest) {
       }
     } else {
       console.log('👤 User already exists');
-      
+
       // If user exists but doesn't have a referral code and one is provided, update it
       if (!existingUser.referral_code_used && referralCode) {
         console.log('🔗 Updating existing user with referral code...');
-        
+
         const { error: updateError } = await supabaseAdmin
           .from('users')
           .update({ referral_code_used: referralCode })
@@ -131,14 +131,14 @@ export async function POST(request: NextRequest) {
           console.error('❌ Failed to update user with referral code:', updateError);
         } else {
           console.log('✅ User updated with referral code');
-          
+
           // Try to register with Viral Loops with the referral code
           try {
             const email = user.email;
             const userMetadata = user.user_metadata || {};
             const firstName = userMetadata.given_name || userMetadata.first_name || userMetadata.full_name?.split(' ')[0] || 'User';
             const lastName = userMetadata.family_name || userMetadata.last_name || userMetadata.full_name?.split(' ').slice(1).join(' ') || '';
-            
+
             await ViralLoopsService.registerParticipant({
               email: email!,
               firstname: firstName,
@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
             console.error('❌ Viral Loops registration with referral code failed:', viralLoopsError);
           }
         }
-        
+
         shouldClearReferralCode = true;
       } else if (referralCode) {
         // User exists and already has a referral code, or referral code provided but user already processed
@@ -159,15 +159,17 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       shouldClearReferralCode,
-      message: existingUser ? 'User profile updated' : 'User profile created successfully'
+      message: existingUser ? 'User profile updated' : 'User profile created successfully',
+      newUser: !existingUser,
+      userEmail: user.email
     });
 
   } catch (error) {
     console.error('💥 Error in Google callback:', error);
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: 'Internal server error',
       shouldClearReferralCode: true // Clear referral code to prevent retry loops
     }, { status: 500 });

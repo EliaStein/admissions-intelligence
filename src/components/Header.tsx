@@ -6,16 +6,24 @@ import { useRouter } from 'next/navigation';
 import { Menu, X, GraduationCap, LogOut, User, Settings } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useAdmin } from '../hooks/useAdmin';
+import { useAnalytics } from '../hooks/useAnalytics';
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, signOut } = useAuth();
   const { isAdmin } = useAdmin();
   const router = useRouter();
+  const analytics = useAnalytics();
 
   const handleSignOut = async () => {
     await signOut();
     router.push('/');
+  };
+
+  const handleGetStartedClick = () => {
+    analytics.trackGetStartedClick({
+      date: new Date().toISOString(),
+    });
   };
 
   return (
@@ -69,6 +77,7 @@ export function Header() {
               <>
                 <Link
                   href="/essay-wizard"
+                  onClick={handleGetStartedClick}
                   className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 transition-colors"
                 >
                   Get Started
