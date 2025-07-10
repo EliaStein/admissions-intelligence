@@ -510,13 +510,9 @@ function ProfileComponent() {
       {/* Calendly Section */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Feeling stuck?</h2>
-          <p className="text-gray-600 mb-2">
-            Need more guidance on your essay or next steps?
-          </p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Want to get more personalized support with your application?</h2>
           <p className="text-gray-600 mb-4">
-            You can now <strong>schedule a 1:1 call with our team</strong> directly from your dashboard. We're here to help!
-          </p>
+            Set up a time with our partners at Endeavor College Consulting          </p>
           <a
             href="http://calendly.com/Zach-endeavorcollegecounseling"
             target="_blank"
