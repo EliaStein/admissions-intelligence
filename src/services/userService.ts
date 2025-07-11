@@ -6,6 +6,7 @@ export interface CreateUserRequest {
   password: string;
   firstName: string;
   lastName: string;
+  userType?: 'student' | 'parent';
   referralCode?: string;
 }
 
@@ -26,7 +27,7 @@ export class UserService {
 
   // TODO: move to backend
   static async createUser(userData: CreateUserRequest): Promise<CreateUserResponse> {
-    const { email, password, firstName, lastName, referralCode } = userData;
+    const { email, password, firstName, lastName, userType, referralCode } = userData;
 
     try {
       const supabaseAdmin = await getAdminClient();
@@ -61,7 +62,7 @@ export class UserService {
           email: email.toLowerCase(),
           first_name: firstName,
           last_name: lastName,
-          role: 'student',
+          role: userType || 'student', // Use userType or default to 'student'
           is_active: true,
           credits: 0,
           referral_code_used: referralCode || null

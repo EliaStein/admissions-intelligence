@@ -25,6 +25,7 @@ export const authService = {
     password: string;
     firstName: string;
     lastName: string;
+    userType?: 'student' | 'parent';
     referralCode?: string;
   }) {
     const response = await fetch('/api/auth/register', {

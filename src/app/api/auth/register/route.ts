@@ -6,6 +6,7 @@ interface RegisterRequest {
   password: string;
   firstName: string;
   lastName: string;
+  userType?: 'student' | 'parent';
   referralCode?: string;
 }
 
@@ -19,7 +20,7 @@ const PASSWORD_REQUIREMENTS = [
 
 function validatePassword(password: string): { isValid: boolean; errors: string[] } {
   const errors: string[] = [];
-  
+
   PASSWORD_REQUIREMENTS.forEach(req => {
     if (!req.regex.test(password)) {
       errors.push(req.message);
@@ -40,7 +41,7 @@ function validateEmail(email: string): boolean {
 export async function POST(request: NextRequest) {
   try {
     const body: RegisterRequest = await request.json();
-    const { email, password, firstName, lastName, referralCode } = body;
+    const { email, password, firstName, lastName, userType, referralCode } = body;
 
     // Validate required fields
     if (!email || !password || !firstName || !lastName) {
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
     const passwordValidation = validatePassword(password);
     if (!passwordValidation.isValid) {
       return NextResponse.json(
-        { 
+        {
           error: 'Password does not meet requirements',
           details: passwordValidation.errors
         },
@@ -78,12 +79,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate user type if provided
+    if (userType !== undefined && !['student', 'parent'].includes(userType)) {
+      return NextResponse.json(
+        { error: 'Invalid user type. Must be either "student" or "parent"' },
+        { status: 400 }
+      );
+    }
+
     // Create user data object
     const userData: CreateUserRequest = {
       email: email.toLowerCase().trim(),
       password,
       firstName: firstName.trim(),
       lastName: lastName.trim(),
+      userType: userType,
       referralCode: referralCode?.trim() || undefined
     };
 

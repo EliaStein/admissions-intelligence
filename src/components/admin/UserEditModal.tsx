@@ -71,8 +71,8 @@ export function UserEditModal({ user, onClose, onSave }: UserEditModalProps) {
     const { name, value, type } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
-              name === 'credits' ? parseInt(value) || 0 : value
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked :
+        name === 'credits' ? parseInt(value) || 0 : value
     }));
   };
 
@@ -152,6 +152,8 @@ export function UserEditModal({ user, onClose, onSave }: UserEditModalProps) {
                 onChange={handleInputChange}
                 className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
               >
+                <option value="student">Student</option>
+                <option value="parent">Parent</option>
                 <option value="user">User</option>
                 <option value="admin">Admin</option>
                 <option value="premium">Premium</option>

@@ -28,6 +28,7 @@ export function CreateAccountForm({ onSuccess }: CreateAccountFormProps) {
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [userType, setUserType] = useState<'student' | 'parent'>('student');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
@@ -63,6 +64,7 @@ export function CreateAccountForm({ onSuccess }: CreateAccountFormProps) {
         password,
         firstName,
         lastName,
+        userType,
         referralCode: referralCode || undefined,
       });
 
@@ -85,9 +87,41 @@ export function CreateAccountForm({ onSuccess }: CreateAccountFormProps) {
 
   return (
     <div className="mt-8 space-y-6">
+      {/* User Type Selection */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-3 text-center">
+          I am a:
+        </label>
+        <div className="flex justify-center space-x-6">
+          <label className="flex items-center">
+            <input
+              type="radio"
+              name="userType"
+              value="student"
+              checked={userType === 'student'}
+              onChange={(e) => setUserType(e.target.value as 'student' | 'parent')}
+              className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+            />
+            <span className="ml-2 text-sm text-gray-700">Student</span>
+          </label>
+          <label className="flex items-center">
+            <input
+              type="radio"
+              name="userType"
+              value="parent"
+              checked={userType === 'parent'}
+              onChange={(e) => setUserType(e.target.value as 'student' | 'parent')}
+              className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+            />
+            <span className="ml-2 text-sm text-gray-700">Parent</span>
+          </label>
+        </div>
+      </div>
+
       {/* Google Sign Up Button */}
       <GoogleAuthButton
         mode="signup"
+        userType={userType}
         onError={setError}
       />
 
@@ -144,6 +178,7 @@ export function CreateAccountForm({ onSuccess }: CreateAccountFormProps) {
               />
             </div>
           </div>
+
           <div>
             <label htmlFor="email" className="sr-only">
               Email address
