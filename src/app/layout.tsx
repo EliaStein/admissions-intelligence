@@ -19,11 +19,6 @@ export const metadata: Metadata = {
   authors: [{ name: 'Admissions Intelligence' }],
   creator: 'Admissions Intelligence',
   publisher: 'Admissions Intelligence',
-  formatDetection: {
-    email: false,
-    address: false,
-    telephone: false,
-  },
   icons: {
     icon: '/favicon.png',
     apple: '/favicon.png',
@@ -44,12 +39,6 @@ export const metadata: Metadata = {
         type: 'image/png',
       }
     ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Admissions Intelligence - AI-Powered College Essay Feedback',
-    description: 'Get personalized feedback on your college essays powered by AI trained on insights from former admissions officers. Transform your college application with expert-level guidance within 24 hours.',
-    images: ['https://admissionsintelligence.ai/og-image.png'],
   },
   other: {
     'og:image:secure_url': 'https://admissionsintelligence.ai/og-image.png',
@@ -89,6 +78,12 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <link rel="preload" href="/og-image.png" as="image" type="image/png" />
+        <meta property="og:locale" content="en_US" />
+        <meta property="og:url" content="https://admissionsintelligence.ai" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="Admissions Intelligence - AI-Powered College Essay Feedback" />
+        <meta property="og:description" content="Get personalized feedback on your college essays powered by AI trained on insights from former admissions officers. Transform your college application with expert-level guidance within 24 hours." />
+        <meta property="og:image" content="https://admissionsintelligence.ai/og-image.png" />
       </head>
       <body>
         <Providers>
