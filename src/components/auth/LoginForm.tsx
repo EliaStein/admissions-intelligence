@@ -7,9 +7,10 @@ import { GoogleAuthButton } from './GoogleAuthButton';
 
 interface LoginFormProps {
   onSuccess?: () => void;
+  onForgotPassword?: () => void;
 }
 
-export function LoginForm({ onSuccess }: LoginFormProps) {
+export function LoginForm({ onSuccess, onForgotPassword }: LoginFormProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,7 +26,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         email,
         password,
       });
-      
+
       if (error) {
         // More specific error messages based on error type
         if (error.message.includes("Invalid login credentials")) {
@@ -34,7 +35,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
             .from('users')
             .select('*', { count: 'exact', head: true })
             .eq('email', email.toLowerCase());
-            
+
           if (count && count > 0) {
             throw new Error('Incorrect password. Please try again or reset your password.');
           } else {
@@ -140,6 +141,16 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
             'Sign in'
           )}
         </button>
+
+        <div className="flex items-center justify-end">
+          <button
+            type="button"
+            onClick={onForgotPassword}
+            className="text-sm text-primary-600 hover:text-primary-500"
+          >
+            Forgot your password?
+          </button>
+        </div>
       </form>
     </div>
   );
