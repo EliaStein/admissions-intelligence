@@ -56,6 +56,7 @@ export function Hero() {
                       priority={false}
                       loading="lazy"
                       unoptimized
+                      data-nosnippet
                     />
                   </div>
                   <span className="text-sm font-medium text-gray-800 text-center">{school.name}</span>

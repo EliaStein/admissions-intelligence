@@ -56,6 +56,7 @@ export const metadata: Metadata = {
     'og:image:type': 'image/png',
     'og:image:width': '1200',
     'og:image:height': '630',
+    'og:image:alt': 'Admissions Intelligence - AI-Powered College Essay Feedback',
   },
   robots: {
     index: true,
@@ -86,8 +87,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="preload" href="/og-image.png" as="image" type="image/png" />
+      </head>
       <body>
-        <img src={'/og-image.png'} alt="Admissions Intelligence" style={{ display: 'none' }} />
         <Providers>
           {children}
         </Providers>
