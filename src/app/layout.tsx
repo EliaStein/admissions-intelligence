@@ -87,6 +87,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        <img src={'/og-image.png'} alt="Admissions Intelligence" style={{ display: 'none' }} />
         <Providers>
           {children}
         </Providers>
