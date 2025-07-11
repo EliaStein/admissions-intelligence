@@ -23,23 +23,6 @@ export const metadata: Metadata = {
     icon: '/favicon.png',
     apple: '/favicon.png',
   },
-  openGraph: {
-    type: 'website',
-    locale: 'en_US',
-    url: 'https://admissionsintelligence.ai',
-    siteName: 'Admissions Intelligence',
-    title: 'Admissions Intelligence - AI-Powered College Essay Feedback',
-    description: 'Get personalized feedback on your college essays powered by AI trained on insights from former admissions officers. Transform your college application with expert-level guidance within 24 hours.',
-    images: [
-      {
-        url: 'https://admissionsintelligence.ai/og-image.png',
-        width: 1200,
-        height: 630,
-        alt: 'Admissions Intelligence - AI-Powered College Essay Feedback',
-        type: 'image/png',
-      }
-    ],
-  },
   other: {
     'og:image:secure_url': 'https://admissionsintelligence.ai/og-image.png',
     'og:image:type': 'image/png',
