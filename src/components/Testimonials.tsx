@@ -53,6 +53,7 @@ export function Testimonials() {
                   className="w-12 h-12 rounded-full object-cover mr-4"
                   priority={false}
                   loading="lazy"
+                  unoptimized
                 />
                 <div>
                   <h4 className="font-semibold text-gray-900">{testimonial.author}</h4>

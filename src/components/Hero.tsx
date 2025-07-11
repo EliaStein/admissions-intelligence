@@ -55,6 +55,7 @@ export function Hero() {
                       className="object-contain"
                       priority={false}
                       loading="lazy"
+                      unoptimized
                     />
                   </div>
                   <span className="text-sm font-medium text-gray-800 text-center">{school.name}</span>
