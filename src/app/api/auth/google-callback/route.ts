@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json();
-    const { referralCode } = body;
+    const { referralCode, userType } = body;
     console.log('🎯 Referral code from request:', referralCode);
 
     // Get admin client for database operations
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
           email: email.toLowerCase(),
           first_name: firstName,
           last_name: lastName,
-          role: 'student',
+          role: userType || 'student', // Use provided userType or default to 'student'
           is_active: true,
           credits: 0,
           referral_code_used: referralCode || null

@@ -33,11 +33,13 @@ export function OAuthCallbackHandler() {
 
           if (data.session) {
             try {
-              // Get referral code from localStorage
+              // Get referral code and user type from localStorage
               const referralCode = localStorage.getItem('referralCode');
+              const pendingUserType = localStorage.getItem('pendingUserType') as 'student' | 'parent' | null;
 
               const result = await UserFetch.post<{ success?: boolean; shouldClearReferralCode?: boolean; newUser?: boolean; userEmail?: string }>('/api/auth/google-callback', {
-                referralCode: referralCode
+                referralCode: referralCode,
+                userType: pendingUserType
               });
 
               if (result.newUser && result.userEmail) {
@@ -49,6 +51,11 @@ export function OAuthCallbackHandler() {
 
               if (referralCode && (result.success || result.shouldClearReferralCode)) {
                 localStorage.removeItem('referralCode');
+              }
+
+              // Clean up pending user type after successful OAuth
+              if (pendingUserType && result.success) {
+                localStorage.removeItem('pendingUserType');
               }
             } catch (profileError) {
               console.error('💥 Error creating user profile:', profileError);
@@ -93,11 +100,13 @@ export function OAuthCallbackHandler() {
 
             if (session) {
               try {
-                // Get referral code from localStorage
+                // Get referral code and user type from localStorage
                 const referralCode = localStorage.getItem('referralCode');
+                const pendingUserType = localStorage.getItem('pendingUserType') as 'student' | 'parent' | null;
 
                 const result = await UserFetch.post<{ success?: boolean; shouldClearReferralCode?: boolean; newUser?: boolean; userEmail?: string }>('/api/auth/google-callback', {
-                  referralCode: referralCode
+                  referralCode: referralCode,
+                  userType: pendingUserType
                 });
 
                 // Track account creation for new users
@@ -110,6 +119,11 @@ export function OAuthCallbackHandler() {
 
                 if (referralCode && (result.success || result.shouldClearReferralCode)) {
                   localStorage.removeItem('referralCode');
+                }
+
+                // Clean up pending user type after successful OAuth
+                if (pendingUserType && result.success) {
+                  localStorage.removeItem('pendingUserType');
                 }
               } catch (profileError) {
                 console.error('💥 Error creating user profile (OAuth flow):', profileError);
@@ -148,11 +162,13 @@ export function OAuthCallbackHandler() {
 
           if (data.session) {
             try {
-              // Get referral code from localStorage
+              // Get referral code and user type from localStorage
               const referralCode = localStorage.getItem('referralCode');
+              const pendingUserType = localStorage.getItem('pendingUserType') as 'student' | 'parent' | null;
 
               const result = await UserFetch.post<{ success?: boolean; shouldClearReferralCode?: boolean; newUser?: boolean; userEmail?: string }>('/api/auth/google-callback', {
-                referralCode: referralCode
+                referralCode: referralCode,
+                userType: pendingUserType
               });
 
               // Track account creation for new users
@@ -165,6 +181,11 @@ export function OAuthCallbackHandler() {
 
               if (referralCode && (result.success || result.shouldClearReferralCode)) {
                 localStorage.removeItem('referralCode');
+              }
+
+              // Clean up pending user type after successful OAuth
+              if (pendingUserType && result.success) {
+                localStorage.removeItem('pendingUserType');
               }
             } catch (profileError) {
               console.error('💥 Error creating user profile (PKCE flow):', profileError);

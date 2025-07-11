@@ -6,16 +6,21 @@ import { Loader2 } from 'lucide-react';
 
 interface GoogleAuthButtonProps {
   mode: 'signin' | 'signup';
+  userType?: 'student' | 'parent';
   onError?: (error: string) => void;
   className?: string;
 }
 
-export function GoogleAuthButton({ mode, onError, className = '' }: GoogleAuthButtonProps) {
+export function GoogleAuthButton({ mode, userType, onError, className = '' }: GoogleAuthButtonProps) {
   const [loading, setLoading] = useState(false);
 
   const handleGoogleAuth = async () => {
     setLoading(true);
     try {
+      // Store user type in localStorage before OAuth redirect (for signup mode)
+      if (mode === 'signup' && userType) {
+        localStorage.setItem('pendingUserType', userType);
+      }
       await authService.signUpWithGoogle();
     } catch (error) {
       console.error('❌ Google auth error:', error);
