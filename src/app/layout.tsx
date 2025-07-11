@@ -41,7 +41,7 @@ export const metadata: Metadata = {
         width: 1200,
         height: 630,
         alt: 'Admissions Intelligence - AI-Powered College Essay Feedback',
-        type: 'image/svg+xml',
+        type: 'image/png',
       }
     ],
   },
