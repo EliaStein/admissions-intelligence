@@ -45,6 +45,12 @@ export const metadata: Metadata = {
       }
     ],
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Admissions Intelligence - AI-Powered College Essay Feedback',
+    description: 'Get personalized feedback on your college essays powered by AI trained on insights from former admissions officers. Transform your college application with expert-level guidance within 24 hours.',
+    images: ['https://admissionsintelligence.ai/favicon.png'],
+  },
   robots: {
     index: true,
     follow: true,
