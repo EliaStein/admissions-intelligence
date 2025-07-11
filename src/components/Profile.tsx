@@ -1,16 +1,29 @@
 'use client';
 
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useState, useMemo, useCallback, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../hooks/useAuth';
 import { useCredits } from '../hooks/useCredits';
 import { useAnalytics } from '../hooks/useAnalytics';
 import { useUserProfile } from '../hooks/useUserProfile';
-import { FileText, Calendar, PenLine, CreditCard, Plus, Users, Edit2, ExternalLink } from 'lucide-react';
+import { FileText, Calendar, PenLine, CreditCard, Plus, Users, Edit2, ExternalLink, X } from 'lucide-react';
 import Link from 'next/link';
 import { ReferralModal } from './ReferralModal';
 import { UserFetch } from '../app/utils/user-fetch';
 import { ActionPersistenceService } from '../services/actionPersistenceService';
+
+function PaymentSuccessHandler({ onPaymentSuccess }: { onPaymentSuccess: () => void }) {
+  const searchParams = useSearchParams();
+  const paymentStatus = searchParams.get('payment');
+
+  useEffect(() => {
+    if (paymentStatus === 'success') {
+      onPaymentSuccess();
+    }
+  }, [paymentStatus, onPaymentSuccess]);
+
+  return null;
+}
 
 interface Essay {
   id: string;
@@ -166,38 +179,35 @@ function ProfileComponent() {
   const [showReferralModal, setShowReferralModal] = useState(false);
   const [showEditNameModal, setShowEditNameModal] = useState(false);
 
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('payment') === 'success') {
-      const action = ActionPersistenceService.getAction();
+  const handlePaymentSuccess = useCallback(() => {
+    const action = ActionPersistenceService.getAction();
 
-      // Track credit purchase
-      const pendingPurchase = localStorage.getItem('pendingPurchase');
-      if (pendingPurchase && user) {
-        try {
-          const purchaseData = JSON.parse(pendingPurchase);
-          analytics.trackCreditPurchase({
-            userId: user.id,
-            creditAmount: purchaseData.credits,
-            date: new Date().toISOString(),
-            price: purchaseData.price,
-          });
-          localStorage.removeItem('pendingPurchase');
-        } catch (error) {
-          console.error('Error tracking credit purchase:', error);
-        }
+    // Track credit purchase
+    const pendingPurchase = localStorage.getItem('pendingPurchase');
+    if (pendingPurchase && user) {
+      try {
+        const purchaseData = JSON.parse(pendingPurchase);
+        analytics.trackCreditPurchase({
+          userId: user.id,
+          creditAmount: purchaseData.credits,
+          date: new Date().toISOString(),
+          price: purchaseData.price,
+        });
+        localStorage.removeItem('pendingPurchase');
+      } catch (error) {
+        console.error('Error tracking credit purchase:', error);
       }
+    }
 
-      setShowPaymentSuccess(true);
-      window.history.replaceState({}, document.title, window.location.pathname);
+    setShowPaymentSuccess(true);
+    window.history.replaceState({}, document.title, window.location.pathname);
 
-      if (action === 'request_feedback') {
-        setIsRedirectingForFeedback(true);
-        setTimeout(() => {
-          ActionPersistenceService.saveAction('request_feedback');
-          router.push('/essay-wizard');
-        }, 2000);
-      }
+    if (action === 'request_feedback') {
+      setIsRedirectingForFeedback(true);
+      setTimeout(() => {
+        ActionPersistenceService.saveAction('request_feedback');
+        router.push('/essay-wizard');
+      }, 2000);
     }
   }, [router, user, analytics]);
 
@@ -289,6 +299,11 @@ function ProfileComponent() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
+      {/* Payment Success Handler */}
+      <Suspense fallback={null}>
+        <PaymentSuccessHandler onPaymentSuccess={handlePaymentSuccess} />
+      </Suspense>
+
       {/* Payment Success Modal */}
       {showPaymentSuccess && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
@@ -500,4 +515,20 @@ function ProfileComponent() {
   );
 }
 
-export const Profile = React.memo(ProfileComponent);
+// Loading fallback component
+function ProfileLoadingFallback() {
+  return (
+    <div className="flex justify-center items-center min-h-screen">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+    </div>
+  );
+}
+
+// Main Profile component wrapped in Suspense
+export function Profile() {
+  return (
+    <Suspense fallback={<ProfileLoadingFallback />}>
+      <ProfileComponent />
+    </Suspense>
+  );
+}
