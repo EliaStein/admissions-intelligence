@@ -6,9 +6,8 @@ import { useAuth } from '../hooks/useAuth';
 import { useCredits } from '../hooks/useCredits';
 import { useAnalytics } from '../hooks/useAnalytics';
 import { useUserProfile } from '../hooks/useUserProfile';
-import { FileText, Calendar, PenLine, X, CreditCard, Plus, Users, Edit2, ExternalLink } from 'lucide-react';
+import { FileText, Calendar, PenLine, CreditCard, Plus, Users, Edit2, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
-import { marked } from 'marked';
 import { ReferralModal } from './ReferralModal';
 import { UserFetch } from '../app/utils/user-fetch';
 import { ActionPersistenceService } from '../services/actionPersistenceService';
@@ -31,10 +30,7 @@ interface EditNameModalProps {
   onSave: (firstName: string, lastName: string) => Promise<void>;
 }
 
-interface EssayModalProps {
-  essay: Essay;
-  onClose: () => void;
-}
+
 
 function EditNameModal({ isOpen, onClose, currentFirstName, currentLastName, onSave }: EditNameModalProps) {
   const [firstName, setFirstName] = useState(currentFirstName);
@@ -156,110 +152,7 @@ function EditNameModal({ isOpen, onClose, currentFirstName, currentLastName, onS
   );
 }
 
-function EssayModalComponent({ essay, onClose }: EssayModalProps) {
-  const [activeTab, setActiveTab] = useState<'feedback' | 'essay' | 'prompt'>(
-    essay.essay_feedback ? 'feedback' : 'essay'
-  );
 
-  const tabs = essay.essay_feedback
-    ? [
-      { id: 'feedback' as const, label: 'Feedback' },
-      { id: 'essay' as const, label: 'Your Essay' },
-      { id: 'prompt' as const, label: 'Prompt' },
-    ]
-    : [
-      { id: 'essay' as const, label: 'Your Essay' },
-      { id: 'prompt' as const, label: 'Prompt' },
-    ];
-
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
-  return (
-    <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
-      onClick={handleBackdropClick}
-    >
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
-        <div className="p-6 flex justify-between items-start border-b border-gray-200">
-          <div>
-            <h3 className="text-xl font-semibold text-gray-900">
-              {essay.personal_statement ? 'Personal Statement' : essay.student_college}
-            </h3>
-            <p className="text-sm text-gray-500 mt-1">
-              Submitted on {new Date(essay.created_at).toLocaleDateString()}
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-500 transition-colors"
-          >
-            <X className="w-6 h-6" />
-          </button>
-        </div>
-
-        <div className="p-6">
-          {/* Tab Navigation */}
-          <div className="border-b border-gray-200 mb-4">
-            <nav className="flex space-x-8" aria-label="Tabs">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`
-                    py-2 px-1 border-b-2 font-medium text-sm transition-colors
-                    ${activeTab === tab.id
-                      ? 'border-primary-500 text-primary-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }
-                  `}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </nav>
-          </div>
-
-          {/* Tab Content */}
-          <div className="overflow-y-auto max-h-[calc(90vh-280px)]">
-            {activeTab === 'feedback' && essay.essay_feedback && (
-              <div>
-                <div
-                  className="text-gray-800 bg-blue-50 p-4 rounded-lg prose prose-sm max-w-none"
-                  dangerouslySetInnerHTML={{
-                    __html: marked(essay.essay_feedback)
-                  }}
-                />
-              </div>
-            )}
-
-            {activeTab === 'essay' && (
-              <div>
-                <div className="whitespace-pre-line text-gray-800 bg-gray-50 p-4 rounded-lg leading-relaxed">
-                  {essay.essay_content}
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'prompt' && (
-              <div>
-                <div className="text-gray-600 bg-gray-50 p-4 rounded-lg">
-                  {essay.selected_prompt}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Memoized EssayModal to prevent unnecessary re-renders
-const EssayModal = React.memo(EssayModalComponent);
 
 function ProfileComponent() {
   const { user, loading: authLoading } = useAuth();
@@ -267,7 +160,7 @@ function ProfileComponent() {
   const { credits, loading: creditsLoading } = useCredits();
   const { profile, essays, loading, error, updateProfile } = useUserProfile();
   const analytics = useAnalytics();
-  const [selectedEssay, setSelectedEssay] = useState<Essay | null>(null);
+
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
   const [isRedirectingForFeedback, setIsRedirectingForFeedback] = useState(false);
   const [showReferralModal, setShowReferralModal] = useState(false);
@@ -562,7 +455,7 @@ function ProfileComponent() {
             {essays.map((essay) => (
               <button
                 key={essay.id}
-                onClick={() => setSelectedEssay(essay)}
+                onClick={() => router.push(`/essay/${essay.id}`)}
                 className="w-full text-left border rounded-lg p-4 border-gray-200 hover:border-primary-500 hover:bg-gray-50 transition-colors"
               >
                 <div className="flex items-start justify-between">
@@ -587,13 +480,7 @@ function ProfileComponent() {
         )}
       </div>
 
-      {/* Essay Modal */}
-      {selectedEssay && (
-        <EssayModal
-          essay={selectedEssay}
-          onClose={() => setSelectedEssay(null)}
-        />
-      )}
+
 
       {/* Edit Name Modal */}
       <EditNameModal
