@@ -51,6 +51,12 @@ export const metadata: Metadata = {
     description: 'Get personalized feedback on your college essays powered by AI trained on insights from former admissions officers. Transform your college application with expert-level guidance within 24 hours.',
     images: ['https://admissionsintelligence.ai/og-image.png'],
   },
+  other: {
+    'og:image:secure_url': 'https://admissionsintelligence.ai/og-image.png',
+    'og:image:type': 'image/png',
+    'og:image:width': '1200',
+    'og:image:height': '630',
+  },
   robots: {
     index: true,
     follow: true,

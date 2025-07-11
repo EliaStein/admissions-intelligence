@@ -1,5 +1,6 @@
 import React from 'react';
 import { Quote } from 'lucide-react';
+import Image from 'next/image';
 
 export function Testimonials() {
   const testimonials = [
@@ -44,10 +45,14 @@ export function Testimonials() {
                 "{testimonial.quote}"
               </p>
               <div className="flex items-center">
-                <img
+                <Image
                   src={testimonial.image}
                   alt={testimonial.author}
+                  width={48}
+                  height={48}
                   className="w-12 h-12 rounded-full object-cover mr-4"
+                  priority={false}
+                  loading="lazy"
                 />
                 <div>
                   <h4 className="font-semibold text-gray-900">{testimonial.author}</h4>

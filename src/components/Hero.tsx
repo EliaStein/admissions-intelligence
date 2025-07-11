@@ -47,12 +47,14 @@ export function Hero() {
                   className="flex flex-col items-center space-y-2"
                 >
                   <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm border border-gray-100">
-                    <img
+                    <Image
                       src={school.logo}
                       alt={`${school.name} logo`}
                       width={48}
                       height={48}
                       className="object-contain"
+                      priority={false}
+                      loading="lazy"
                     />
                   </div>
                   <span className="text-sm font-medium text-gray-800 text-center">{school.name}</span>
