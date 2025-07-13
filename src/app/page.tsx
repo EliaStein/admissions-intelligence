@@ -7,6 +7,7 @@ import { Features } from '@/components/Features';
 import { HowItWorks } from '@/components/HowItWorks';
 import { Testimonials } from '@/components/Testimonials';
 import { Pricing } from '@/components/Pricing';
+import { FAQ } from '@/components/FAQ';
 import { Footer } from '@/components/Footer';
 import { useSearchParams } from 'next/navigation';
 
@@ -37,6 +38,7 @@ function HomePage() {
         <Features />
         <Testimonials />
         <Pricing />
+        <FAQ />
       </main>
       <Footer />
     </div>
