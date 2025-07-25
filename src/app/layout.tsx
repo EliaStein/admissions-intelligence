@@ -58,6 +58,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* Google Tag Manager */}
+        <script dangerouslySetInnerHTML={{
+          __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-PLNPF2QS');`
+        }} />
+        {/* End Google Tag Manager */}
+        
         <link rel="preload" href="/favicon.png" as="image" type="image/png" />
         <meta property="og:locale" content="en_US" />
         <meta property="og:url" content="https://admissionsintelligence.ai" />
@@ -68,6 +78,17 @@ export default function RootLayout({
         <meta name="facebook-domain-verification" content="1ewqh81gx1naieey2ei0a3sepjdba7" />
       </head>
       <body>
+        {/* Google Tag Manager (noscript) */}
+        <noscript>
+          <iframe 
+            src="https://www.googletagmanager.com/ns.html?id=GTM-PLNPF2QS"
+            height="0" 
+            width="0" 
+            style={{display:'none',visibility:'hidden'}}
+          />
+        </noscript>
+        {/* End Google Tag Manager (noscript) */}
+        
         <Providers>
           {children}
         </Providers>
