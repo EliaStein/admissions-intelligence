@@ -65,6 +65,7 @@ export default function RootLayout({
         <meta property="og:title" content="Admissions Intelligence - AI-Powered College Essay Feedback" />
         <meta property="og:description" content="Get personalized feedback on your college essays powered by AI trained on insights from former admissions officers. Transform your college application with expert-level guidance within 24 hours." />
         <meta property="og:image" content="https://admissionsintelligence.ai/favicon.png" />
+        <meta name="facebook-domain-verification" content="1ewqh81gx1naieey2ei0a3sepjdba7" />
       </head>
       <body>
         <Providers>
