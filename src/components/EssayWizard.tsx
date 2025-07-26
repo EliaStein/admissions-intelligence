@@ -159,8 +159,13 @@ function EssayWizard() {
     }
 
     const wordCount = essay.trim().split(/\s+/).filter(Boolean).length;
-    if (wordCount > selectedPrompt.word_count * 2) {
-      setError(`Essay exceeds the ${selectedPrompt.word_count} word limit`);
+    
+    // For personal statements, allow up to 1000 words but warn at 650
+    // For supplemental essays, use the original logic
+    const maxWordCount = essayType === 'personal' ? 1000 : selectedPrompt.word_count * 2;
+    if (wordCount > maxWordCount) {
+      const limitText = essayType === 'personal' ? '1000' : selectedPrompt.word_count.toString();
+      setError(`Essay exceeds the ${limitText} word limit`);
       return;
     }
 
@@ -458,11 +463,12 @@ function EssayWizard() {
             )}
 
             <div className="flex justify-between items-center">
-              <span className={`text-sm ${essay.trim().split(/\s+/).filter(Boolean).length > (selectedPrompt?.word_count || 0)
-                ? 'text-red-600'
-                : 'text-gray-500'
-                }`}>
-                Words: {essay.trim().split(/\s+/).filter(Boolean).length} / {selectedPrompt?.word_count}
+              <span className={`text-sm ${(() => {
+                const currentWordCount = essay.trim().split(/\s+/).filter(Boolean).length;
+                const displayLimit = essayType === 'personal' ? 650 : (selectedPrompt?.word_count || 0);
+                return currentWordCount > displayLimit ? 'text-red-600' : 'text-gray-500';
+              })()}`}>
+                Words: {essay.trim().split(/\s+/).filter(Boolean).length} / {essayType === 'personal' ? 650 : selectedPrompt?.word_count}
               </span>
               <div className="space-x-4">
                 <button
