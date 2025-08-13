@@ -18,7 +18,7 @@ export function Hero() {
           </h1>
 
           <p className="text-xl text-gray-600 mb-6 max-w-2xl mx-auto">
-            Get personalized feedback powered by AI trained on insights from former admissions officers.
+            Get personalized feedback powered by AI trained on insights from former admissions officers
           </p>
 
           <div className="flex items-center justify-center space-x-2 mb-12">
