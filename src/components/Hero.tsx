@@ -14,11 +14,11 @@ export function Hero() {
           <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-8">
             Transform Your College Essay
             <br />
-            <span className="text-primary-600">with Expert-Trained Feedback</span>
+            <span className="text-primary-600">with Feedback from Admissions Officers</span>
           </h1>
 
           <p className="text-xl text-gray-600 mb-6 max-w-2xl mx-auto">
-            Get personalized feedback powered by AI trained on insights from former admissions officers within 24 hours.
+            Get personalized feedback powered by AI trained on insights from former admissions officers
           </p>
 
           <div className="flex items-center justify-center space-x-2 mb-12">
@@ -27,7 +27,20 @@ export function Hero() {
               AI review is permitted in college applications when you implement the feedback yourself
             </span>
           </div>
+          
+   {/* Free Review Callout */}
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4 mb-8 max-w-lg mx-auto">
+            <div className="flex items-center justify-center space-x-2">
+              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                <span className="text-green-600 font-bold text-sm">FREE</span>
+              </div>
+              <div className="text-left">
+                <p className="text-green-800 font-medium text-sm">Your first essay review is completely free!</p>
+              </div>
+            </div>
+          </div>
 
+          
           <div className="essay-form-section mb-16">
             <EssayWizard />
           </div>
