@@ -14,11 +14,11 @@ export function Hero() {
           <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-8">
             Transform Your College Essay
             <br />
-            <span className="text-primary-600">with Expert-Trained Feedback</span>
+            <span className="text-primary-600">with Feedback from Admissions Officers</span>
           </h1>
 
           <p className="text-xl text-gray-600 mb-6 max-w-2xl mx-auto">
-            Get personalized feedback powered by AI trained on insights from former admissions officers within 24 hours.
+            Get personalized feedback powered by AI trained on insights from former admissions officers.
           </p>
 
           <div className="flex items-center justify-center space-x-2 mb-12">
