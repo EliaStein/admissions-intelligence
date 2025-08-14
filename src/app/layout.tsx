@@ -5,7 +5,7 @@ import Script from 'next/script';
 
 export const metadata: Metadata = {
   title: 'Admissions Intelligence - AI-Powered College Essay Feedback',
-  description: 'Get personalized feedback on your college essays powered by AI trained on insights from former admissions officers. Transform your college application with expert-level guidance within 24 hours.',
+  description: 'Get personalized feedback on your college essays powered by AI trained on insights from former admissions officers. Transform your college application with expert-level guidance.',
   keywords: [
     'college essay feedback',
     'admissions consulting',
@@ -75,7 +75,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <meta property="og:url" content="https://admissionsintelligence.ai" />
         <meta property="og:type" content="website" />
         <meta property="og:title" content="Admissions Intelligence - AI-Powered College Essay Feedback" />
-        <meta property="og:description" content="Get personalized feedback on your college essays powered by AI trained on insights from former admissions officers. Transform your college application with expert-level guidance within 24 hours." />
+        <meta property="og:description" content="Get personalized feedback on your college essays powered by AI trained on insights from former admissions officers. Transform your college application with expert-level guidance." />
         <meta property="og:image" content="https://admissionsintelligence.ai/og-image.png" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
