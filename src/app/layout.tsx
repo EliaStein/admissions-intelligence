@@ -5,7 +5,7 @@ import Script from 'next/script';
 
 export const metadata: Metadata = {
   title: 'Admissions Intelligence - AI-Powered College Essay Feedback',
-  description: 'Get personalized feedback on your college essays powered by AI trained on insights from former admissions officers. Transform your college application with expert-level guidance within 24 hours.',
+  description: 'Get personalized feedback on your college essays powered by AI trained on insights from former admissions officers. Transform your college application with expert-level guidance.',
   keywords: [
     'college essay feedback',
     'admissions consulting',
@@ -24,8 +24,10 @@ export const metadata: Metadata = {
     apple: '/favicon.png',
   },
   other: {
-    'og:image:secure_url': 'https://admissionsintelligence.ai/favicon.png',
+    'og:image:secure_url': 'https://admissionsintelligence.ai/og-image.png',
     'og:image:type': 'image/png',
+    'og:image:width': '1200',
+    'og:image:height': '630',
     'og:image:alt': 'Admissions Intelligence - AI-Powered College Essay Feedback',
   },
   robots: {
@@ -73,8 +75,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <meta property="og:url" content="https://admissionsintelligence.ai" />
         <meta property="og:type" content="website" />
         <meta property="og:title" content="Admissions Intelligence - AI-Powered College Essay Feedback" />
-        <meta property="og:description" content="Get personalized feedback on your college essays powered by AI trained on insights from former admissions officers. Transform your college application with expert-level guidance within 24 hours." />
-        <meta property="og:image" content="https://admissionsintelligence.ai/favicon.png" />
+        <meta property="og:description" content="Get personalized feedback on your college essays powered by AI trained on insights from former admissions officers. Transform your college application with expert-level guidance." />
+        <meta property="og:image" content="https://admissionsintelligence.ai/og-image.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content="https://admissionsintelligence.ai/og-image.png" />
         <meta name="facebook-domain-verification" content="1ewqh81gx1naieey2ei0a3sepjdba7" />
       </head>
       <body>
