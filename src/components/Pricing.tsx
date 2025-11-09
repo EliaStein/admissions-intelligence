@@ -79,15 +79,17 @@ export function Pricing() {
                   <div className="mb-6">
                     {pkg.discount && pkg.originalPrice ? (
                       <div>
-                        <div className="flex items-center justify-center space-x-2 mb-1">
+                        <div className="flex items-center justify-center mb-2">
+                          <span className="bg-gradient-to-r from-red-500 to-orange-500 text-white text-sm font-bold px-3 py-1 rounded-full shadow-lg animate-pulse">
+                            {pkg.discount}% OFF
+                          </span>
+                        </div>
+                        <div className="flex items-baseline justify-center space-x-2 mb-1">
                           <span className="text-4xl font-bold text-gray-900">
                             ${pkg.price}
                           </span>
-                          <span className="text-lg text-gray-500 line-through">
+                          <span className="text-xl text-gray-400 line-through decoration-2">
                             ${pkg.originalPrice}
-                          </span>
-                          <span className="bg-secondary-100 text-secondary-800 text-xs font-medium px-2 py-1 rounded-full">
-                            {pkg.discount}% OFF
                           </span>
                         </div>
                         <p className="text-gray-600 text-sm">
