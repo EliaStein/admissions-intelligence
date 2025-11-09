@@ -119,7 +119,7 @@ export function Pricing() {
                       <div className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center mr-3">
                         <Check className="h-3 w-3 text-green-600" />
                       </div>
-                      24-hour turnaround
+                      Instant AI feedback
                     </div>
                     <div className="flex items-center text-sm text-gray-600">
                       <div className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center mr-3">
