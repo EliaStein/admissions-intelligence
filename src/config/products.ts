@@ -17,7 +17,7 @@ const devProducts = [
     price: 49,
     originalPrice: 99,
     discount: 50,
-    priceId: 'price_1Re1GW02R5keeXtZ7yEPRyIz',
+    priceId: 'price_1SRwBP03wFCvtmnbg5sSQwOZ',
   },
   {
     id: 'prod_SZ9fokXOBwQhDd',
