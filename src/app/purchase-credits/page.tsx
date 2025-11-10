@@ -126,79 +126,34 @@ export default function PurchaseCreditsPage() {
                 </Link>
               </div>
 
-              <div className="flex flex-col md:flex-row items-start justify-between gap-8 mb-10">
-                <div className="flex-1 text-center md:text-left">
-                  <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                    Purchase Credits
-                  </h1>
-                  <p className="text-xl text-gray-600 max-w-2xl mb-6">
-                    Get essay feedback with our credit system
-                  </p>
+              <div className="text-center mb-10">
+                <h1 className="text-4xl font-bold text-gray-900 mb-4">
+                  Purchase Credits
+                </h1>
+                <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-6">
+                  Get essay feedback with our credit system
+                </p>
 
-                  <div className="inline-block">
-                    <div className="bg-primary-50 border border-primary-200 rounded-xl p-6">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
-                          <CreditCard className="h-5 w-5 text-primary-600" />
-                        </div>
-                        <div className="text-left">
-                          <p className="text-sm text-gray-600">Current Balance</p>
-                          <p className="text-lg font-semibold text-gray-900">
-                            {creditsLoading ? '-' : currentCredits} credits
-                          </p>
-                        </div>
+                <div className="inline-block">
+                  <div className="bg-primary-50 border border-primary-200 rounded-xl p-6">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                        <CreditCard className="h-5 w-5 text-primary-600" />
+                      </div>
+                      <div className="text-left">
+                        <p className="text-sm text-gray-600">Current Balance</p>
+                        <p className="text-lg font-semibold text-gray-900">
+                          {creditsLoading ? '-' : currentCredits} credits
+                        </p>
                       </div>
                     </div>
                   </div>
-                </div>
-
-                <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-6 w-full max-w-sm md:max-w-xs">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                    Single Review
-                  </h3>
-
-                  <div className="mb-6">
-                    <div className="flex items-center justify-center mb-2">
-                      <span className="bg-gradient-to-r from-red-500 to-orange-500 text-white text-sm font-bold px-3 py-1 rounded-full shadow-lg animate-pulse">
-                        50% OFF
-                      </span>
-                    </div>
-                    <div className="flex items-baseline justify-center space-x-2 mb-1">
-                      <span className="text-4xl font-bold text-gray-900">
-                        $49
-                      </span>
-                      <span className="text-xl text-gray-400 line-through decoration-2">
-                        $99
-                      </span>
-                    </div>
-                    <p className="text-gray-600 text-sm">
-                      for 1 review
-                    </p>
-                  </div>
-
-                  <button
-                    onClick={() => handlePurchase(creditPackages[0])}
-                    disabled={purchasing === creditPackages[0].id}
-                    className={`w-full py-3 px-6 rounded-full font-medium transition-all duration-200 bg-gray-900 hover:bg-gray-800 text-white hover:shadow-lg ${purchasing === creditPackages[0].id
-                      ? 'opacity-50 cursor-not-allowed'
-                      : ''
-                      }`}
-                  >
-                    {purchasing === creditPackages[0].id ? (
-                      <div className="flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Processing...
-                      </div>
-                    ) : (
-                      'Purchase Now'
-                    )}
-                  </button>
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-30">
-              {creditPackages.filter(pkg => pkg.credits === 5 || pkg.credits === 10).map((pkg) => (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-30">
+              {creditPackages.filter(pkg => pkg.credits === 1 || pkg.credits === 5 || pkg.credits === 10).map((pkg) => (
                 <div
                   key={pkg.id}
                   className={`relative bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden ${pkg.popular ? 'ring-2 ring-primary-500 transform scale-105' : 'hover:-translate-y-1'
