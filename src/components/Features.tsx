@@ -1,5 +1,5 @@
 import React from 'react';
-import { Brain, Target, Clock, Sparkles, Shield, BarChart } from 'lucide-react';
+import { Brain, Target, Zap, Sparkles, Shield, BarChart } from 'lucide-react';
 
 export function Features() {
   const features = [
@@ -16,9 +16,9 @@ export function Features() {
       color: "secondary"
     },
     {
-      icon: <Clock className="w-6 h-6" />,
-      title: "24-Hour Turnaround",
-      description: "Receive comprehensive feedback within 24 hours of submission",
+      icon: <Zap className="w-6 h-6" />,
+      title: "Instant Feedback",
+      description: "Get comprehensive AI-powered feedback immediately after submission",
       color: "primary"
     },
     {
