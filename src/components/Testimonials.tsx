@@ -7,19 +7,19 @@ export function Testimonials() {
     {
       quote: "The feedback I received was incredibly detailed and helped me craft an essay that got me into Stanford. It was like having a personal admissions officer guiding me.",
       author: "Sarah Chen",
-      status: "Accepted to Stanford '28",
+      status: "Accepted to Stanford",
       image: "/image/testemonials/5.jpg"
     },
     {
       quote: "Admissions Intelligence helped me understand exactly what admissions officers are looking for. The AI feedback was spot-on and helped me tell my story in a compelling way.",
       author: "Michael Rodriguez",
-      status: "Accepted to Harvard '28",
+      status: "Accepted to Harvard",
       image: "/image/testemonials/6.jpg"
     },
     {
       quote: "The platform's feedback was invaluable in helping me craft a unique and authentic essay. It's like having a team of admissions officers reviewing your work.",
       author: "Emily Thompson",
-      status: "Accepted to Yale '27",
+      status: "Accepted to Yale",
       image: "/image/testemonials/1.jpg"
     }
   ];
