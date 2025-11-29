@@ -13,7 +13,7 @@ export function Testimonials() {
     {
       quote: "Admissions Intelligence helped me understand exactly what admissions officers are looking for. The AI feedback was spot-on and helped me tell my story in a compelling way.",
       author: "Michael Rodriguez",
-      status: "Accepted to Harvard '26",
+      status: "Accepted to Harvard '28",
       image: "/image/testemonials/6.jpg"
     },
     {
