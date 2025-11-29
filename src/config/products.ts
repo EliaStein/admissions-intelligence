@@ -74,7 +74,7 @@ const prodProducts = [
     price: 200,
     originalPrice: 495,
     discount: 60,
-    priceId: 'price_1Rguih03wFCvtmnbxtFsdBVy',
+    priceId: 'price_1SRwU503wFCvtmnb7PeXdGCG',
     popular: true,
   },
   {
@@ -84,7 +84,7 @@ const prodProducts = [
     price: 350,
     originalPrice: 990,
     discount: 65,
-    priceId: 'price_1RgukG03wFCvtmnbZYOpgoEc',
+    priceId: 'price_1SYuQS03wFCvtmnbU1phNKFl',
   }
 ];
 
