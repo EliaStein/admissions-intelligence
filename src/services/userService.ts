@@ -64,7 +64,7 @@ export class UserService {
           last_name: lastName,
           role: userType || 'student', // Use userType or default to 'student'
           is_active: true,
-          credits: 1,
+          credits: 0,
           referral_code_used: referralCode || null
         })
         .select()
