@@ -15,7 +15,7 @@ const devProducts = [
     name: 'Single Review',
     credits: 1,
     price: 9.99,
-    priceId: 'price_1SRwBP03wFCvtmnbg5sSQwOZ',
+    priceId: 'price_1ShIYc03wFCvtmnbf2iRFbKL',
   },
   {
     id: 'prod_SZ9nIXNbOIMBv2',
@@ -24,7 +24,7 @@ const devProducts = [
     price: 39.99,
     originalPrice: 49.95,
     discount: 20,
-    priceId: 'price_1Re1UG02R5keeXtZEBVyIsRG',
+    priceId: 'price_1ShIa603wFCvtmnbG6WwNonD',
     popular: true,
   },
   {
@@ -34,7 +34,7 @@ const devProducts = [
     price: 69.99,
     originalPrice: 99.90,
     discount: 30,
-    priceId: 'price_1Re1US02R5keeXtZaOHxoeTL',
+    priceId: 'price_1ShIaN03wFCvtmnbVqTTZwFp',
   }
 ];
 const prodProducts = [
@@ -43,7 +43,7 @@ const prodProducts = [
     name: 'Single Review',
     credits: 1,
     price: 9.99,
-    priceId: 'price_1SRwBP03wFCvtmnbg5sSQwOZ',
+    priceId: 'price_1ShIYc03wFCvtmnbf2iRFbKL',
   },
   {
     id: 'prod_Sc90kY3c9LLDL8',
@@ -52,7 +52,7 @@ const prodProducts = [
     price: 39.99,
     originalPrice: 49.95,
     discount: 20,
-    priceId: 'price_1SRwU503wFCvtmnb7PeXdGCG',
+    priceId: 'price_1ShIa603wFCvtmnbG6WwNonD',
     popular: true,
   },
   {
@@ -62,7 +62,7 @@ const prodProducts = [
     price: 69.99,
     originalPrice: 99.90,
     discount: 30,
-    priceId: 'price_1SYuQS03wFCvtmnbU1phNKFl',
+    priceId: 'price_1ShIaN03wFCvtmnbVqTTZwFp',
   }
 ];
 
