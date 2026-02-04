@@ -40,7 +40,7 @@ export function useUserProfile(): UseUserProfileReturn {
     setError(null);
 
     if (authLoading) return;
-    if (!user) {
+    if (!user || !user.email) {
       setLoading(false);
       return;
     }
@@ -48,26 +48,27 @@ export function useUserProfile(): UseUserProfileReturn {
     try {
       setLoading(true);
 
-      const [profileResponse, essaysResponse] = await Promise.all([
-        supabase
-          .from('users')
-          .select('first_name, last_name, email, role, created_at')
-          .eq('id', user.id)
-          .single(),
-        supabase
-          .from('essays')
-          .select('*')
-          .eq('student_email', user.email)
-          .order('created_at', { ascending: false })
-      ]);
+      // Fetch profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('users')
+        .select('first_name, last_name, email, role, created_at')
+        .eq('id', user.id)
+        .single();
 
-      if (profileResponse.error) throw profileResponse.error;
-      if (!profileResponse.data) throw new Error('Profile not found');
+      if (profileError) throw profileError;
+      if (!profileData) throw new Error('Profile not found');
 
-      setProfile(profileResponse.data);
+      setProfile(profileData as unknown as UserProfile);
 
-      if (essaysResponse.error) throw essaysResponse.error;
-      setEssays(essaysResponse.data || []);
+      // Fetch essays
+      const { data: essaysData, error: essaysError } = await supabase
+        .from('essays')
+        .select('*')
+        .eq('student_email', user.email)
+        .order('created_at', { ascending: false });
+
+      if (essaysError) throw essaysError;
+      setEssays((essaysData || []) as unknown as Essay[]);
     } catch (err) {
       console.error('Profile loading error:', err);
       setError(err instanceof Error ? err.message : 'Failed to load profile');

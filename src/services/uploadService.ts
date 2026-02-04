@@ -36,8 +36,8 @@ export const uploadService = {
       const schoolMap = new Map<string, string>();
 
       for (const [schoolName] of parsed.schools) {
-        const { data: school, error } = await supabase
-          .from('schools')
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: school, error } = await (supabase.from('schools') as any)
           .upsert({ name: schoolName })
           .select()
           .single();
@@ -47,7 +47,8 @@ export const uploadService = {
           continue;
         }
 
-        schoolMap.set(schoolName, school.id);
+        const schoolData = school as { id: string; name: string };
+        schoolMap.set(schoolName, schoolData.id);
         result.schoolsAdded++;
       }
 
@@ -57,8 +58,8 @@ export const uploadService = {
         school_id: schoolMap.get(prompt.school_id)
       }));
 
-      const { error: promptError } = await supabase
-        .from('essay_prompts')
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: promptError } = await (supabase.from('essay_prompts') as any)
         .upsert(prompts);
 
       if (promptError) {

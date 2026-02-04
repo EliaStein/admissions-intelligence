@@ -45,11 +45,17 @@ export default function EssayDetailPage() {
       setLoading(true);
       setError(null);
 
+      const essayId = Array.isArray(params.id) ? params.id[0] : params.id;
+      if (!essayId || !user?.email) {
+        setError('Invalid essay ID or user not authenticated.');
+        return;
+      }
+
       const { data, error: fetchError } = await supabase
         .from('essays')
         .select('*')
-        .eq('id', params.id)
-        .eq('student_email', user?.email)
+        .eq('id', essayId)
+        .eq('student_email', user.email)
         .single();
 
       if (fetchError) {
@@ -61,10 +67,11 @@ export default function EssayDetailPage() {
         return;
       }
 
-      setEssay(data);
+      const essayData = data as Essay;
+      setEssay(essayData);
 
       // Set initial active tab based on whether feedback exists
-      setActiveTab(data.essay_feedback ? 'feedback' : 'essay');
+      setActiveTab(essayData.essay_feedback ? 'feedback' : 'essay');
     } catch (err) {
       console.error('Error fetching essay:', err);
       setError('Failed to load essay. Please try again.');

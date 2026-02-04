@@ -186,9 +186,10 @@ function EssayWizard() {
           if (error) throw error;
 
           if (data) {
-            setStudentFirstName(data.first_name);
-            setStudentLastName(data.last_name);
-            setStudentEmail(data.email);
+            const userData = data as { first_name: string; last_name: string; email: string };
+            setStudentFirstName(userData.first_name);
+            setStudentLastName(userData.last_name);
+            setStudentEmail(userData.email);
           }
         } catch (err) {
           console.error('Error loading user profile:', err);
