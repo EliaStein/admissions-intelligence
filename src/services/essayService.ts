@@ -19,7 +19,8 @@ export const essayService = {
       return [];
     }
 
-    return data?.map(school => ({
+    type SchoolWithPrompts = { id: string; name: string; essay_prompts: { count: number }[] };
+    return (data as unknown as SchoolWithPrompts[])?.map(school => ({
       id: school.id,
       name: school.name,
       prompt_count: school.essay_prompts[0].count
@@ -46,9 +47,13 @@ export const essayService = {
       return [];
     }
 
-    return data?.map(prompt => ({
-      ...prompt,
-      school_name: (prompt.schools as any)?.name || ''
+    type PromptWithSchool = { id: string; school_id: string; prompt: string; word_count: string; schools: { name: string } | null };
+    return (data as unknown as PromptWithSchool[])?.map(prompt => ({
+      id: prompt.id,
+      school_id: prompt.school_id,
+      prompt: prompt.prompt,
+      word_count: parseInt(prompt.word_count, 10) || 0,
+      school_name: prompt.schools?.name || ''
     })) || [];
   },
 
