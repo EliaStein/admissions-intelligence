@@ -69,10 +69,17 @@ export const essayService = {
         ...(userInfo && { user_info: userInfo })
       };
 
+      // The API derives the user from this token; submissions require login.
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('You must be signed in to submit an essay');
+      }
+
       const response = await fetch('/api/essays', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify(requestBody),
       });

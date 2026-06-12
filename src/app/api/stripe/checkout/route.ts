@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { CONFIG_KEYS, ConfigService } from '../../../../services/configService';
 import { supabase } from '../../../../lib/supabase';
+import { creditPackages } from '../../../../config/products';
 
 interface CheckoutRequest {
   priceId: string;
-  credits: number;
   successUrl?: string;
   cancelUrl?: string;
 }
@@ -42,11 +42,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body: CheckoutRequest = await request.json();
-    const { priceId, credits, successUrl, cancelUrl } = body;
+    const { priceId, successUrl, cancelUrl } = body;
 
-    if (!priceId || !credits) {
+    // Credits come from the server-side package list keyed by price —
+    // a client-sent credit count must never reach the webhook.
+    const creditPackage = creditPackages.find(p => p.priceId === priceId);
+    if (!creditPackage) {
       return NextResponse.json(
-        { error: 'Price ID and credits amount are required' },
+        { error: 'Unknown price ID' },
         { status: 400 }
       );
     }
@@ -66,7 +69,7 @@ export async function POST(request: NextRequest) {
       allow_promotion_codes: true,
       metadata: {
         userId: user.id,
-        credits: credits.toString(),
+        priceId: creditPackage.priceId,
         email: user.email || '',
       },
     });

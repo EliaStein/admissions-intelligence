@@ -5,11 +5,9 @@ import { supabaseUrl } from '../config/supabase';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers'
 
-// Access auth admin api
-let adminAuthClient: SupabaseClient<any, "public", any> | null = null;
-
-export async function getAdminClient() {
-  if (adminAuthClient) return adminAuthClient;
+// Built per request: caching a client would close over the first
+// request's cookie store and reuse it for every later request.
+export async function getAdminClient(): Promise<SupabaseClient<any, "public", any>> {
   const cookieStore = await cookies()
 
   const service_role_key = await ConfigService.getConfigValue(CONFIG_KEYS.DB_SERVICE_ROLE_KEY);
@@ -33,5 +31,5 @@ export async function getAdminClient() {
       },
     },
   })
-  return adminAuthClient = supabase;
+  return supabase;
 }

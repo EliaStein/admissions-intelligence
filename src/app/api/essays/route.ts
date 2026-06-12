@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Essay } from '../../../types/essay';
 import { getAdminClient } from '../../../lib/supabase-admin-client';
+import { getAuthenticatedUser } from '../../../lib/api-auth';
 import { EmailService } from '../../../services/emailService';
 import { AIService } from '../../../services/aiService';
 import { AiFeedbackRequest } from '../../../types/aiService';
 import { CreditService } from '../../../services/creditService';
 import { EssayDuplicateDetectionService } from '../../../services/essayDuplicateDetectionService';
+
+const MAX_ESSAY_LENGTH = 50_000; // chars; well above any real essay
 
 interface EssaySubmissionRequest {
   essay: Essay;
@@ -19,29 +22,28 @@ interface EssaySubmissionRequest {
 
 export async function POST(request: NextRequest) {
   try {
+    // The user is derived from the verified token — never from the request
+    // body, which would let callers spend other users' credits (or nobody's).
+    const user = await getAuthenticatedUser(request);
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+    const userId = user.id;
+
     const body: EssaySubmissionRequest = await request.json();
 
     // Handle both legacy format (direct Essay) and new format (with essay property)
     const essay: Essay = 'essay' in body ? body.essay : body as Essay;
     const wordCount = body.word_count;
-    const userInfo = body.user_info;
 
-    // Get user ID from userInfo or try to extract from essay email
-    const userId = userInfo?.user_id;
-
-    // If we have word count (meaning AI feedback is requested) and user ID, check credits
-    if (wordCount && userId) {
-      const hasSufficientCredits = await CreditService.hasSufficientCredits(userId, 1);
-      if (!hasSufficientCredits) {
-        return NextResponse.json(
-          {
-            error: 'Insufficient credits',
-            message: 'You need at least 1 credit to get AI feedback. Please purchase more credits.',
-            requiresCredits: true
-          },
-          { status: 402 } // Payment Required
-        );
-      }
+    if (!essay?.essay_content || essay.essay_content.length > MAX_ESSAY_LENGTH) {
+      return NextResponse.json(
+        { error: 'Essay content is missing or too long' },
+        { status: 400 }
+      );
     }
 
     // Check for duplicate submissions (only for personal statements with AI feedback requested)
@@ -64,6 +66,27 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Consume the credit atomically before generating feedback; refunded
+    // below if generation fails. A post-generation consume would let two
+    // concurrent submissions get feedback for one credit.
+    if (wordCount) {
+      const creditConsumed = await CreditService.consumeCredits(
+        userId,
+        1,
+        'AI feedback for essay submission'
+      );
+      if (!creditConsumed) {
+        return NextResponse.json(
+          {
+            error: 'Insufficient credits',
+            message: 'You need at least 1 credit to get AI feedback. Please purchase more credits.',
+            requiresCredits: true
+          },
+          { status: 402 } // Payment Required
+        );
+      }
+    }
+
     const supabaseAdmin = await getAdminClient();
 
     const { data, error } = await supabaseAdmin
@@ -74,6 +97,7 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Error saving essay:', error.message);
+      if (wordCount) await CreditService.addCredits(userId, 1); // refund
       return NextResponse.json(
         { error: 'Failed to save essay', details: error.message },
         { status: 500 }
@@ -95,7 +119,7 @@ export async function POST(request: NextRequest) {
             created_at: data.created_at,
             word_count: wordCount,
           },
-          ...(userInfo && { user_info: userInfo })
+          user_info: { user_id: userId, email: user.email }
         };
 
         await AIService.processAIFeedbackRequest(aiFeedbackRequest).then(async (feedback) => {
@@ -106,20 +130,6 @@ export async function POST(request: NextRequest) {
 
           if (updateError) {
             throw updateError;
-          }
-
-          // Consume credits after successful AI feedback processing
-          if (userId) {
-            const creditConsumed = await CreditService.consumeCredits(
-              userId,
-              1,
-              `AI feedback for essay: ${data.id}`
-            );
-
-            if (!creditConsumed) {
-              console.error('Failed to consume credits for user:', userId);
-              // Note: We don't fail the request here since the feedback was already generated
-            }
           }
 
           // Send feedback email to student
@@ -140,6 +150,7 @@ export async function POST(request: NextRequest) {
         })
       } catch (aiError) {
         console.error('Error generating feedback:', aiError);
+        await CreditService.addCredits(userId, 1); // refund
         return NextResponse.json(
           { error: 'Failed to save essay', details: aiError },
           { status: 500 }

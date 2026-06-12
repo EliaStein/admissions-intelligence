@@ -1,5 +1,6 @@
 import { Essay } from '../types/essay';
 import { AiFeedbackRequest, AiFeedbackResponse } from '../types/aiService';
+import { supabase } from '../lib/supabase';
 
 // Legacy interface for backward compatibility
 interface LegacyAiFeedbackRequest {
@@ -38,10 +39,17 @@ export async function submitEssayForFeedback(
       ...(userInfo && { user_info: userInfo })
     };
 
+    // The API derives the user from this token and consumes a credit.
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      throw new Error('You must be signed in to request feedback');
+    }
+
     const response = await fetch('/api/ai-feedback', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
       },
       body: JSON.stringify(requestBody),
     });

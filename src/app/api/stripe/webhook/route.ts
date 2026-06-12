@@ -3,6 +3,8 @@ import Stripe from 'stripe';
 import { CONFIG_KEYS, ConfigService } from '../../../../services/configService';
 import { CreditService } from '../../../../services/creditService';
 import { ReferralService } from '../../../../services/referralService';
+import { creditPackages } from '../../../../config/products';
+import { getAdminClient } from '../../../../lib/supabase-admin-client';
 
 export async function POST(request: NextRequest) {
   try {
@@ -49,15 +51,44 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true });
     }
     const userId = session.metadata?.userId;
-    const credits = session.metadata?.credits;
-    if (!userId || !credits) {
-      console.log('[no user id] ', event.type);
+    const priceId = session.metadata?.priceId;
+    if (!userId || !priceId) {
+      console.log('[no user id / price id] ', event.type);
       return NextResponse.json({ received: true });
     }
-    await CreditService.addCredits(
-      userId,
-      +credits,
-    );
+
+    // Credits are derived from the server-side package list, never from
+    // metadata a client could have influenced.
+    const creditPackage = creditPackages.find(p => p.priceId === priceId);
+    if (!creditPackage) {
+      console.error('[unknown price id] ', priceId);
+      return NextResponse.json({ received: true });
+    }
+
+    // Idempotency: Stripe retries deliveries. Claim the event id first;
+    // a conflict means another delivery already processed (or is processing) it.
+    const supabaseAdmin = await getAdminClient();
+    const { data: claimed, error: claimError } = await supabaseAdmin
+      .from('stripe_events')
+      .insert({ id: event.id })
+      .select('id')
+      .maybeSingle();
+
+    if (claimError || !claimed) {
+      if (claimError && claimError.code !== '23505') {
+        console.error('[stripe_events] failed to record event:', claimError);
+        return NextResponse.json({ error: 'Failed to record event' }, { status: 500 });
+      }
+      console.log('[duplicate event] ', event.id);
+      return NextResponse.json({ received: true });
+    }
+
+    const granted = await CreditService.addCredits(userId, creditPackage.credits);
+    if (!granted) {
+      // Release the claim and let Stripe retry — the user paid.
+      await supabaseAdmin.from('stripe_events').delete().eq('id', event.id);
+      return NextResponse.json({ error: 'Failed to grant credits' }, { status: 500 });
+    }
 
     await ReferralService.rewardReferrer(userId);
 
