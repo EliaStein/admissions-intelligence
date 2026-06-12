@@ -13,8 +13,16 @@
   5. stripe_events table for webhook idempotency (Stripe retries deliveries).
 */
 
--- 1. config: remove anon read access
-DROP POLICY IF EXISTS "Allow anonymous read access to config" ON config;
+-- 1. config: remove anon read access (table may not exist in all envs)
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'config'
+  ) THEN
+    DROP POLICY IF EXISTS "Allow anonymous read access to config" ON public.config;
+  END IF;
+END $$;
 
 -- 2. users: protect credits/role from client-side updates.
 -- SECURITY INVOKER (default) so current_user reflects the API role:
