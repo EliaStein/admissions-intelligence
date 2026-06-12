@@ -47,42 +47,25 @@ export class CreditService {
     }
   }
 
-  // TODO: move to backend
+  // Atomic: single UPDATE guarded by `credits >= amount`, so concurrent
+  // requests can't double-spend. Returns false when credits are insufficient.
   static async consumeCredits(userId: string, amount: number = 1, description: string = 'Essay feedback'): Promise<boolean> {
     try {
       const supaAdmin = await getAdminClient();
+      const { data, error } = await supaAdmin
+        .rpc('consume_user_credits', { p_user_id: userId, p_amount: amount });
 
-      // First check if user has sufficient credits
-      const { data: userData, error: fetchError } = await supaAdmin
-        .from('users')
-        .select('credits')
-        .eq('id', userId)
-        .single();
-
-      if (fetchError) {
-        console.error('Error fetching user credits:', fetchError);
+      if (error) {
+        console.error('Error consuming credits:', error);
         return false;
       }
 
-      const currentCredits = userData?.credits || 0;
-      if (currentCredits < amount) {
-        console.error('Insufficient credits:', { currentCredits, required: amount });
-        return false;
-      }
-      console.log({ currentCredits, userData })
-
-      // Consume credits
-      const { error: updateError } = await supaAdmin
-        .from('users')
-        .update({ credits: currentCredits - amount })
-        .eq('id', userId);
-
-      if (updateError) {
-        console.error('Error consuming credits:', updateError);
+      if (data === null) {
+        console.error('Insufficient credits for user:', userId);
         return false;
       }
 
-      console.log(`Successfully consumed ${amount} credits for user ${userId}. Remaining: ${currentCredits - amount}`);
+      console.log(`Successfully consumed ${amount} credits for user ${userId}. Remaining: ${data}`);
       return true;
     } catch (error) {
       console.error('Error in consumeCredits:', error);
@@ -90,36 +73,18 @@ export class CreditService {
     }
   }
 
-  // TODO: move to backend
   static async addCredits(userId: string, amount: number): Promise<boolean> {
     try {
       const supabaseAdmin = await getAdminClient();
+      const { data, error } = await supabaseAdmin
+        .rpc('add_user_credits', { p_user_id: userId, p_amount: amount });
 
-      const { data: userData, error: fetchError } = await supabaseAdmin
-        .from('users')
-        .select('credits')
-        .eq('id', userId)
-        .single();
-
-      if (fetchError) {
-        console.error('[Error] fetching user credits:', fetchError);
+      if (error || data === null) {
+        console.error('[Error] adding credits:', error ?? 'user not found');
         return false;
       }
 
-      const currentCredits = userData?.credits || 0;
-      const newCredits = currentCredits + amount;
-
-      const { error: updateError } = await supabaseAdmin
-        .from('users')
-        .update({ credits: newCredits })
-        .eq('id', userId);
-
-      if (updateError) {
-        console.error('[Error] adding credits:', updateError);
-        return false;
-      }
-
-      console.log(`[Success] added ${amount} credits for user ${userId}. New balance: ${newCredits}`);
+      console.log(`[Success] added ${amount} credits for user ${userId}. New balance: ${data}`);
       return true;
     } catch (error) {
       console.error('Error in addCredits:', error);
