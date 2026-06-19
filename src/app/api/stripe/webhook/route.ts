@@ -90,7 +90,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to grant credits' }, { status: 500 });
     }
 
-    await ReferralService.rewardReferrer(userId);
+    // Best-effort: the purchase already succeeded, so a failed referral reward
+    // must not fail the webhook. Log it so it can be reconciled manually.
+    const rewarded = await ReferralService.rewardReferrer(userId);
+    if (!rewarded) {
+      console.error('[referral] reward not granted for referee', userId);
+    }
 
     return NextResponse.json({ received: true });
 

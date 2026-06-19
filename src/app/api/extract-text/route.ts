@@ -1,6 +1,9 @@
 import 'server-only';
 import { NextRequest, NextResponse } from 'next/server';
 import WordExtractor from 'word-extractor';
+import { getAuthenticatedUser } from '../../../lib/api-auth';
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
 interface ExtractTextResult {
   success: boolean;
@@ -10,6 +13,16 @@ interface ExtractTextResult {
 
 export async function POST(request: NextRequest) {
   try {
+    // Parsing buffers the whole file into memory and runs word-extractor on it;
+    // require a verified user so it can't be used as an anonymous CPU/memory DoS.
+    const user = await getAuthenticatedUser(request);
+    if (!user) {
+      return NextResponse.json(
+        { success: false, content: '', error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     const formData = await request.formData();
     const file = formData.get('file') as File;
 
@@ -17,6 +30,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, content: '', error: 'No file provided' },
         { status: 400 }
+      );
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { success: false, content: '', error: 'File is too large (max 10 MB)' },
+        { status: 413 }
       );
     }
 

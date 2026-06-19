@@ -1,5 +1,6 @@
 import 'server-only';
 import { getAdminClient } from '../lib/supabase-admin-client';
+import { CreditService } from './creditService';
 interface Reward {
   id: string;
   name: string;
@@ -124,37 +125,40 @@ export class ReferralService {
   static async rewardReferrer(refereeId: string): Promise<boolean> {
     try {
       const referee = await this.findRefereeByCode(refereeId);
-      console.log('referee', referee);
       if (!referee) return false;
 
       const supabaseAdmin = await getAdminClient();
       const pendings: PendingReward[] = await this.getCampaignParticipantRewardsPending(referee.referral_code_used);
-      console.log('pendings', pendings);
       const rewordId = pendings[0]?.rewards[0]?.id;
-      console.log({ rewordId })
       if (!rewordId) return false;
 
       const referrerEmail = pendings[0]?.user.email;
       const { data: referrer } = await supabaseAdmin
         .from('users')
-        .select('*')
+        .select('id')
         .eq('email', referrerEmail)
         .single();
-      console.log('referrer', referrer);
-      await this.postCampaignParticipantRewardsRedeem(referee.referral_code_used, rewordId);
+      if (!referrer) {
+        console.error('Referral reward: no user row for referrer email', referrerEmail);
+        return false;
+      }
 
-      await supabaseAdmin.from('users')
-        .update({
-          credits: referrer.credits + 1
-        })
-        .eq('id', referrer.id);
+      // Grant the credit first via the atomic RPC (no read-then-write race),
+      // and only redeem the external reward once the grant succeeds — otherwise
+      // a DB failure would burn the Viral Loops reward with nothing to show.
+      const granted = await CreditService.addCredits(referrer.id, 1);
+      if (!granted) {
+        console.error('Referral reward: failed to grant credit to', referrer.id);
+        return false;
+      }
+
+      await this.postCampaignParticipantRewardsRedeem(referee.referral_code_used, rewordId);
 
       await supabaseAdmin.from('users')
         .update({
           referral_code_used: null
         })
         .eq('id', refereeId);
-
 
       return true;
     } catch (error) {

@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     // The user is derived from the verified token — never from the request
     // body, which would let callers spend other users' credits (or nobody's).
     const user = await getAuthenticatedUser(request);
-    if (!user) {
+    if (!user?.email) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
@@ -45,6 +45,13 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Ownership comes from the verified token, never the request body. A
+    // body-supplied student_email would let a caller attribute the essay to
+    // anyone — making it readable under their RLS scope, sending the feedback
+    // email to an attacker-chosen address, and keying the duplicate/rate-limit
+    // checks off a spoofable value.
+    essay.student_email = user.email;
 
     // Check for duplicate submissions (only for personal statements with AI feedback requested)
     if (wordCount && essay.personal_statement) {

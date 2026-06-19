@@ -1,4 +1,5 @@
 import mammoth from 'mammoth';
+import { supabase } from '../lib/supabase';
 
 // Configure PDF.js worker for Next.js (client-side only)
 let pdfjsLib: any = null;
@@ -80,8 +81,17 @@ export const fileProcessingService = {
     const formData = new FormData();
     formData.append('file', file);
 
+    // The endpoint derives the user from this token before parsing.
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      throw new Error('You must be signed in to upload a .doc file');
+    }
+
     const response = await fetch('/api/extract-text', {
       method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+      },
       body: formData,
     });
 
