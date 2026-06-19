@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AdminGuard } from '../../../../../lib/admin-guard';
+import { toCsv } from '../../../../../utils/csv';
 
 export async function GET(request: NextRequest) {
   try {
@@ -91,10 +92,9 @@ export async function GET(request: NextRequest) {
         user.updated_at
       ]);
 
-      const csvContent = [
-        csvHeaders.join(','),
-        ...csvRows.map(row => row.join(','))
-      ].join('\n');
+      // Escape every cell to prevent CSV structure breakage and spreadsheet
+      // formula injection from user-controlled fields (name, email, ...).
+      const csvContent = toCsv(csvHeaders, csvRows);
 
       // Return CSV file
       return new NextResponse(csvContent, {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AdminGuard } from '../../../../lib/admin-guard';
+import { buildEssaySearchFilter } from '../../../../lib/essay-search';
 
 export async function GET(request: NextRequest) {
   try {
@@ -35,9 +36,10 @@ export async function GET(request: NextRequest) {
         created_at
       `, { count: 'exact' });
 
-    // Apply filters
+    // Apply filters. The search term is escaped/quoted to prevent PostgREST
+    // filter injection (a raw `,` or `)` could break out of the condition).
     if (search) {
-      query = query.or(`student_first_name.ilike.%${search}%,student_last_name.ilike.%${search}%,student_email.ilike.%${search}%,student_college.ilike.%${search}%`);
+      query = query.or(buildEssaySearchFilter(search));
     }
 
     if (personalStatement !== null && personalStatement !== undefined) {

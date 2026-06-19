@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, GraduationCap } from 'lucide-react';
 import { schoolService } from '../services/schoolService';
 import type { Database } from '../types/supabase';
@@ -17,14 +17,18 @@ export function SchoolCard({ school }: SchoolCardProps) {
   const [prompts, setPrompts] = useState<EssayPrompt[]>([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (isExpanded && prompts.length === 0) {
+  // Lazy-load prompts the first time the card is expanded. Driven from the
+  // click handler rather than an effect so we don't setState during render.
+  const handleToggle = () => {
+    const next = !isExpanded;
+    setIsExpanded(next);
+    if (next && prompts.length === 0 && !loading) {
       setLoading(true);
       schoolService.getSchoolPrompts(school.id)
         .then(setPrompts)
         .finally(() => setLoading(false));
     }
-  }, [isExpanded, school.id]);
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
@@ -37,7 +41,7 @@ export function SchoolCard({ school }: SchoolCardProps) {
             <h3 className="text-lg font-semibold text-gray-900">{school.name}</h3>
           </div>
           <button
-            onClick={() => setIsExpanded(!isExpanded)}
+            onClick={handleToggle}
             className="text-gray-500 hover:text-primary-600 transition-colors"
           >
             {isExpanded ? (

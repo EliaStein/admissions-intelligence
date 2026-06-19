@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, Suspense } from 'react';
+import React, { Suspense } from 'react';
 import Link from 'next/link';
 import { AlertCircle, Home, RefreshCw } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
@@ -8,20 +8,11 @@ import { OAuthCallbackHandler } from '@/components/auth/OAuthCallbackHandler';
 
 function AuthCodeErrorContent() {
   const searchParams = useSearchParams();
-  const [errorDetails, setErrorDetails] = useState<{
-    error?: string;
-    description?: string;
-  }>({});
-
-  useEffect(() => {
-    const error = searchParams.get('error');
-    const description = searchParams.get('description');
-
-    setErrorDetails({
-      error: error || undefined,
-      description: description || undefined
-    });
-  }, [searchParams]);
+  // Derived straight from the URL — no effect/state needed.
+  const errorDetails = {
+    error: searchParams.get('error') || undefined,
+    description: searchParams.get('description') || undefined,
+  };
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">

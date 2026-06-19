@@ -146,7 +146,7 @@ export class ReferralService {
       // Grant the credit first via the atomic RPC (no read-then-write race),
       // and only redeem the external reward once the grant succeeds — otherwise
       // a DB failure would burn the Viral Loops reward with nothing to show.
-      const granted = await CreditService.addCredits(referrer.id, 1);
+      const granted = await CreditService.addCredits(referrer.id, 1, 'Referral reward');
       if (!granted) {
         console.error('Referral reward: failed to grant credit to', referrer.id);
         return false;

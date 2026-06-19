@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true });
     }
 
-    const granted = await CreditService.addCredits(userId, creditPackage.credits);
+    const granted = await CreditService.addCredits(userId, creditPackage.credits, `Credit purchase: ${creditPackage.credits} credits`);
     if (!granted) {
       // Release the claim and let Stripe retry — the user paid.
       await supabaseAdmin.from('stripe_events').delete().eq('id', event.id);

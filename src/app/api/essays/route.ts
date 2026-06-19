@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Error saving essay:', error.message);
-      if (wordCount) await CreditService.addCredits(userId, 1); // refund
+      if (wordCount) await CreditService.addCredits(userId, 1, 'Refund: essay save failed'); // refund
       return NextResponse.json(
         { error: 'Failed to save essay', details: error.message },
         { status: 500 }
@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
         })
       } catch (aiError) {
         console.error('Error generating feedback:', aiError);
-        await CreditService.addCredits(userId, 1); // refund
+        await CreditService.addCredits(userId, 1, 'Refund: feedback generation failed'); // refund
         return NextResponse.json(
           { error: 'Failed to save essay', details: aiError },
           { status: 500 }

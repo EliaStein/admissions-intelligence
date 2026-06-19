@@ -29,11 +29,6 @@ export default tseslint.config(
       '@next/next/no-img-element': 'warn',
       'react-hooks/exhaustive-deps': 'warn',
       '@typescript-eslint/no-namespace': 'warn',
-      // Newer react-hooks/React Compiler rules — downgraded to match the
-      // existing backwards-compat stance above (TODO: fix and promote to error).
-      'react-hooks/set-state-in-effect': 'warn',
-      'react-hooks/preserve-manual-memoization': 'warn',
-      'react-hooks/immutability': 'warn',
     },
   },
   // Allow namespaces in type declaration files for ViralLoops widgets

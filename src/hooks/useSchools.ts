@@ -36,6 +36,10 @@ export function useSchools(initialQuery: string = '') {
     setSchools([]);
   }, []);
 
+  // Stable identity so consumers can safely list loadMore in dependency
+  // arrays (e.g. the IntersectionObserver callback in SchoolList).
+  const loadMore = useCallback(() => loadSchools(false), [loadSchools]);
+
   useEffect(() => {
     loadSchools(true);
   }, [searchQuery]);
@@ -55,7 +59,7 @@ export function useSchools(initialQuery: string = '') {
     loading,
     error,
     hasMore,
-    loadMore: () => loadSchools(false),
+    loadMore,
     handleSearch
   };
 }
