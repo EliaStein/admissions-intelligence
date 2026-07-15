@@ -1,5 +1,13 @@
 [build]
 publish = ".next"
 command = "npm run build"
+
+# Next.js 16 requires Node >=20.9. Without a pin Netlify picks its own default,
+# which for this project was Node 18 — the last successful deploy (2025-11-29,
+# before the Next 16 upgrade) shipped a nodejs18.x function. Pinned here *and*
+# in .nvmrc so local, CI and Netlify agree and this can't drift silently again.
+[build.environment]
+NODE_VERSION = "22"
+
 [[plugins]]
 package = "@netlify/plugin-nextjs"
