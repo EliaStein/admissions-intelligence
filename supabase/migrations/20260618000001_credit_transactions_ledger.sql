@@ -105,5 +105,19 @@ BEGIN
 END;
 $$;
 
+-- Only the service role may spend or grant credits. Postgres grants EXECUTE to
+-- PUBLIC by default, so the REVOKE below is what actually closes these off to
+-- end users — and the GRANT is what keeps them open to us.
+--
+-- The GRANT is not redundant. If service_role's access came via PUBLIC rather
+-- than its own grant, revoking PUBLIC would take service_role with it and
+-- every credit operation would start failing the moment this migration runs —
+-- before any code is deployed. Granting explicitly makes the outcome the same
+-- either way.
+--
+-- Order matters: REVOKE first, then GRANT, so the grant cannot be revoked.
 REVOKE EXECUTE ON FUNCTION public.consume_user_credits(uuid, integer, text) FROM PUBLIC, anon, authenticated;
 REVOKE EXECUTE ON FUNCTION public.add_user_credits(uuid, integer, text) FROM PUBLIC, anon, authenticated;
+
+GRANT EXECUTE ON FUNCTION public.consume_user_credits(uuid, integer, text) TO service_role;
+GRANT EXECUTE ON FUNCTION public.add_user_credits(uuid, integer, text) TO service_role;
