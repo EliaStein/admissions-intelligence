@@ -53,7 +53,7 @@ export class CreditService {
     try {
       const supaAdmin = await getAdminClient();
       const { data, error } = await supaAdmin
-        .rpc('consume_user_credits', { p_user_id: userId, p_amount: amount });
+        .rpc('consume_user_credits', { p_user_id: userId, p_amount: amount, p_description: description });
 
       if (error) {
         console.error('Error consuming credits:', error);
@@ -73,11 +73,11 @@ export class CreditService {
     }
   }
 
-  static async addCredits(userId: string, amount: number): Promise<boolean> {
+  static async addCredits(userId: string, amount: number, description: string = 'Credit added'): Promise<boolean> {
     try {
       const supabaseAdmin = await getAdminClient();
       const { data, error } = await supabaseAdmin
-        .rpc('add_user_credits', { p_user_id: userId, p_amount: amount });
+        .rpc('add_user_credits', { p_user_id: userId, p_amount: amount, p_description: description });
 
       if (error || data === null) {
         console.error('[Error] adding credits:', error ?? 'user not found');

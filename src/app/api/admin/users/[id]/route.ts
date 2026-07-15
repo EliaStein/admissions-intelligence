@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AdminGuard } from '../../../../../lib/admin-guard';
+import { adminUserUpdateSchema } from '../../../../../lib/validators';
 
 export async function GET(
   request: NextRequest,
@@ -88,17 +89,18 @@ export async function PUT(
 
     // Await params before accessing properties
     const { id: userId } = await params;
-    const updateData = await request.json();
+    const body = await request.json();
 
-    // Validate the update data
-    const allowedFields = ['first_name', 'last_name', 'role', 'credits', 'is_active'];
-    const filteredData: any = {};
-
-    for (const field of allowedFields) {
-      if (updateData[field] !== undefined) {
-        filteredData[field] = updateData[field];
-      }
+    // Validate the update data: only known fields, well-typed values
+    // (non-negative integer credits, a known role, etc.).
+    const parsed = adminUserUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid update data', details: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
     }
+    const filteredData = parsed.data;
 
     if (Object.keys(filteredData).length === 0) {
       return NextResponse.json(

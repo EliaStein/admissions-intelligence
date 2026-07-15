@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { Check, Star } from 'lucide-react';
 import { creditPackages } from '../config/products';
 import { useAuth } from '../hooks/useAuth';
@@ -9,6 +10,7 @@ import { useAnalytics } from '../hooks/useAnalytics';
 export function Pricing() {
   const { user } = useAuth();
   const analytics = useAnalytics();
+  const router = useRouter();
 
   // Filter to get the specific packages we want: 1, 5, and 10 reviews
   const selectedPackages = creditPackages.filter(pkg => 
@@ -34,7 +36,7 @@ export function Pricing() {
     }));
 
     // Redirect to purchase credits page
-    window.location.href = '/purchase-credits';
+    router.push('/purchase-credits');
   };
 
   return (

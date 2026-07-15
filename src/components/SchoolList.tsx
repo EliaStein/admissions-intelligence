@@ -48,7 +48,7 @@ export function SchoolList({ schools: propSchools }: SchoolListProps) {
     });
     
     if (node) observer.current.observe(node);
-  }, [loading, hasMore]);
+  }, [loading, hasMore, loadMore]);
 
   return (
     <div className="space-y-6">

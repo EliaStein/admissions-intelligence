@@ -83,14 +83,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true });
     }
 
-    const granted = await CreditService.addCredits(userId, creditPackage.credits);
+    const granted = await CreditService.addCredits(userId, creditPackage.credits, `Credit purchase: ${creditPackage.credits} credits`);
     if (!granted) {
       // Release the claim and let Stripe retry — the user paid.
       await supabaseAdmin.from('stripe_events').delete().eq('id', event.id);
       return NextResponse.json({ error: 'Failed to grant credits' }, { status: 500 });
     }
 
-    await ReferralService.rewardReferrer(userId);
+    // Best-effort: the purchase already succeeded, so a failed referral reward
+    // must not fail the webhook. Log it so it can be reconciled manually.
+    const rewarded = await ReferralService.rewardReferrer(userId);
+    if (!rewarded) {
+      console.error('[referral] reward not granted for referee', userId);
+    }
 
     return NextResponse.json({ received: true });
 
