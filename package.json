@@ -10,6 +10,9 @@
     "stripe:dev": "stripe listen --forward-to localhost:3000/api/stripe/webhook",
     "stripe:emit": "stripe trigger checkout.session.completed"
   },
+  "engines": {
+    "node": ">=20.9.0"
+  },
   "dependencies": {
     "@api/viral-loops-docs": "file:.api/apis/viral-loops-docs",
     "@sendgrid/mail": "^8.1.5",
