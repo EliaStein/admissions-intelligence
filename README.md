@@ -1,5 +1,7 @@
 # Admissions Intelligence
 
+> **A portfolio project by [Eli Stein](https://www.linkedin.com/in/eli-stein-37570585/)** — product, full-stack build, and AI pipeline, end to end.
+
 AI-powered feedback on college application essays, trained by former admission officers. Students submit a personal statement or supplemental essay, spend a credit, and receive detailed feedback by email.
 
 ## Stack
