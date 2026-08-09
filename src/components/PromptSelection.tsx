@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { essayService } from '../services/essayService';
-import { School, BasePrompt, SchoolPrompt } from '../types/prompt';
+import { School, BasePrompt, SchoolPrompt, formatWordLimit } from '../types/prompt';
 import { useAnalytics } from '../hooks/useAnalytics';
 import { useAuth } from '../hooks/useAuth';
 
@@ -144,7 +144,7 @@ export function PromptSelection({
             >
               <p className="text-gray-900">{prompt.prompt}</p>
               <p className="text-sm text-gray-500 mt-2">
-                Word limit: {prompt.word_count}
+                {formatWordLimit(prompt)}
               </p>
             </button>
           ))}
@@ -229,7 +229,7 @@ export function PromptSelection({
               >
                 <p className="text-gray-900">{prompt.prompt}</p>
                 <p className="text-sm text-gray-500 mt-2">
-                  Word limit: {prompt.word_count}
+                  {formatWordLimit(prompt)}
                 </p>
               </button>
             ))}
