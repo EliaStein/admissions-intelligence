@@ -7,7 +7,7 @@ import { PromptSelection } from './PromptSelection';
 import { SuccessMessage } from './SuccessMessage';
 import AuthModal from './AuthModal';
 import { DuplicateSubmissionModal } from './DuplicateSubmissionModal';
-import { EssayPrompt } from '../types/prompt';
+import { EssayPrompt, formatWordLimit, submissionWordCap } from '../types/prompt';
 import { essayService } from '../services/essayService';
 import { essayStorageService } from '../services/essayStorageService';
 import { ActionPersistenceService } from '../services/actionPersistenceService';
@@ -91,7 +91,9 @@ function EssayWizard() {
       };
 
       setLoadingStep('Generating feedback...');
-      await essayService.saveEssay(essayData as any, _selectedPrompt?.word_count, userInfo);
+      // null (no stated limit) is sent as undefined so the API omits the field
+      // rather than recording a bogus 0-word limit against the submission.
+      await essayService.saveEssay(essayData as any, _selectedPrompt?.word_count ?? undefined, userInfo);
 
       // Track essay submission
       analytics.trackEssaySubmissionNew({
@@ -159,12 +161,10 @@ function EssayWizard() {
     }
 
     const wordCount = essay.trim().split(/\s+/).filter(Boolean).length;
-    
-    // For personal statements, allow up to 1000 words but warn at 650
-    // For supplemental essays, use the original logic
-    const maxWordCount = essayType === 'personal' ? 1000 : selectedPrompt.word_count * 2;
-    if (wordCount > maxWordCount) {
-      const limitText = essayType === 'personal' ? '1000' : selectedPrompt.word_count.toString();
+
+    const maxWordCount = submissionWordCap(selectedPrompt, essayType === 'personal' ? 'personal' : 'supplemental');
+    if (maxWordCount != null && wordCount > maxWordCount) {
+      const limitText = essayType === 'personal' ? '1000' : String(selectedPrompt.word_count);
       setError(`Essay exceeds the ${limitText} word limit`);
       return;
     }
@@ -425,7 +425,7 @@ function EssayWizard() {
               <h3 className="font-medium text-gray-900 mb-2">Writing Prompt:</h3>
               <p className="text-gray-600">{selectedPrompt?.prompt}</p>
               <p className="mt-2 text-sm text-gray-500">
-                Word limit: {selectedPrompt?.word_count}
+                {selectedPrompt ? formatWordLimit(selectedPrompt) : ''}
               </p>
             </div>
 
@@ -466,10 +466,18 @@ function EssayWizard() {
             <div className="flex justify-between items-center">
               <span className={`text-sm ${(() => {
                 const currentWordCount = essay.trim().split(/\s+/).filter(Boolean).length;
-                const displayLimit = essayType === 'personal' ? 650 : (selectedPrompt?.word_count || 0);
-                return currentWordCount > displayLimit ? 'text-red-600' : 'text-gray-500';
+                // null = no stated limit, so there is nothing to exceed and the
+                // counter should never turn red.
+                const displayLimit = essayType === 'personal' ? 650 : selectedPrompt?.word_count ?? null;
+                return displayLimit != null && currentWordCount > displayLimit ? 'text-red-600' : 'text-gray-500';
               })()}`}>
-                Words: {essay.trim().split(/\s+/).filter(Boolean).length} / {essayType === 'personal' ? 650 : selectedPrompt?.word_count}
+                {(() => {
+                  const currentWordCount = essay.trim().split(/\s+/).filter(Boolean).length;
+                  const displayLimit = essayType === 'personal' ? 650 : selectedPrompt?.word_count ?? null;
+                  return displayLimit == null
+                    ? `Words: ${currentWordCount}`
+                    : `Words: ${currentWordCount} / ${displayLimit}`;
+                })()}
               </span>
               <div className="space-x-4">
                 <button

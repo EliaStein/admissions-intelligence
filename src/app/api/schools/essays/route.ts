@@ -19,7 +19,11 @@ async function fetchCrmPrompts(crmId: string, schoolName: string): Promise<Schoo
     school_id: crmId,
     school_name: schoolName,
     prompt: r.prompt,
-    word_count: r.word_limit ?? 0,
+    // Preserve null. The CRM uses NULL for "the school states no word limit";
+    // coercing that to 0 previously made the prompt unsubmittable, since the
+    // wizard's guard reads 0 as "zero words allowed".
+    word_count: r.word_limit,
+    min_word_count: r.min_word_count,
     source: 'crm',
     groupKey: r.group_key,
     groupLabel: r.group_label,
@@ -44,7 +48,11 @@ async function fetchLocalPrompts(localId: string, schoolName: string): Promise<S
     school_id: p.school_id,
     school_name: p.schools?.name || schoolName,
     prompt: p.prompt,
-    word_count: parseInt(p.word_count, 10) || 0,
+    // Legacy free-text column: values range from "650" to "100 characters" to
+    // "Not specified". Take the leading number when there is one, else null
+    // ("no stated limit") — never 0, which would block submission entirely.
+    word_count: Number.isFinite(parseInt(p.word_count, 10)) ? parseInt(p.word_count, 10) : null,
+    min_word_count: null,
     source: 'local',
     groupKey: null,
     groupLabel: null,
