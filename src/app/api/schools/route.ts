@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { crmListSchools, crmEssayPromptsForSchools, latestCycleRealPrompts } from '@/lib/crmClient';
+import { crmListSchools, crmEssayPromptsForSchools, latestCycleRealPromptsBySchool } from '@/lib/crmClient';
 import { encodeSchoolId } from '@/lib/schoolId';
+import { canonicalSchoolKey } from '@/lib/schoolAliases';
 
 interface LocalSchoolRow {
   id: string;
@@ -18,9 +19,11 @@ interface MergedSchool {
 }
 
 // Full school list for the "pick a school" step. Merges the CRM's catalog
-// with this app's own (legacy) schools table, de-duplicated by name. A
-// school that exists in both keeps both ids (see lib/schoolId) so the essay
-// lookup can fall back to the local table if the CRM has nothing for it yet.
+// with this app's own (legacy) schools table, de-duplicated by canonical
+// name (see lib/schoolAliases — a plain string match misses e.g. the CRM's
+// "USC" vs. this app's "University of Southern California"). A school that
+// exists in both keeps both ids (see lib/schoolId) so the essay lookup can
+// fall back to the local table if the CRM currently has fewer prompts for it.
 export async function GET() {
   const [crmSchools, localResult] = await Promise.all([
     crmListSchools(),
@@ -30,7 +33,7 @@ export async function GET() {
       .order('name'),
   ]);
 
-  const crmPrompts = latestCycleRealPrompts(
+  const crmPrompts = latestCycleRealPromptsBySchool(
     await crmEssayPromptsForSchools(crmSchools.map((s) => s.id))
   );
   const crmCountBySchoolId = new Map<string, number>();
@@ -45,31 +48,34 @@ export async function GET() {
     promptCount: s.essay_prompts[0]?.count ?? 0,
   }));
 
-  const byName = new Map<string, MergedSchool>();
+  const byKey = new Map<string, MergedSchool>();
 
   for (const s of crmSchools) {
-    const key = s.name.trim().toLowerCase();
-    byName.set(key, { name: s.name, crmId: s.id, crmCount: crmCountBySchoolId.get(s.id) ?? 0, localCount: 0 });
+    byKey.set(canonicalSchoolKey(s.name), {
+      name: s.name,
+      crmId: s.id,
+      crmCount: crmCountBySchoolId.get(s.id) ?? 0,
+      localCount: 0,
+    });
   }
   for (const s of localSchools) {
-    const key = s.name.trim().toLowerCase();
-    const existing = byName.get(key);
+    const key = canonicalSchoolKey(s.name);
+    const existing = byKey.get(key);
     if (existing) {
       existing.localId = s.id;
       existing.localCount = s.promptCount;
     } else {
-      byName.set(key, { name: s.name, localId: s.id, crmCount: 0, localCount: s.promptCount });
+      byKey.set(key, { name: s.name, localId: s.id, crmCount: 0, localCount: s.promptCount });
     }
   }
 
-  const merged = Array.from(byName.values())
+  const merged = Array.from(byKey.values())
     .map((s) => ({
       id: encodeSchoolId(s.crmId, s.localId),
       name: s.name,
-      // Fallback rule: only trust the CRM's count when it actually has
-      // prompts for this school; otherwise show the local count so schools
-      // the CRM hasn't researched yet don't look empty.
-      prompt_count: s.crmCount > 0 ? s.crmCount : s.localCount,
+      // Never show fewer prompts than were already available before this
+      // change — show whichever source currently has more for this school.
+      prompt_count: Math.max(s.crmCount, s.localCount),
     }))
     .sort((a, b) => a.name.localeCompare(b.name));
 

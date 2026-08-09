@@ -63,15 +63,31 @@ export async function crmEssayPromptsForSchools(schoolIds: string[]): Promise<Cr
   return results.flatMap((r) => r ?? []);
 }
 
-/** Common App main prompts (school_id is always null for these). */
-export async function crmCommonAppPrompts(): Promise<CrmEssayPrompt[]> {
-  return (await crmFetch<CrmEssayPrompt[]>('/api/schools/essays?type=common_app_main')) ?? [];
-}
+/**
+ * Keep only each school's OWN latest application_cycle (not one global
+ * latest across every school) and drop "no supplement" marker rows. Cycles
+ * roll out school-by-school, not all at once — verified against production
+ * data as of 2026-08: Howard, Mount Holyoke, Pomona, Simpson, and USC were
+ * all still on the prior cycle while most other schools had moved to the
+ * current one. Computing one global "latest" instead of a per-school one
+ * would have zeroed out their real prompt counts.
+ */
+export function latestCycleRealPromptsBySchool(rows: CrmEssayPrompt[]): CrmEssayPrompt[] {
+  const bySchool = new Map<string, CrmEssayPrompt[]>();
+  for (const r of rows) {
+    if (!r.school_id) continue;
+    const arr = bySchool.get(r.school_id);
+    if (arr) arr.push(r);
+    else bySchool.set(r.school_id, [r]);
+  }
 
-/** Keep only the latest application_cycle present, drop "no supplement" marker rows. */
-export function latestCycleRealPrompts(rows: CrmEssayPrompt[]): CrmEssayPrompt[] {
-  let latest: string | null = null;
-  for (const r of rows) if (!latest || r.application_cycle > latest) latest = r.application_cycle;
-  if (!latest) return [];
-  return rows.filter((r) => r.application_cycle === latest && r.group_key !== NO_SUPPLEMENT_GROUP);
+  const out: CrmEssayPrompt[] = [];
+  for (const schoolRows of bySchool.values()) {
+    let latest: string | null = null;
+    for (const r of schoolRows) if (!latest || r.application_cycle > latest) latest = r.application_cycle;
+    for (const r of schoolRows) {
+      if (r.application_cycle === latest && r.group_key !== NO_SUPPLEMENT_GROUP) out.push(r);
+    }
+  }
+  return out;
 }
