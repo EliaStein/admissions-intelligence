@@ -17,8 +17,8 @@ export const essayService = {
   },
 
   // Backed by src/app/api/schools/essays/route.ts, which reads from the CRM
-  // and falls back to this app's own table if the CRM has nothing for the
-  // school yet.
+  // and this app's own table and returns whichever currently has more
+  // prompts for the school.
   async getPromptsBySchool(schoolId: string, schoolName: string): Promise<SchoolPrompt[]> {
     try {
       const params = new URLSearchParams({ schoolId, schoolName });
