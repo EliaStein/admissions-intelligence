@@ -20,7 +20,7 @@ export class AIService {
     });
   }
 
-  private static constructSystemPrompt(isPersonalStatement: boolean, maxWordCount: number): string {
+  private static constructSystemPrompt(isPersonalStatement: boolean, maxWordCount: number | null): string {
     const feedbackPrompt = isPersonalStatement ? CAPS_FEEDBACK_PROMPT : SUPPLEMENTAL_FEEDBACK_PROMPT;
     return `${feedbackPrompt}\n\n${API_PERSONAL_STATEMENT_AND_RULES_PROMPT(maxWordCount)}`;
   }
@@ -34,7 +34,7 @@ export class AIService {
     essayContent: string,
     isPersonalStatement: boolean,
     wordCount: number,
-    maxWordCount: number
+    maxWordCount: number | null
   ): Promise<string> {
     const openai = await this.getOpenAIClient();
     const systemPrompt = this.constructSystemPrompt(isPersonalStatement, maxWordCount);
@@ -64,13 +64,15 @@ export class AIService {
     }
 
     const { essay } = body;
+    // word_count (the prompt's stated limit) is deliberately NOT required: it
+    // is absent whenever the school states no limit, and a falsy check here
+    // would reject those submissions outright.
     const requiredFields = [
       'student_first_name',
       'student_last_name',
       'student_email',
       'selected_prompt',
-      'essay_content',
-      'word_count'
+      'essay_content'
     ];
 
     for (const field of requiredFields) {
@@ -94,7 +96,7 @@ export class AIService {
       essay.essay_content,
       essay.personal_statement,
       calculatedWordCount,
-      essay.word_count
+      essay.word_count ?? null
     );
 
     return {
