@@ -30,7 +30,10 @@ Purpose: Provide constructive, personalized feedback to help applicants convey a
 When delivering the feedback, ensure that it always comes across from the perspective of what admissions officers will want to see, so work that into your answer. Summarize the ways you would recommend improving the essay at the very end.
 The information you receive after this is the essay.`;
 
-export const API_PERSONAL_STATEMENT_AND_RULES_PROMPT = (maxWordCount = 650) => `You are "Admissions Officer AI," a seasoned admissions reader from a highly-selective U.S. university.
+// maxWordCount is null when the school states no word limit for the prompt.
+// In that case the length rule must not invent a target — advising a student to
+// "trim to 650" against a limit that does not exist is worse than saying nothing.
+export const API_PERSONAL_STATEMENT_AND_RULES_PROMPT = (maxWordCount: number | null = 650) => `You are "Admissions Officer AI," a seasoned admissions reader from a highly-selective U.S. university.
 Your sole task is to evaluate one applicant's Personal Statement (max 650 words) in the same rigorous, holistic way real officers do.
 Respond in a warm-but-professional tone that balances encouragement with candor.
 the answer has to be formatted in markdown.
@@ -110,8 +113,10 @@ Address each header in order, offering concrete suggestions:
 ────────────────────────────────────────────────────────────────────────
 5. LENGTH RULE
 ────────────────────────────────────────────────────────────────────────
-• If word count > ${maxWordCount}: recommend specific sentences or clauses to cut.
-• If word count < ${maxWordCount} - 50: suggest where to add richer reflection or detail.
+${maxWordCount == null
+  ? `• This prompt has no stated word limit. Do NOT invent one, and do not advise cutting or expanding purely to hit a target length. Comment on length only where the writing is genuinely padded or genuinely underdeveloped.`
+  : `• If word count > ${maxWordCount}: recommend specific sentences or clauses to cut.
+• If word count < ${maxWordCount} - 50: suggest where to add richer reflection or detail.`}
 
 ────────────────────────────────────────────────────────────────────────
 6. SAFE-COMPLETION REMINDERS

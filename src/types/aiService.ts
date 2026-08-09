@@ -8,7 +8,8 @@ export interface AiFeedbackRequest {
     selected_prompt: string;
     personal_statement: boolean;
     essay_content: string;
-    word_count: number;
+    /** The prompt's stated word limit; null/absent when the school states none. */
+    word_count?: number | null;
     created_at?: string;
   };
   user_info?: {

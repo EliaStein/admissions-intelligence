@@ -53,8 +53,10 @@ export async function POST(request: NextRequest) {
     // checks off a spoofable value.
     essay.student_email = user.email;
 
-    // Check for duplicate submissions (only for personal statements with AI feedback requested)
-    if (wordCount && essay.personal_statement) {
+    // Check for duplicate submissions (personal statements only). Not gated on
+    // `wordCount` — every submission now gets feedback, so gating this on the
+    // prompt's stated word limit would just be a way to skip the rate limit.
+    if (essay.personal_statement) {
       const duplicateCheck = await EssayDuplicateDetectionService.checkForDuplicate(
         essay.student_email,
         essay.personal_statement
@@ -76,22 +78,25 @@ export async function POST(request: NextRequest) {
     // Consume the credit atomically before generating feedback; refunded
     // below if generation fails. A post-generation consume would let two
     // concurrent submissions get feedback for one credit.
-    if (wordCount) {
-      const creditConsumed = await CreditService.consumeCredits(
-        userId,
-        1,
-        'AI feedback for essay submission'
+    // NB: this is deliberately NOT gated on `wordCount`. That value is the
+    // *prompt's* stated word limit, which is absent whenever the school states
+    // no limit — gating on it silently skipped the credit charge, the feedback
+    // generation and the email for those prompts, so the student got nothing
+    // and saw success.
+    const creditConsumed = await CreditService.consumeCredits(
+      userId,
+      1,
+      'AI feedback for essay submission'
+    );
+    if (!creditConsumed) {
+      return NextResponse.json(
+        {
+          error: 'Insufficient credits',
+          message: 'You need at least 1 credit to get AI feedback. Please purchase more credits.',
+          requiresCredits: true
+        },
+        { status: 402 } // Payment Required
       );
-      if (!creditConsumed) {
-        return NextResponse.json(
-          {
-            error: 'Insufficient credits',
-            message: 'You need at least 1 credit to get AI feedback. Please purchase more credits.',
-            requiresCredits: true
-          },
-          { status: 402 } // Payment Required
-        );
-      }
     }
 
     const supabaseAdmin = await getAdminClient();
@@ -104,14 +109,14 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Error saving essay:', error.message);
-      if (wordCount) await CreditService.addCredits(userId, 1, 'Refund: essay save failed'); // refund
+      await CreditService.addCredits(userId, 1, 'Refund: essay save failed'); // refund
       return NextResponse.json(
         { error: 'Failed to save essay', details: error.message },
         { status: 500 }
       );
     }
 
-    if (wordCount && data) {
+    if (data) {
       try {
         const aiFeedbackRequest: AiFeedbackRequest = {
           essay: {
