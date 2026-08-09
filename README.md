@@ -52,6 +52,7 @@ Set these in `.env.local` (and in the Netlify dashboard for deploys):
 | `VIRAL_LOOPS_API_TOKEN` | Viral Loops referral campaign API |
 | `OPENAI_API_KEY` | Essay feedback generation |
 | `SENDGRID_API_KEY` | Feedback delivery email |
+| `CRM_API_BASE_URL` | Base URL of the CRM app (e.g. `https://crm.example.com`) — school/essay-prompt data is read from its public `/api/schools/*` endpoints. Falls back to this app's own `schools`/`essay_prompts` tables for any school the CRM doesn't have yet. |
 
 Supabase keys and Stripe secrets are read at runtime from the `config` table via the service role (see `src/services/configService.ts`).
 

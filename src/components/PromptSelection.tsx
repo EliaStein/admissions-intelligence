@@ -6,6 +6,45 @@ import { School, BasePrompt, SchoolPrompt } from '../types/prompt';
 import { useAnalytics } from '../hooks/useAnalytics';
 import { useAuth } from '../hooks/useAuth';
 
+interface PromptGroup {
+  key: string;
+  label: string | null;
+  ruleText: string;
+  prompts: SchoolPrompt[];
+}
+
+// Groups a school's prompts into choice-sets for display only ("Choose 4 of
+// 8", "Required — all 3") — it doesn't change the underlying one-prompt-at-a-
+// time selection flow below. Prompts from the local-fallback table have no
+// grouping metadata and each render as their own standalone group.
+function groupPromptsForDisplay(prompts: SchoolPrompt[]): PromptGroup[] {
+  const groups = new Map<string, { label: string | null; selectCount: number; isRequired: boolean; prompts: SchoolPrompt[] }>();
+  const order: string[] = [];
+  for (const p of prompts) {
+    const key = p.groupKey ?? `__solo_${p.id}`;
+    let g = groups.get(key);
+    if (!g) {
+      g = { label: p.groupLabel, selectCount: p.selectCount, isRequired: p.isRequired, prompts: [] };
+      groups.set(key, g);
+      order.push(key);
+    }
+    g.prompts.push(p);
+  }
+  return order.map((key) => {
+    const g = groups.get(key)!;
+    const n = g.prompts.length;
+    let ruleText = '';
+    if (!g.isRequired) {
+      ruleText = g.selectCount >= n ? 'Optional' : `Optional — choose up to ${g.selectCount}`;
+    } else if (g.selectCount < n) {
+      ruleText = `Choose ${g.selectCount} of ${n}`;
+    } else if (n > 1) {
+      ruleText = 'Answer all';
+    }
+    return { key, label: g.label, ruleText, prompts: g.prompts };
+  });
+}
+
 interface PromptSelectionProps {
   onPromptSelected: (prompt: BasePrompt) => void;
   personalStatementPrompts: BasePrompt[];
@@ -52,7 +91,8 @@ export function PromptSelection({
       if (selectedSchool) {
         setLoading(true);
         try {
-          const promptData = await essayService.getPromptsBySchool(selectedSchool);
+          const schoolName = schools.find((s) => s.id === selectedSchool)?.name ?? '';
+          const promptData = await essayService.getPromptsBySchool(selectedSchool, schoolName);
           setPrompts(promptData);
         } catch (error) {
           console.error('Error loading prompts:', error);
@@ -65,7 +105,7 @@ export function PromptSelection({
     if (essayType === 'supplemental') {
       loadPrompts();
     }
-  }, [selectedSchool, essayType]);
+  }, [selectedSchool, essayType, schools]);
 
   if (loading) {
     return (
@@ -168,18 +208,32 @@ export function PromptSelection({
         </button>
       </div>
 
-      <div className="space-y-4 max-h-[calc(100vh-300px)] overflow-y-auto pr-4">
-        {prompts.map((prompt) => (
-          <button
-            key={prompt.id}
-            onClick={() => onPromptSelected(prompt)}
-            className="w-full text-left p-4 border rounded-lg border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-colors"
-          >
-            <p className="text-gray-900">{prompt.prompt}</p>
-            <p className="text-sm text-gray-500 mt-2">
-              Word limit: {prompt.word_count}
-            </p>
-          </button>
+      <div className="space-y-6 max-h-[calc(100vh-300px)] overflow-y-auto pr-4">
+        {groupPromptsForDisplay(prompts).map((group) => (
+          <div key={group.key} className="space-y-3">
+            {(group.label || group.ruleText) && (
+              <div className="flex items-baseline justify-between px-1">
+                {group.label && (
+                  <h4 className="text-sm font-semibold text-gray-700">{group.label}</h4>
+                )}
+                {group.ruleText && (
+                  <span className="text-xs text-gray-500">{group.ruleText}</span>
+                )}
+              </div>
+            )}
+            {group.prompts.map((prompt) => (
+              <button
+                key={prompt.id}
+                onClick={() => onPromptSelected(prompt)}
+                className="w-full text-left p-4 border rounded-lg border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-colors"
+              >
+                <p className="text-gray-900">{prompt.prompt}</p>
+                <p className="text-sm text-gray-500 mt-2">
+                  Word limit: {prompt.word_count}
+                </p>
+              </button>
+            ))}
+          </div>
         ))}
       </div>
     </div>

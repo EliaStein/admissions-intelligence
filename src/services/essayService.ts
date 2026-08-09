@@ -3,58 +3,32 @@ import { Essay } from '../types/essay';
 import { School, SchoolPrompt } from '../types/prompt';
 
 export const essayService = {
-  // TODO: move to backend
+  // Backed by src/app/api/schools/route.ts, which merges the CRM's school
+  // catalog with this app's own (legacy) table.
   async getSchools(): Promise<(School & { prompt_count: number })[]> {
-    const { data, error } = await supabase
-      .from('schools')
-      .select(`
-        id,
-        name,
-        essay_prompts:essay_prompts(count)
-      `)
-      .order('name');
-
-    if (error) {
+    try {
+      const response = await fetch('/api/schools');
+      if (!response.ok) throw new Error(`Failed to fetch schools: ${response.status}`);
+      return await response.json();
+    } catch (error) {
       console.error('Error fetching schools:', error);
       return [];
     }
-
-    type SchoolWithPrompts = { id: string; name: string; essay_prompts: { count: number }[] };
-    return (data as unknown as SchoolWithPrompts[])?.map(school => ({
-      id: school.id,
-      name: school.name,
-      prompt_count: school.essay_prompts[0].count
-    })) || [];
   },
 
-  // TODO: move to backend
-  async getPromptsBySchool(schoolId: string): Promise<SchoolPrompt[]> {
-    const { data, error } = await supabase
-      .from('essay_prompts')
-      .select(`
-        id,
-        school_id,
-        prompt,
-        word_count,
-        schools (
-          name
-        )
-      `)
-      .eq('school_id', schoolId);
-
-    if (error) {
+  // Backed by src/app/api/schools/essays/route.ts, which reads from the CRM
+  // and falls back to this app's own table if the CRM has nothing for the
+  // school yet.
+  async getPromptsBySchool(schoolId: string, schoolName: string): Promise<SchoolPrompt[]> {
+    try {
+      const params = new URLSearchParams({ schoolId, schoolName });
+      const response = await fetch(`/api/schools/essays?${params}`);
+      if (!response.ok) throw new Error(`Failed to fetch prompts: ${response.status}`);
+      return await response.json();
+    } catch (error) {
       console.error('Error fetching prompts:', error);
       return [];
     }
-
-    type PromptWithSchool = { id: string; school_id: string; prompt: string; word_count: string; schools: { name: string } | null };
-    return (data as unknown as PromptWithSchool[])?.map(prompt => ({
-      id: prompt.id,
-      school_id: prompt.school_id,
-      prompt: prompt.prompt,
-      word_count: parseInt(prompt.word_count, 10) || 0,
-      school_name: prompt.schools?.name || ''
-    })) || [];
   },
 
   async saveEssay(
